@@ -503,7 +503,7 @@
                                 </div>
                                 
                                 <!-- Bekas Kontena Gambar Berpembolehubah -->
-                                <div id="out-img-gallery-container" class="flex-1 grid grid-cols-2 gap-2 min-h-0 items-stretch">
+                                <div id="out-img-gallery-container" class="flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-2 min-h-0 h-full">
                                     <!-- Terjana Secara Dinamik Melalui updatePreview() -->
                                 </div>
                             </div>
@@ -822,8 +822,8 @@
             updatePreview();
         }
 
-        // Fungsi Penjana HTML Galeri Gambar — SATU susun atur grid 2x2 yang kukuh.
-        // Guna CSS Grid dengan auto-rows-fr supaya kedua-dua baris SENTIASA sama tinggi
+        // Fungsi Penjana HTML Galeri Gambar — SATU susun atur grid 1 lajur x 4 baris yang kukuh.
+        // Guna CSS Grid dengan auto-rows-fr supaya keempat-empat baris SENTIASA sama tinggi
         // dan mengisi penuh ruang lajur kanan, tidak kira berapa panjang kapsyen setiap gambar.
         function renderGalleryHTML() {
             const fitMode = document.getElementById('sel-img-fit')?.value || 'cover';
@@ -846,14 +846,14 @@
             const container = document.getElementById('out-img-gallery-container');
             if (!container) return;
 
-            container.className = 'flex-1 grid grid-cols-2 grid-rows-2 auto-rows-fr gap-2 min-h-0 h-full';
+            container.className = 'flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-2 min-h-0 h-full';
             container.innerHTML = imgs.map((img, i) => `
-                <div class="bg-white border border-slate-300 p-1.5 rounded-lg shadow-xs flex flex-col h-full min-h-0">
-                    <div class="w-full flex-1 min-h-0 bg-slate-100 rounded overflow-hidden relative border border-slate-200">
-                        <span class="absolute top-1 left-1 bg-slate-900/80 text-white text-[8px] px-1.5 py-0.5 rounded font-black z-10">#${i + 1}</span>
+                <div class="bg-white border border-slate-300 p-1 rounded-lg shadow-xs flex flex-row items-center gap-1.5 h-full min-h-0">
+                    <div class="h-full aspect-[4/3] shrink-0 min-h-0 bg-slate-100 rounded overflow-hidden relative border border-slate-200">
+                        <span class="absolute top-0.5 left-0.5 bg-slate-900/80 text-white text-[7.5px] px-1 py-0.5 rounded font-black z-10">#${i + 1}</span>
                         <img src="${img}" class="w-full h-full ${fitClass} absolute inset-0" alt="Gambar ${i + 1}">
                     </div>
-                    <p class="text-[8.5px] font-bold text-slate-800 mt-1 truncate text-center leading-tight shrink-0">${caps[i]}</p>
+                    <p class="text-[8.5px] font-bold text-slate-800 text-left leading-tight flex-1 min-w-0 line-clamp-3">${caps[i]}</p>
                 </div>
             `).join('');
         }
