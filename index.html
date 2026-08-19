@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Penjana One Page Report (OPR) & AI Generator</title>
+    <title>Penjana One Page Report (OPR) — PPD Subis</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Penjana PDF In-House (menangkap paparan A4 terus sebagai fail .pdf) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -84,10 +87,10 @@
                 </div>
                 <div>
                     <h1 class="text-base font-extrabold leading-tight flex items-center gap-2">
-                        OPR Generator AI 
-                        <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-bold">Smart Layout Engine</span>
+                        Penjana OPR
+                        <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-bold">Auto-Fit 1 Muka Surat</span>
                     </h1>
-                    <p class="text-xs text-slate-400">Penyunting Lanskap/Potret & AI Auto - Sektor Pembangunan Murid / PPD Subis</p>
+                    <p class="text-xs text-slate-400">Sektor Pembangunan Murid / PPD Subis — Muat Turun PDF Terus</p>
                 </div>
             </div>
             
@@ -101,9 +104,6 @@
                     <button onclick="setPdfTheme('crimson')" class="w-5 h-5 rounded-full bg-rose-700 hover:scale-110 transition border border-white/40 ml-1" title="Crimson Red"></button>
                 </div>
 
-                <button onclick="autoRecommendLayout()" class="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-xs font-bold transition flex items-center gap-1.5 border border-amber-500/40">
-                    <i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> Syorkan Layout Pintar
-                </button>
                 <button onclick="loadSampleData()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700">
                     <i class="fa-solid fa-database text-amber-400"></i> Data Contoh
                 </button>
@@ -111,10 +111,13 @@
                     <i class="fa-solid fa-rotate-left"></i> Reset
                 </button>
                 <button onclick="openPdfVisualModal()" class="px-3 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-teal-600/20 transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-eye text-sm"></i> Pratonton Visual A4
+                    <i class="fa-solid fa-eye text-sm"></i> Pratonton
                 </button>
-                <button onclick="triggerPrint()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-indigo-600/30 transition flex items-center gap-2">
-                    <i class="fa-solid fa-print text-sm"></i> Cetak / Simpan PDF
+                <button onclick="triggerPrint()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700" title="Guna dialog cetak pelayar (untuk cetak kertas terus)">
+                    <i class="fa-solid fa-print text-sm"></i> Cetak
+                </button>
+                <button id="btn-download-pdf" onclick="generateAndDownloadPDF()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-indigo-600/30 transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-arrow-down text-sm"></i> <span id="btn-download-pdf-label">Muat Turun PDF</span>
                 </button>
             </div>
         </div>
@@ -125,28 +128,6 @@
         <!-- Panel Kawalan Penyunting (Terselindung Semasa Cetak) -->
         <section class="no-print lg:col-span-5 space-y-4 max-h-[calc(100vh-100px)] overflow-y-auto pr-2">
             
-            <!-- Kad Pembantu AI -->
-            <div class="bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 p-4 rounded-xl shadow-lg border border-indigo-700/50 text-white relative overflow-hidden">
-                <div class="absolute -right-4 -bottom-4 text-indigo-500/10 text-8xl pointer-events-none">
-                    <i class="fa-solid fa-brain"></i>
-                </div>
-                <div class="flex items-center justify-between mb-2">
-                    <h2 class="text-sm font-bold uppercase tracking-wider text-indigo-200 flex items-center gap-2">
-                        <i class="fa-solid fa-sparkles text-amber-400"></i> Pembantu AI OPR
-                    </h2>
-                    <span class="text-[10px] bg-indigo-500/30 border border-indigo-400/30 text-indigo-300 px-2 py-0.5 rounded-full font-semibold">Gemini 2.5 Auto</span>
-                </div>
-                <p class="text-xs text-slate-300 mb-3 leading-relaxed">
-                    Masukkan nama program di bawah, kemudian tekan butang AI untuk menjana Objektif, Ringkasan Aktiviti, dan Analisis SWOT secara automatik.
-                </p>
-                <button id="btn-generate-ai" type="button" onclick="generateContentWithAI()" class="w-full py-2.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white text-xs font-extrabold rounded-lg shadow-md hover:shadow-indigo-500/30 transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Jana Kandungan OPR Dengan AI
-                </button>
-                <div id="ai-loading-status" class="hidden mt-2 text-center text-xs text-amber-300 font-medium animate-pulse flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-circle-notch fa-spin"></i> AI sedang merangka kandungan OPR anda...
-                </div>
-            </div>
-
             <!-- Kad 1: Maklumat Asas & Header -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2 border-b pb-2">
@@ -273,72 +254,19 @@
                 </div>
             </div>
 
-            <!-- Kad 5: Pelarasan Layout Interaktif & Nisbah Paparan (Drag/Resize Controls) -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                <div class="flex items-center justify-between border-b pb-2 mb-3">
-                    <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2">
-                        <i class="fa-solid fa-sliders text-indigo-600"></i> Pelarasan Nisbah Layout & Saiz (Interactive Resize)
-                    </h2>
-                    <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-bold border">Dynamic Engine</span>
-                </div>
-                
-                <div class="space-y-3">
-                    <!-- Nisbah Lajur Kiri vs Kanan -->
-                    <div>
-                        <div class="flex justify-between text-xs font-semibold text-gray-700 mb-1">
-                            <span>Nisbah Pembahagian Lajur (Teks vs Gambar):</span>
-                            <span id="lbl-col-ratio" class="text-indigo-600 font-extrabold">7 : 5 (58% / 42%)</span>
-                        </div>
-                        <input type="range" id="rng-col-ratio" min="5" max="8" step="1" value="7" oninput="updateLayoutRatio()" class="w-full accent-indigo-600 cursor-pointer">
-                        <div class="flex justify-between text-[10px] text-gray-400 font-medium">
-                            <span>5:7 (Lebih Kanan)</span>
-                            <span>6:6 (Sama Rata)</span>
-                            <span>7:5 (Standard)</span>
-                            <span>8:4 (Lebih Kiri)</span>
-                        </div>
-                    </div>
-
-                    <!-- Skala Saiz Teks & Jarak A4 -->
-                    <div>
-                        <div class="flex justify-between text-xs font-semibold text-gray-700 mb-1">
-                            <span>Skala Teks Laporan (Text Density Scale):</span>
-                            <span id="lbl-font-scale" class="text-indigo-600 font-extrabold">100%</span>
-                        </div>
-                        <input type="range" id="rng-font-scale" min="85" max="115" step="5" value="100" oninput="updateFontScale()" class="w-full accent-indigo-600 cursor-pointer">
-                        <div class="flex justify-between text-[10px] text-gray-400 font-medium">
-                            <span>85% (Padat/Kandungan Panjang)</span>
-                            <span>100% (Standard)</span>
-                            <span>115% (Besar)</span>
-                        </div>
-                    </div>
-
-                    <!-- Butang Syorkan Layout Pintar -->
-                    <div class="pt-2 border-t">
-                        <button type="button" onclick="autoRecommendLayout()" class="w-full py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs rounded-lg shadow-sm transition flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Fit: Syorkan Layout & Saiz Terbaik
-                        </button>
-                        <p id="recommend-status" class="text-[10.5px] text-emerald-700 font-semibold text-center mt-1.5 hidden bg-emerald-50 p-1.5 rounded border border-emerald-200"></p>
-                    </div>
-                </div>
+            <!-- Kad 5: Status Muat Halaman (Auto-Fit) -->
+            <div id="fit-status-card" class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                <span id="fit-status-text">Kandungan muat penuh dalam 1 muka surat A4.</span>
             </div>
 
-            <!-- Kad 6: Pilihan Susun Atur & Gambar Aktiviti (Features Lanskap/Potret) -->
+            <!-- Kad 6: Gambar Aktiviti -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2 border-b pb-2">
                     <i class="fa-regular fa-images text-indigo-600"></i> Tetapan Gambar (Lanskap / Potret)
                 </h2>
                 
                 <div class="space-y-3 mb-4">
-                    <!-- Pemilih Layout Gambar -->
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Pilih Susun Atur Gambar:</label>
-                        <select id="sel-img-layout" onchange="updatePreview()" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 font-medium">
-                            <option value="grid2x2">Grid 2x2 Seimbang (Sesuai Campuran / Lanskap)</option>
-                            <option value="hero1">Gambar 1 Utama (Hero Potret/Lanskap) + 3 Sisi</option>
-                            <option value="strip1x4">4 Jalur Lanskap Bertingkat (1x4 Horizontal)</option>
-                        </select>
-                    </div>
-
                     <!-- Pemilih Mod Fits -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Mod Padanan Gambar (Fit Mode):</label>
@@ -347,6 +275,7 @@
                             <option value="contain">Papar Gambar Penuh (Contain - Tanpa Potong)</option>
                         </select>
                     </div>
+                    <p class="text-[10.5px] text-slate-500 leading-snug">Gambar dimampatkan secara automatik semasa dimuat naik untuk memastikan PDF kekal ringan dan cepat dijana.</p>
                 </div>
 
                 <!-- Input Muat Naik Gambar 1-4 -->
@@ -378,7 +307,7 @@
                 </div>
             </div>
 
-            <!-- Kad 6: Pengesahan & Pengesah -->
+            <!-- Kad 7: Pengesahan & Pengesah -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2 border-b pb-2">
                     <i class="fa-solid fa-signature text-indigo-600"></i> Pengesahan Laporan
@@ -415,7 +344,7 @@
                 <!-- Bar Hiasan Atas Gradien -->
                 <div id="theme-accent-bar" class="h-2.5 w-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-sky-400"></div>
 
-                <div class="a4-inner-content">
+                <div id="a4-inner-content-el" class="a4-inner-content">
                     <!-- Pembungkus Kandungan Utama Mengembang Penuh (flex-1) -->
                     <div id="a4-scalable-wrapper" class="flex-1 flex flex-col justify-between space-y-2.5 min-h-0 transition-all duration-200">
                         
@@ -510,7 +439,7 @@
                         <div id="a4-main-grid" class="grid grid-cols-12 gap-3 flex-1 items-stretch min-h-0">
                             
                             <!-- LAJUR KIRI: Teks Kandungan Laporan (Dinamik col-span) -->
-                            <div id="a4-left-col" class="col-span-7 flex flex-col justify-between space-y-2.5 h-full">
+                            <div id="a4-left-col" class="col-span-7 flex flex-col justify-between space-y-2 h-full min-h-0">
                                 
                                 <!-- 1. Objektif Program -->
                                 <div class="flex flex-col flex-1">
@@ -583,7 +512,7 @@
                     </div>
 
                     <!-- Ruangan Tandatangan Pengesahan (Sauh Bawah A4) -->
-                    <div class="pt-3 border-t-2 border-slate-300 mt-2 shrink-0">
+                    <div id="a4-signature-block" class="pt-3 border-t-2 border-slate-300 mt-2 shrink-0">
                         <div class="grid grid-cols-2 gap-4 text-[9px]">
                             <!-- Kolum 1: Disediakan Oleh -->
                             <div class="bg-slate-50/80 p-3 rounded-lg border border-slate-300 flex flex-col justify-between">
@@ -637,8 +566,8 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="triggerPrint(); closePdfVisualModal();" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-print"></i> Cetak / Simpan PDF
+                    <button onclick="generateAndDownloadPDF()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-arrow-down"></i> Muat Turun PDF
                     </button>
                     <button onclick="closePdfVisualModal()" class="p-2 text-slate-400 hover:text-white rounded-lg text-lg transition">
                         <i class="fa-solid fa-xmark"></i>
@@ -782,27 +711,58 @@
             if (swocBadge) swocBadge.className = `inline-block ${t.swocBadge} text-white font-black text-[8px] px-2 py-0.5 rounded uppercase mb-1 shadow-2xs`;
         }
 
-        // Fungsi Muat Naik Fail
-        function handleLogoUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
+        // Fungsi Mampatan Imej — resize + JPEG compress di sisi klien sebelum disimpan.
+        // Ini penting supaya PDF yang dijana (via html2canvas) kekal ringan & pantas,
+        // memandangkan gambar terus dari kamera boleh 4-8MB setiap satu.
+        function compressImageFile(file, maxDim, quality) {
+            return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('out-logo').src = e.target.result;
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        let { width, height } = img;
+                        if (width > height && width > maxDim) {
+                            height = Math.round(height * (maxDim / width));
+                            width = maxDim;
+                        } else if (height > maxDim) {
+                            width = Math.round(width * (maxDim / height));
+                            height = maxDim;
+                        }
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                    img.onerror = reject;
+                    img.src = e.target.result;
                 };
+                reader.onerror = reject;
                 reader.readAsDataURL(file);
+            });
+        }
+
+        async function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            try {
+                const dataUrl = await compressImageFile(file, 400, 0.9);
+                document.getElementById('out-logo').src = dataUrl;
+            } catch (e) {
+                alert('Gagal memproses logo. Sila cuba fail imej lain.');
             }
         }
 
-        function handleImageUpload(event, index) {
+        async function handleImageUpload(event, index) {
             const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    loadedImages[index] = e.target.result;
-                    updatePreview();
-                };
-                reader.readAsDataURL(file);
+            if (!file) return;
+            try {
+                const dataUrl = await compressImageFile(file, 1000, 0.82);
+                loadedImages[index] = dataUrl;
+                updatePreview();
+            } catch (e) {
+                alert('Gagal memproses gambar. Sila cuba fail imej lain.');
             }
         }
 
@@ -862,9 +822,10 @@
             updatePreview();
         }
 
-        // Fungsi Penjana HTML Galeri Gambar
+        // Fungsi Penjana HTML Galeri Gambar — SATU susun atur grid 2x2 yang kukuh.
+        // Guna CSS Grid dengan auto-rows-fr supaya kedua-dua baris SENTIASA sama tinggi
+        // dan mengisi penuh ruang lajur kanan, tidak kira berapa panjang kapsyen setiap gambar.
         function renderGalleryHTML() {
-            const layout = document.getElementById('sel-img-layout')?.value || 'grid2x2';
             const fitMode = document.getElementById('sel-img-fit')?.value || 'cover';
             const fitClass = fitMode === 'contain' ? 'object-contain bg-slate-900/10' : 'object-cover';
 
@@ -885,136 +846,60 @@
             const container = document.getElementById('out-img-gallery-container');
             if (!container) return;
 
-            if (layout === 'hero1') {
-                container.className = 'flex-1 grid grid-cols-12 gap-2 min-h-0 items-stretch';
-                container.innerHTML = `
-                    <div class="col-span-7 bg-white border border-slate-300 p-1.5 rounded-lg shadow-xs flex flex-col justify-between h-full">
-                        <div class="w-full flex-1 bg-slate-100 rounded overflow-hidden relative border border-slate-200 min-h-[180px]">
-                            <span class="absolute top-1.5 left-1.5 bg-indigo-600 text-white text-[8.5px] px-2 py-0.5 rounded font-black z-10 shadow-xs">Utama #1</span>
-                            <img src="${imgs[0]}" class="w-full h-full ${fitClass} absolute inset-0" alt="Gambar 1">
-                        </div>
-                        <p class="text-[8.5px] font-bold text-slate-800 mt-1 truncate text-center leading-tight shrink-0">${caps[0]}</p>
+            container.className = 'flex-1 grid grid-cols-2 grid-rows-2 auto-rows-fr gap-2 min-h-0 h-full';
+            container.innerHTML = imgs.map((img, i) => `
+                <div class="bg-white border border-slate-300 p-1.5 rounded-lg shadow-xs flex flex-col h-full min-h-0">
+                    <div class="w-full flex-1 min-h-0 bg-slate-100 rounded overflow-hidden relative border border-slate-200">
+                        <span class="absolute top-1 left-1 bg-slate-900/80 text-white text-[8px] px-1.5 py-0.5 rounded font-black z-10">#${i + 1}</span>
+                        <img src="${img}" class="w-full h-full ${fitClass} absolute inset-0" alt="Gambar ${i + 1}">
                     </div>
-                    <div class="col-span-5 flex flex-col justify-between space-y-1.5 h-full">
-                        ${[1, 2, 3].map(i => `
-                            <div class="bg-white border border-slate-300 p-1 rounded-lg shadow-xs flex-1 flex flex-col justify-between min-h-0">
-                                <div class="w-full flex-1 bg-slate-100 rounded overflow-hidden relative border border-slate-200 min-h-[50px]">
-                                    <span class="absolute top-1 left-1 bg-slate-900/80 text-white text-[7.5px] px-1 py-0.5 rounded font-black z-10">#${i+1}</span>
-                                    <img src="${imgs[i]}" class="w-full h-full ${fitClass} absolute inset-0" alt="Gambar ${i+1}">
-                                </div>
-                                <p class="text-[8px] font-bold text-slate-800 mt-0.5 truncate text-center leading-tight shrink-0">${caps[i]}</p>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } else if (layout === 'strip1x4') {
-                container.className = 'flex-1 flex flex-col justify-between space-y-1.5 min-h-0';
-                container.innerHTML = imgs.map((img, i) => `
-                    <div class="bg-white border border-slate-300 p-1 rounded-lg shadow-xs flex-1 flex flex-col justify-between min-h-0">
-                        <div class="w-full flex-1 bg-slate-100 rounded overflow-hidden relative border border-slate-200 min-h-[55px]">
-                            <span class="absolute top-1 left-1 bg-slate-900/80 text-white text-[7.5px] px-1.5 py-0.5 rounded font-black z-10">#${i+1}</span>
-                            <img src="${img}" class="w-full h-full ${fitClass} absolute inset-0" alt="Gambar ${i+1}">
-                        </div>
-                        <p class="text-[8px] font-bold text-slate-800 mt-0.5 truncate text-center leading-tight shrink-0">${caps[i]}</p>
-                    </div>
-                `).join('');
-            } else {
-                container.className = 'flex-1 grid grid-cols-2 gap-2 min-h-0 items-stretch';
-                container.innerHTML = imgs.map((img, i) => `
-                    <div class="bg-white border border-slate-300 p-1.5 rounded-lg shadow-xs flex flex-col justify-between h-full">
-                        <div class="w-full flex-1 bg-slate-100 rounded overflow-hidden relative border border-slate-200 min-h-[120px]">
-                            <span class="absolute top-1 left-1 bg-slate-900/80 text-white text-[8px] px-1.5 py-0.5 rounded font-black z-10">#${i+1}</span>
-                            <img src="${img}" class="w-full h-full ${fitClass} absolute inset-0" alt="Gambar ${i+1}">
-                        </div>
-                        <p class="text-[8.5px] font-bold text-slate-800 mt-1 truncate text-center leading-tight shrink-0">${caps[i]}</p>
-                    </div>
-                `).join('');
-            }
+                    <p class="text-[8.5px] font-bold text-slate-800 mt-1 truncate text-center leading-tight shrink-0">${caps[i]}</p>
+                </div>
+            `).join('');
         }
 
-        // Fungsi Pelarasan Nisbah
-        function updateLayoutRatio() {
-            const val = parseInt(document.getElementById('rng-col-ratio').value);
-            const leftCol = document.getElementById('a4-left-col');
-            const rightCol = document.getElementById('a4-right-col');
-            const lbl = document.getElementById('lbl-col-ratio');
+        // Fungsi Auto-Fit Sebenar — ukur ketinggian kandungan sebenar berbanding
+        // ruang sebenar yang ada pada halaman A4, dan susutkan sehingga muat betul-betul.
+        // Ini menggantikan heuristik lama yang cuma meneka ikut kiraan aksara.
+        const FIT_MIN_ZOOM = 78;   // had bawah supaya teks tidak jadi terlalu kecil untuk dibaca/dicetak
+        const FIT_STEP = 2;
 
-            const rightVal = 12 - val;
-            const percentLeft = Math.round((val / 12) * 100);
-            
-            if (leftCol && rightCol) {
-                leftCol.className = `col-span-${val} flex flex-col justify-between space-y-2.5 h-full`;
-                rightCol.className = `col-span-${rightVal} flex flex-col justify-between h-full min-h-0`;
-            }
-            if (lbl) {
-                lbl.textContent = `${val} : ${rightVal} (${percentLeft}% / ${100 - percentLeft}%)`;
-            }
-        }
-
-        function updateFontScale() {
-            const val = document.getElementById('rng-font-scale').value;
+        function autoFitToPage() {
             const wrapper = document.getElementById('a4-scalable-wrapper');
-            const lbl = document.getElementById('lbl-font-scale');
+            const innerContent = document.getElementById('a4-inner-content-el');
+            const signatureBlock = document.getElementById('a4-signature-block');
+            const statusCard = document.getElementById('fit-status-card');
+            const statusText = document.getElementById('fit-status-text');
+            if (!wrapper || !innerContent || !signatureBlock) return;
 
-            if (lbl) lbl.textContent = `${val}%`;
-            if (wrapper) {
-                wrapper.style.zoom = `${val}%`;
-            }
-        }
+            // Reset ke 100% dahulu supaya ukuran bermula dari saiz sebenar
+            wrapper.style.zoom = '100%';
 
-        // Fungsi Syor Layout Pintar Automatik
-        function autoRecommendLayout() {
-            let totalChars = 0;
-            
-            document.querySelectorAll('.inp-obj-item, .inp-imp-item, .inp-swoc-s-item, .inp-swoc-w-item, .inp-swoc-o-item, .inp-swoc-t-item').forEach(inp => {
-                totalChars += (inp.value || '').length;
+            requestAnimationFrame(() => {
+                const availableHeight = innerContent.clientHeight - signatureBlock.offsetHeight;
+                let zoom = 100;
+                let fits = wrapper.scrollHeight <= availableHeight;
+
+                while (!fits && zoom > FIT_MIN_ZOOM) {
+                    zoom -= FIT_STEP;
+                    wrapper.style.zoom = `${zoom}%`;
+                    fits = wrapper.scrollHeight <= availableHeight;
+                }
+
+                if (statusCard && statusText) {
+                    if (fits) {
+                        statusCard.className = 'bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
+                        statusText.parentElement.querySelector('i').className = 'fa-solid fa-circle-check text-emerald-600';
+                        statusText.textContent = zoom === 100
+                            ? 'Kandungan muat penuh dalam 1 muka surat A4.'
+                            : `Kandungan disesuaikan automatik kepada ${zoom}% supaya muat dalam 1 muka surat.`;
+                    } else {
+                        statusCard.className = 'bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
+                        statusText.parentElement.querySelector('i').className = 'fa-solid fa-triangle-exclamation text-rose-600';
+                        statusText.textContent = `Kandungan terlalu panjang walaupun pada ${FIT_MIN_ZOOM}% — sila kurangkan bilangan/panjang butiran (Objektif, Implementasi atau SWOT).`;
+                    }
+                }
             });
-
-            const objCount = document.querySelectorAll('.inp-obj-item').length;
-            const impCount = document.querySelectorAll('.inp-imp-item').length;
-
-            const ratioSlider = document.getElementById('rng-col-ratio');
-            const fontSlider = document.getElementById('rng-font-scale');
-            const layoutSelect = document.getElementById('sel-img-layout');
-            const statusBox = document.getElementById('recommend-status');
-
-            let recRatio = 7;
-            let recFont = 100;
-            let recLayout = 'grid2x2';
-            let reason = '';
-
-            if (totalChars > 450 || objCount + impCount > 8) {
-                recRatio = 7;
-                recFont = 90;
-                recLayout = 'hero1';
-                reason = 'Kandungan Teks Panjang: Nisbah 7:5, Font 90%, Layout Hero dipasang secara automatik.';
-            } else if (totalChars < 200 && objCount + impCount <= 4) {
-                recRatio = 6;
-                recFont = 105;
-                recLayout = 'grid2x2';
-                reason = 'Kandungan Teks Ringkas: Nisbah 6:6, Font 105%, Layout Grid 2x2 dipasang automatik.';
-            } else {
-                recRatio = 7;
-                recFont = 100;
-                recLayout = 'grid2x2';
-                reason = 'Kandungan Sederhana: Nisbah Standard 7:5 & Font 100% dipasang automatik.';
-            }
-
-            if (ratioSlider) ratioSlider.value = recRatio;
-            if (fontSlider) fontSlider.value = recFont;
-            if (layoutSelect) layoutSelect.value = recLayout;
-
-            updateLayoutRatio();
-            updateFontScale();
-            updatePreview();
-
-            if (statusBox) {
-                statusBox.textContent = `⚡ Layout Pintar: ${reason}`;
-                statusBox.classList.remove('hidden');
-                setTimeout(() => {
-                    statusBox.classList.add('hidden');
-                }, 5000);
-            }
         }
 
         // Fungsi Kemaskini Pratonton A4
@@ -1133,122 +1018,9 @@
             if (outKNama) outKNama.textContent = kNama ? `( ${kNama} )` : '( Nama: ________________________ )';
             if (outKJawatan) outKJawatan.textContent = kJawatan ? `Jawatan: ${kJawatan}` : 'Jawatan: ________________________';
             if (outKTarikh) outKTarikh.textContent = kTarikh ? `Tarikh: ${kTarikh}` : 'Tarikh: ________________________';
-        }
 
-        // --- GEMINI AI GENERATION LOGIC --- //
-        async function callGeminiApi(promptText, systemPrompt) {
-            const apiKey = ""; // Kunci disuntik secara automatik semasa runtime
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-
-            const payload = {
-                contents: [{ parts: [{ text: promptText }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-                generationConfig: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: "OBJECT",
-                        properties: {
-                            objectives: {
-                                type: "ARRAY",
-                                items: { type: "STRING" }
-                            },
-                            implementation: {
-                                type: "ARRAY",
-                                items: { type: "STRING" }
-                            },
-                            swot: {
-                                type: "OBJECT",
-                                properties: {
-                                    strengths: { type: "ARRAY", items: { type: "STRING" } },
-                                    weaknesses: { type: "ARRAY", items: { type: "STRING" } },
-                                    opportunities: { type: "ARRAY", items: { type: "STRING" } },
-                                    threats: { type: "ARRAY", items: { type: "STRING" } }
-                                },
-                                required: ["strengths", "weaknesses", "opportunities", "threats"]
-                            }
-                        },
-                        required: ["objectives", "implementation", "swot"]
-                    }
-                }
-            };
-
-            let delay = 1000;
-            for (let i = 0; i < 5; i++) {
-                try {
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                        if (rawText) {
-                            const cleanText = rawText.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-                            return JSON.parse(cleanText);
-                        }
-                    }
-                } catch (e) {
-                    // Retry
-                }
-                await new Promise(r => setTimeout(r, delay));
-                delay *= 2;
-            }
-
-            throw new Error("Gagal menjana kandungan AI. Sila semak sambungan internet atau cuba lagi.");
-        }
-
-        async function generateContentWithAI() {
-            const programTitle = document.getElementById('inp-nama-program').value.trim();
-            if (!programTitle) {
-                alert("Sila masukkan Nama Program / Aktiviti terlebih dahulu dalam ruangan Maklumat Organisasi!");
-                document.getElementById('inp-nama-program').focus();
-                return;
-            }
-
-            const btn = document.getElementById('btn-generate-ai');
-            const statusDiv = document.getElementById('ai-loading-status');
-
-            btn.disabled = true;
-            btn.classList.add('opacity-50', 'cursor-not-allowed');
-            statusDiv.classList.remove('hidden');
-
-            const systemPrompt = `Anda adalah pakar penulisan laporan rasmi One Page Report (OPR) bagi Sektor Pembangunan Murid & Pejabat Pendidikan Daerah / Kementerian Pendidikan Malaysia. Hasilkan draf 3 objektif spesifik, 3 ringkasan langkah perjalanan program, dan analisis SWOT (Kekuatan, Kelemahan, Peluang, Ancaman/Cabaran) dalam Bahasa Melayu rasmi yang sangat profesional.`;
-            const userPrompt = `Hasilkan maklumat laporan OPR yang padat dan mantap untuk program bernama: "${programTitle}".`;
-
-            try {
-                const aiResult = await callGeminiApi(userPrompt, systemPrompt);
-
-                if (aiResult.objectives && aiResult.objectives.length > 0) {
-                    document.getElementById('obj-inputs-container').innerHTML = '';
-                    aiResult.objectives.forEach(obj => addObjField(obj));
-                }
-
-                if (aiResult.implementation && aiResult.implementation.length > 0) {
-                    document.getElementById('imp-inputs-container').innerHTML = '';
-                    aiResult.implementation.forEach(imp => addImpField(imp));
-                }
-
-                if (aiResult.swot) {
-                    document.getElementById('swoc-s-inputs').innerHTML = '';
-                    document.getElementById('swoc-w-inputs').innerHTML = '';
-                    if (document.getElementById('swoc-o-inputs')) document.getElementById('swoc-o-inputs').innerHTML = '';
-                    if (document.getElementById('swoc-t-inputs')) document.getElementById('swoc-t-inputs').innerHTML = '';
-
-                    (aiResult.swot.strengths || []).forEach(s => addSwotField('s', s));
-                    (aiResult.swot.weaknesses || []).forEach(w => addSwotField('w', w));
-                    (aiResult.swot.opportunities || []).forEach(o => addSwotField('o', o));
-                    (aiResult.swot.threats || []).forEach(t => addSwotField('t', t));
-                }
-
-                autoRecommendLayout();
-            } catch (err) {
-                alert(err.message || "Ralat berlaku semasa komunikasi AI. Sila cuba lagi.");
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                statusDiv.classList.add('hidden');
-            }
+            saveDraftToStorage();
+            autoFitToPage();
         }
 
         function loadSampleData() {
@@ -1308,7 +1080,7 @@
             setInpValue('inp-k-jawatan', 'Ketua Sektor / PPD Subis');
             setInpValue('inp-k-tarikh', '19 Ogos 2026');
 
-            autoRecommendLayout();
+            updatePreview();
         }
 
         function clearForm() {
@@ -1332,7 +1104,103 @@
             loadedImages = { 1: '', 2: '', 3: '', 4: '' };
             document.getElementById('out-logo').src = generateDefaultLogoSvg();
 
+            try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+
             updatePreview();
+        }
+
+        // --- SIMPAN & PULIH DRAF (localStorage) --- //
+        // Supaya kerja pegawai tidak hilang jika tab tertutup / peranti restart secara
+        // tidak sengaja sebelum sempat muat turun PDF.
+        const DRAFT_KEY = 'opr_subis_draft_v1';
+        let saveDraftTimer = null;
+
+        function collectDraftData() {
+            const getVal = (id) => document.getElementById(id)?.value ?? '';
+            const listVals = (cls) => Array.from(document.querySelectorAll(`.${cls}`)).map(el => el.value);
+
+            return {
+                org: getVal('inp-org'),
+                namaProgram: getVal('inp-nama-program'),
+                tarikh: getVal('inp-tarikh'),
+                masa: getVal('inp-masa'),
+                tempat: getVal('inp-tempat'),
+                anjuran: getVal('inp-anjuran'),
+                sasaran: getVal('inp-sasaran'),
+                kehadiran: getVal('inp-kehadiran'),
+                objectives: listVals('inp-obj-item'),
+                implementation: listVals('inp-imp-item'),
+                swotS: listVals('inp-swoc-s-item'),
+                swotW: listVals('inp-swoc-w-item'),
+                swotO: listVals('inp-swoc-o-item'),
+                swotT: listVals('inp-swoc-t-item'),
+                caps: [getVal('inp-cap-1'), getVal('inp-cap-2'), getVal('inp-cap-3'), getVal('inp-cap-4')],
+                imgFit: getVal('sel-img-fit'),
+                loadedImages,
+                logoSrc: document.getElementById('out-logo')?.src || '',
+                pNama: getVal('inp-p-nama'), pJawatan: getVal('inp-p-jawatan'), pTarikh: getVal('inp-p-tarikh'),
+                kNama: getVal('inp-k-nama'), kJawatan: getVal('inp-k-jawatan'), kTarikh: getVal('inp-k-tarikh'),
+                theme: activeThemeKey,
+            };
+        }
+
+        function saveDraftToStorage() {
+            clearTimeout(saveDraftTimer);
+            saveDraftTimer = setTimeout(() => {
+                try {
+                    localStorage.setItem(DRAFT_KEY, JSON.stringify(collectDraftData()));
+                } catch (e) {
+                    // Storan penuh / tidak tersedia — abaikan senyap, tidak kritikal.
+                }
+            }, 400);
+        }
+
+        function restoreDraftFromStorage() {
+            let data;
+            try {
+                const raw = localStorage.getItem(DRAFT_KEY);
+                if (!raw) return false;
+                data = JSON.parse(raw);
+            } catch (e) {
+                return false;
+            }
+
+            const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
+
+            setVal('inp-org', data.org);
+            setVal('inp-nama-program', data.namaProgram);
+            setVal('inp-tarikh', data.tarikh);
+            setVal('inp-masa', data.masa);
+            setVal('inp-tempat', data.tempat);
+            setVal('inp-anjuran', data.anjuran);
+            setVal('inp-sasaran', data.sasaran);
+            setVal('inp-kehadiran', data.kehadiran);
+            setVal('sel-img-fit', data.imgFit || 'cover');
+            setVal('inp-cap-1', data.caps?.[0]); setVal('inp-cap-2', data.caps?.[1]);
+            setVal('inp-cap-3', data.caps?.[2]); setVal('inp-cap-4', data.caps?.[3]);
+            setVal('inp-p-nama', data.pNama); setVal('inp-p-jawatan', data.pJawatan); setVal('inp-p-tarikh', data.pTarikh);
+            setVal('inp-k-nama', data.kNama); setVal('inp-k-jawatan', data.kJawatan); setVal('inp-k-tarikh', data.kTarikh);
+
+            document.getElementById('obj-inputs-container').innerHTML = '';
+            document.getElementById('imp-inputs-container').innerHTML = '';
+            document.getElementById('swoc-s-inputs').innerHTML = '';
+            document.getElementById('swoc-w-inputs').innerHTML = '';
+            if (document.getElementById('swoc-o-inputs')) document.getElementById('swoc-o-inputs').innerHTML = '';
+            if (document.getElementById('swoc-t-inputs')) document.getElementById('swoc-t-inputs').innerHTML = '';
+
+            (data.objectives || []).forEach(v => addObjField(v));
+            (data.implementation || []).forEach(v => addImpField(v));
+            (data.swotS || []).forEach(v => addSwotField('s', v));
+            (data.swotW || []).forEach(v => addSwotField('w', v));
+            (data.swotO || []).forEach(v => addSwotField('o', v));
+            (data.swotT || []).forEach(v => addSwotField('t', v));
+
+            if (data.loadedImages) loadedImages = data.loadedImages;
+            if (data.logoSrc) document.getElementById('out-logo').src = data.logoSrc;
+            setPdfTheme(data.theme || 'indigo');
+
+            updatePreview();
+            return true;
         }
 
         function triggerPrint() {
@@ -1359,9 +1227,77 @@
             document.getElementById('pdfVisualModal').classList.add('hidden');
         }
 
+        // --- PENJANAAN PDF IN-HOUSE (html2canvas + jsPDF) --- //
+        // Menangkap paparan A4 yang sama seperti apa yang dilihat pengguna,
+        // dan memuat turunkan terus sebagai fail .pdf tanpa bergantung pada
+        // dialog cetak pelayar.
+        function slugifyForFilename(text) {
+            return (text || 'Laporan_OPR')
+                .trim()
+                .replace(/[^\p{L}\p{N}\s-]/gu, '')
+                .replace(/\s+/g, '_')
+                .substring(0, 60) || 'Laporan_OPR';
+        }
+
+        async function generateAndDownloadPDF() {
+            const btn = document.getElementById('btn-download-pdf');
+            const label = document.getElementById('btn-download-pdf-label');
+            if (!btn || !label) return;
+
+            if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+                alert('Pustaka penjana PDF gagal dimuatkan. Sila semak sambungan internet anda dan cuba lagi.');
+                return;
+            }
+
+            const originalLabel = label.textContent;
+            btn.disabled = true;
+            btn.classList.add('opacity-60', 'cursor-not-allowed');
+            label.textContent = 'Menjana PDF...';
+
+            // Pastikan auto-fit sudah dikira sebelum tangkapan supaya PDF sepadan pratonton.
+            autoFitToPage();
+            await new Promise(r => setTimeout(r, 150));
+
+            try {
+                const source = document.getElementById('a4-paper-element');
+                const canvas = await html2canvas(source, {
+                    scale: 3,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    windowWidth: source.scrollWidth,
+                    windowHeight: source.scrollHeight,
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+
+                const programName = document.getElementById('inp-nama-program')?.value || 'Laporan_OPR';
+                const tarikh = (document.getElementById('inp-tarikh')?.value || '').replace(/\s+/g, '');
+                const filename = `OPR_${slugifyForFilename(programName)}${tarikh ? '_' + slugifyForFilename(tarikh) : ''}.pdf`;
+
+                pdf.save(filename);
+            } catch (err) {
+                console.error(err);
+                alert('Ralat berlaku semasa menjana PDF. Sila cuba lagi, atau guna butang "Cetak" sebagai alternatif.');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-60', 'cursor-not-allowed');
+                label.textContent = originalLabel;
+            }
+        }
+
         window.onload = function() {
-            loadSampleData();
+            const restored = restoreDraftFromStorage();
+            if (!restored) {
+                loadSampleData();
+            } else {
+                autoFitToPage();
+            }
         };
+
+        window.addEventListener('resize', () => autoFitToPage());
     </script>
 </body>
 </html>
