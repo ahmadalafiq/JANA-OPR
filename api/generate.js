@@ -12,7 +12,7 @@
 //    Nilai: (API key anda)
 // 4. Redeploy project. Butang "Jana AI" dalam index.html akan berfungsi selepas ini.
 
-const BULAN_MODEL = 'gemini-2.5-flash';
+const BULAN_MODEL = 'gemini-3.6-flash';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -101,6 +101,7 @@ ${konteksTeks}`;
             if (status === 429) userMsg = 'Had kadar (rate limit) Gemini API tercapai. Sila tunggu seketika dan cuba lagi.';
             else if (status === 400 || status === 403) userMsg = 'API key tidak sah atau tiada kebenaran. Sila semak GEMINI_API_KEY di Vercel.';
             else if (status === 503) userMsg = 'Pelayan Gemini sedang sibuk (overloaded). Sila cuba lagi sebentar lagi.';
+            else if (status === 404) userMsg = `Model AI "${BULAN_MODEL}" tidak lagi tersedia. Sila kemaskini pemalar BULAN_MODEL dalam api/generate.js kepada model terkini yang disyorkan Google.`;
             console.error('Gemini API error (selepas cuba semula):', status, errText);
             return res.status(502).json({ error: userMsg });
         }
