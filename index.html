@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- Penjana PDF In-House (menangkap paparan A4 terus sebagai fail .pdf) -->
+    <!-- Penjana PDF In-House -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -31,6 +31,7 @@
             box-sizing: border-box;
             position: relative;
             overflow: hidden;
+            transition: transform 0.2s ease, width 0.2s ease;
         }
 
         .a4-inner-content {
@@ -41,6 +42,14 @@
             flex-direction: column;
             justify-content: space-between;
         }
+
+        /* Mod Saiz Font Lebih Besar pada Preview A4 */
+        .large-font-mode {
+            font-size: 1.15em !important;
+        }
+        .large-font-mode h2 { font-size: 1.15em !important; }
+        .large-font-mode h3 { font-size: 1.15em !important; }
+        .large-font-mode p, .large-font-mode span, .large-font-mode div { font-size: 1.12em !important; }
 
         /* Gaya Khusus Cetakan Browser Native Print / PDF */
         @media print {
@@ -62,6 +71,7 @@
                 padding: 0 !important;
                 margin: 0 !important;
                 width: 100% !important;
+                max-width: none !important;
             }
             .a4-paper {
                 width: 210mm !important;
@@ -72,6 +82,7 @@
                 page-break-after: avoid !important;
                 page-break-inside: avoid !important;
                 overflow: hidden !important;
+                transform: scale(1) !important;
             }
         }
     </style>
@@ -90,13 +101,23 @@
                         Penjana OPR
                         <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-bold">Auto-Fit 1 Muka Surat</span>
                     </h1>
-                    <p class="text-xs text-slate-400">Sektor Pembangunan Murid / PPD Subis — Muat Turun PDF Terus</p>
+                    <p class="text-xs text-slate-400">Sektor Pembangunan Murid / PPD Subis — Muat Turun PDF Terus[cite: 2]</p>
                 </div>
             </div>
             
             <div class="flex items-center flex-wrap gap-2">
+                <!-- Toggle Saiz Font -->
+                <button id="btn-toggle-font" onclick="toggleFontSize()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700" title="Besarkan / Kecilkan Saiz Teks Preview">
+                    <i class="fa-solid fa-text-height text-amber-400"></i> <span id="lbl-font-size">Font: Asal</span>
+                </button>
+
+                <!-- Toggle Saiz Container Preview -->
+                <button id="btn-toggle-container" onclick="toggleContainerSize()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700" title="Besarkan / Kecilkan Paparan Container Preview">
+                    <i class="fa-solid fa-expand text-sky-400"></i> <span id="lbl-container-size">Paparan: Normal</span>
+                </button>
+
                 <!-- Pemilih Tema -->
-                <div class="flex items-center bg-slate-800 p-1 rounded-lg border border-slate-700 mr-2 text-xs">
+                <div class="flex items-center bg-slate-800 p-1 rounded-lg border border-slate-700 mr-1 text-xs">
                     <span class="text-slate-400 text-[11px] px-2 font-medium">Tema:</span>
                     <button onclick="setPdfTheme('indigo')" class="w-5 h-5 rounded-full bg-indigo-600 hover:scale-110 transition border border-white/40" title="Indigo Executive"></button>
                     <button onclick="setPdfTheme('emerald')" class="w-5 h-5 rounded-full bg-emerald-600 hover:scale-110 transition border border-white/40 ml-1" title="Emerald Green"></button>
@@ -113,7 +134,7 @@
                 <button onclick="openPdfVisualModal()" class="px-3 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-teal-600/20 transition flex items-center gap-1.5">
                     <i class="fa-solid fa-eye text-sm"></i> Pratonton
                 </button>
-                <button onclick="triggerPrint()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700" title="Guna dialog cetak pelayar (untuk cetak kertas terus)">
+                <button onclick="triggerPrint()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700" title="Guna dialog cetak pelayar">
                     <i class="fa-solid fa-print text-sm"></i> Cetak
                 </button>
                 <button id="btn-download-pdf" onclick="generateAndDownloadPDF()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-indigo-600/30 transition flex items-center gap-2">
@@ -123,11 +144,10 @@
         </div>
     </header>
 
-    <main class="print-container max-w-[1600px] mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <main id="main-app-container" class="print-container max-w-[1600px] mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 transition-all duration-300">
         
-        <!-- Panel Kawalan Penyunting (Terselindung Semasa Cetak) -->
-        <section class="no-print lg:col-span-5 space-y-4">
-            
+        <!-- Panel Kawalan Penyunting -->
+        <section id="sec-editor-panel" class="no-print lg:col-span-5 space-y-4 transition-all duration-300">
             <!-- Kad 1: Maklumat Asas & Header -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2 border-b pb-2">
@@ -150,8 +170,7 @@
                         <label class="block text-xs font-semibold text-purple-800 mb-1 flex items-center gap-1.5">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> Keterangan Ringkas Program (untuk Jana AI)
                         </label>
-                        <textarea id="inp-keterangan-ai" rows="3" placeholder="Cth: Kursus 1 hari untuk pegawai dan staf sokongan, fokus kepada integriti dan pengurusan emosi, ada ceramah, LDK dan sesi pembentangan pelan tindakan." class="w-full text-xs p-2 border border-purple-300 rounded-md focus:ring-2 focus:ring-purple-500 outline-none bg-white"></textarea>
-                        <p class="text-[10px] text-purple-700 mt-1 leading-snug">Kotak ini hanya untuk bantu AI jana kandungan — <strong>tidak dipaparkan</strong> pada laporan OPR sebenar.</p>
+                        <textarea id="inp-keterangan-ai" rows="3" placeholder="Cth: Kursus 1 hari untuk pegawai dan staf sokongan, fokus kepada integriti dan pengurusan emosi..." class="w-full text-xs p-2 border border-purple-300 rounded-md focus:ring-2 focus:ring-purple-500 outline-none bg-white"></textarea>
                     </div>
                     <button type="button" id="btn-ai-generate-all" onclick="generateWithAI()" class="w-full px-3 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-purple-600/20 transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Jana Objektif, Ringkasan & Impak dengan AI
@@ -199,12 +218,10 @@
                         <i class="fa-solid fa-plus text-xs"></i> Tambah
                     </button>
                 </div>
-                <div id="obj-inputs-container" class="space-y-2">
-                    <!-- Dynamic fields added via JavaScript -->
-                </div>
+                <div id="obj-inputs-container" class="space-y-2"></div>
             </div>
 
-            <!-- Kad 3: Ringkasan Perjalanan / Implementasi -->
+            <!-- Kad 3: Ringkasan Implementasi -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <div class="flex items-center justify-between border-b pb-2 mb-3">
                     <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide flex items-center gap-2">
@@ -214,9 +231,7 @@
                         <i class="fa-solid fa-plus text-xs"></i> Tambah
                     </button>
                 </div>
-                <div id="imp-inputs-container" class="space-y-2">
-                    <!-- Dynamic fields added via JavaScript -->
-                </div>
+                <div id="imp-inputs-container" class="space-y-2"></div>
             </div>
 
             <!-- Kad 4: SWOT / Impak -->
@@ -228,43 +243,35 @@
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-semibold text-gray-700">Kekuatan (Strengths)</label>
-                            <button type="button" onclick="addSwotField('s')" class="text-[11px] text-emerald-600 hover:text-emerald-800 font-semibold flex items-center gap-1">
-                                <i class="fa-solid fa-plus text-[10px]"></i> Tambah
-                            </button>
+                            <button type="button" onclick="addSwotField('s')" class="text-[11px] text-emerald-600 hover:text-emerald-800 font-semibold flex items-center gap-1"><i class="fa-solid fa-plus text-[10px]"></i> Tambah</button>
                         </div>
                         <div id="swoc-s-inputs" class="space-y-1.5"></div>
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-semibold text-gray-700">Kelemahan (Weaknesses)</label>
-                            <button type="button" onclick="addSwotField('w')" class="text-[11px] text-amber-600 hover:text-amber-800 font-semibold flex items-center gap-1">
-                                <i class="fa-solid fa-plus text-[10px]"></i> Tambah
-                            </button>
+                            <button type="button" onclick="addSwotField('w')" class="text-[11px] text-amber-600 hover:text-amber-800 font-semibold flex items-center gap-1"><i class="fa-solid fa-plus text-[10px]"></i> Tambah</button>
                         </div>
                         <div id="swoc-w-inputs" class="space-y-1.5"></div>
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-semibold text-gray-700">Peluang (Opportunities)</label>
-                            <button type="button" onclick="addSwotField('o')" class="text-[11px] text-sky-600 hover:text-sky-800 font-semibold flex items-center gap-1">
-                                <i class="fa-solid fa-plus text-[10px]"></i> Tambah
-                            </button>
+                            <button type="button" onclick="addSwotField('o')" class="text-[11px] text-sky-600 hover:text-sky-800 font-semibold flex items-center gap-1"><i class="fa-solid fa-plus text-[10px]"></i> Tambah</button>
                         </div>
                         <div id="swoc-o-inputs" class="space-y-1.5"></div>
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-semibold text-gray-700">Ancaman / Cabaran (Threats)</label>
-                            <button type="button" onclick="addSwotField('t')" class="text-[11px] text-rose-600 hover:text-rose-800 font-semibold flex items-center gap-1">
-                                <i class="fa-solid fa-plus text-[10px]"></i> Tambah
-                            </button>
+                            <button type="button" onclick="addSwotField('t')" class="text-[11px] text-rose-600 hover:text-rose-800 font-semibold flex items-center gap-1"><i class="fa-solid fa-plus text-[10px]"></i> Tambah</button>
                         </div>
                         <div id="swoc-t-inputs" class="space-y-1.5"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Kad 5: Status Muat Halaman (Auto-Fit) -->
+            <!-- Kad 5: Status Muat Halaman -->
             <div id="fit-status-card" class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
                 <i class="fa-solid fa-circle-check text-emerald-600"></i>
                 <span id="fit-status-text">Kandungan muat penuh dalam 1 muka surat A4.</span>
@@ -273,46 +280,37 @@
             <!-- Kad 6: Gambar Aktiviti -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2 border-b pb-2">
-                    <i class="fa-regular fa-images text-indigo-600"></i> Tetapan Gambar (Lanskap / Potret)
+                    <i class="fa-regular fa-images text-indigo-600"></i> Tetapan Gambar
                 </h2>
-                
                 <div class="space-y-3 mb-4">
-                    <!-- Pemilih Mod Fits -->
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 mb-1">Mod Padanan Gambar (Fit Mode):</label>
-                        <select id="sel-img-fit" onchange="updatePreview()" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none bg-slate-50 font-medium">
-                            <option value="cover">Potong Kemas Penuh (Cover - Elak Ruang Kosong)</option>
-                            <option value="contain">Papar Gambar Penuh (Contain - Tanpa Potong)</option>
+                        <label class="block text-xs font-semibold text-gray-700 mb-1">Mod Padanan Gambar:</label>
+                        <select id="sel-img-fit" onchange="updatePreview()" class="w-full text-xs p-2 border border-gray-300 rounded-md outline-none bg-slate-50 font-medium">
+                            <option value="cover">Potong Kemas Penuh (Cover)</option>
+                            <option value="contain">Papar Gambar Penuh (Contain)</option>
                         </select>
                     </div>
                     <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-md border border-slate-200">
                         <input type="checkbox" id="chk-show-caption" checked onchange="updatePreview()" class="w-3.5 h-3.5 accent-indigo-600">
-                        <label for="chk-show-caption" class="text-xs font-semibold text-gray-700 cursor-pointer">Papar Keterangan (Caption) Gambar dalam Galeri</label>
+                        <label for="chk-show-caption" class="text-xs font-semibold text-gray-700 cursor-pointer">Papar Keterangan Gambar dalam Galeri</label>
                     </div>
-                    <p class="text-[10.5px] text-slate-500 leading-snug">Gambar dimampatkan secara automatik semasa dimuat naik untuk memastikan PDF kekal ringan dan cepat dijana.</p>
                 </div>
-
-                <!-- Input Muat Naik Gambar 1-4 -->
                 <div class="grid grid-cols-2 gap-3">
-                    <!-- Gambar 1 -->
                     <div class="bg-slate-50 p-2 rounded border border-gray-200">
                         <label class="block text-xs font-bold mb-1">Gambar 1 (Utama)</label>
                         <input type="file" accept="image/*" onchange="handleImageUpload(event, 1)" class="w-full text-[10px] text-gray-500 mb-1">
                         <input type="text" id="inp-cap-1" oninput="updatePreview()" placeholder="Keterangan Gambar 1" class="w-full text-[11px] p-1 border rounded">
                     </div>
-                    <!-- Gambar 2 -->
                     <div class="bg-slate-50 p-2 rounded border border-gray-200">
                         <label class="block text-xs font-bold mb-1">Gambar 2</label>
                         <input type="file" accept="image/*" onchange="handleImageUpload(event, 2)" class="w-full text-[10px] text-gray-500 mb-1">
                         <input type="text" id="inp-cap-2" oninput="updatePreview()" placeholder="Keterangan Gambar 2" class="w-full text-[11px] p-1 border rounded">
                     </div>
-                    <!-- Gambar 3 -->
                     <div class="bg-slate-50 p-2 rounded border border-gray-200">
                         <label class="block text-xs font-bold mb-1">Gambar 3</label>
                         <input type="file" accept="image/*" onchange="handleImageUpload(event, 3)" class="w-full text-[10px] text-gray-500 mb-1">
                         <input type="text" id="inp-cap-3" oninput="updatePreview()" placeholder="Keterangan Gambar 3" class="w-full text-[11px] p-1 border rounded">
                     </div>
-                    <!-- Gambar 4 -->
                     <div class="bg-slate-50 p-2 rounded border border-gray-200">
                         <label class="block text-xs font-bold mb-1">Gambar 4</label>
                         <input type="file" accept="image/*" onchange="handleImageUpload(event, 4)" class="w-full text-[10px] text-gray-500 mb-1">
@@ -321,219 +319,121 @@
                 </div>
             </div>
 
-            <!-- Kad 7: Pengesahan & Pengesah -->
+            <!-- Kad 7: Pengesahan -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2 border-b pb-2">
                     <i class="fa-solid fa-signature text-indigo-600"></i> Pengesahan Laporan
                 </h2>
                 <div class="space-y-3">
                     <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        <p class="text-xs font-bold text-gray-700 mb-2">Maklumat Penyedia (Disediakan Oleh)</p>
-                        <div class="space-y-2">
-                            <input type="text" id="inp-p-nama" oninput="updatePreview()" placeholder="Nama Penyedia" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="inp-p-jawatan" oninput="updatePreview()" placeholder="Jawatan Penyedia" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                                <input type="text" id="inp-p-tarikh" oninput="updatePreview()" placeholder="Tarikh" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                            </div>
+                        <p class="text-xs font-bold text-gray-700 mb-2">Maklumat Penyedia</p>
+                        <input type="text" id="inp-p-nama" oninput="updatePreview()" placeholder="Nama Penyedia" class="w-full text-xs p-2 border border-gray-300 rounded-md outline-none mb-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="inp-p-jawatan" oninput="updatePreview()" placeholder="Jawatan" class="w-full text-xs p-2 border border-gray-300 rounded-md outline-none">
+                            <input type="text" id="inp-p-tarikh" oninput="updatePreview()" placeholder="Tarikh" class="w-full text-xs p-2 border border-gray-300 rounded-md outline-none">
                         </div>
                     </div>
                     <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        <p class="text-xs font-bold text-gray-700 mb-2">Maklumat Pengesah (Disahkan Oleh)</p>
-                        <div class="space-y-2">
-                            <input type="text" id="inp-k-nama" oninput="updatePreview()" placeholder="Nama Pengesah" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="inp-k-jawatan" oninput="updatePreview()" placeholder="Jawatan Pengesah" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                                <input type="text" id="inp-k-tarikh" oninput="updatePreview()" placeholder="Tarikh" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                            </div>
+                        <p class="text-xs font-bold text-gray-700 mb-2">Maklumat Pengesah</p>
+                        <input type="text" id="inp-k-nama" oninput="updatePreview()" placeholder="Nama Pengesah" class="w-full text-xs p-2 border border-gray-300 rounded-md outline-none mb-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="text" id="inp-k-jawatan" oninput="updatePreview()" placeholder="Jawatan" class="w-full text-xs p-2 border border-gray-300 rounded-md outline-none">
+                            <input type="text" id="inp-k-tarikh" oninput="updatePreview()" placeholder="Tarikh" class="w-full text-xs p-2 border border-gray-300 rounded-md outline-none">
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Bahagian Live Preview A4 Canvas (Full Vertical Stretch Engine) -->
-        <section class="lg:col-span-7 flex justify-center items-start lg:sticky lg:top-[76px] lg:self-start">
+        <!-- Bahagian Live Preview A4 Canvas -->
+        <section id="sec-preview-panel" class="lg:col-span-7 flex justify-center items-start lg:sticky lg:top-[76px] lg:self-start transition-all duration-300">
             <div id="a4-paper-element" class="a4-paper text-slate-800 bg-white border border-slate-300 relative">
                 
-                <!-- Bar Hiasan Atas Gradien -->
+                <!-- Bar Hiasan Atas -->
                 <div id="theme-accent-bar" class="h-2.5 w-full bg-gradient-to-r from-indigo-600 via-indigo-500 to-sky-400"></div>
 
                 <div id="a4-inner-content-el" class="a4-inner-content">
-                    <!-- Pembungkus Kandungan Utama Mengembang Penuh (flex-1) -->
                     <div id="a4-scalable-wrapper" class="flex-1 flex flex-col justify-between space-y-2.5 min-h-0 transition-all duration-200">
                         
-                        <!-- Pengepala Utama (Logo & Header Besarkan Saiz) -->
+                        <!-- Header -->
                         <div class="flex items-center justify-between border-b-2 pb-2.5 border-slate-900 shrink-0">
                             <div class="flex items-center space-x-3.5">
                                 <div class="w-[76px] h-[76px] min-w-[76px] min-h-[76px] rounded-xl bg-slate-50 border border-slate-300 p-1.5 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
                                     <img id="out-logo" src="" alt="Logo Organisasi" class="max-h-full max-w-full object-contain block">
                                 </div>
                                 <div class="flex-1">
-                                    <h2 id="out-org" class="text-sm sm:text-base md:text-lg font-black tracking-wider text-slate-900 uppercase leading-tight">
-                                        SEKTOR PEMBANGUNAN MURID
-                                    </h2>
-                                    <p id="out-sub-org" class="text-xs sm:text-sm text-slate-700 uppercase tracking-wide font-black mt-1">
-                                        PEJABAT PENDIDIKAN DAERAH SUBIS
-                                    </p>
+                                    <h2 id="out-org" class="text-sm sm:text-base md:text-lg font-black tracking-wider text-slate-900 uppercase leading-tight">SEKTOR PEMBANGUNAN MURID</h2>
+                                    <p id="out-sub-org" class="text-xs sm:text-sm text-slate-700 uppercase tracking-wide font-black mt-1">PEJABAT PENDIDIKAN DAERAH SUBIS</p>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <span id="theme-badge" class="inline-block bg-slate-900 text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
-                                    ONE PAGE REPORT (OPR)
-                                </span>
+                                <span id="theme-badge" class="inline-block bg-slate-900 text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">ONE PAGE REPORT (OPR)</span>
                             </div>
                         </div>
 
-                        <!-- Grid Kad Maklumat Program -->
+                        <!-- Grid Kad Maklumat -->
                         <div class="grid grid-cols-2 gap-1.5 text-[9.5px] shrink-0">
-                            <!-- Nama Program -->
                             <div id="theme-main-card" class="col-span-2 bg-slate-900 text-white p-2.5 rounded-lg flex items-center justify-start gap-2 shadow-xs border border-slate-800">
                                 <span class="text-[8.5px] font-extrabold text-slate-300 uppercase tracking-wider shrink-0 bg-white/10 px-2 py-0.5 rounded">NAMA PROGRAM</span>
-                                <h3 id="out-nama-program" class="font-bold text-xs uppercase tracking-wide text-white text-left flex-1 leading-snug">
-                                    LAPORAN PROGRAM / AKTIVITI
-                                </h3>
+                                <h3 id="out-nama-program" class="font-bold text-xs uppercase tracking-wide text-white text-left flex-1 leading-snug">LAPORAN PROGRAM / AKTIVITI</h3>
                             </div>
-
-                            <!-- Tarikh -->
-                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
-                                    <i class="fa-regular fa-calendar-days text-indigo-600 theme-icon mr-1.5"></i>TARIKH
-                                </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-tarikh" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
-                            </div>
-
-                            <!-- Masa -->
-                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
-                                    <i class="fa-regular fa-clock text-indigo-600 theme-icon mr-1.5"></i>MASA
-                                </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-masa" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
-                            </div>
-
-                            <!-- Tempat -->
-                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
-                                    <i class="fa-solid fa-location-dot text-indigo-600 theme-icon mr-1.5"></i>TEMPAT
-                                </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-tempat" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
-                            </div>
-
-                            <!-- Anjuran -->
-                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
-                                    <i class="fa-solid fa-building text-indigo-600 theme-icon mr-1.5"></i>ANJURAN
-                                </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-anjuran" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
-                            </div>
-
-                            <!-- Sasaran -->
-                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
-                                    <i class="fa-solid fa-users text-indigo-600 theme-icon mr-1.5"></i>SASARAN
-                                </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-sasaran" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
-                            </div>
-
-                            <!-- Kehadiran -->
-                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
-                                    <i class="fa-solid fa-user-check text-indigo-600 theme-icon mr-1.5"></i>KEHADIRAN
-                                </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-kehadiran" class="font-extrabold text-indigo-700 theme-highlight text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
-                            </div>
+                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center gap-1.5"><span class="font-bold text-slate-600 text-[9px] shrink-0 w-[65px]"><i class="fa-regular fa-calendar-days text-indigo-600 theme-icon mr-1.5"></i>TARIKH</span><span class="text-slate-400 font-bold">:</span><span id="out-tarikh" class="font-bold text-slate-900 text-[9.5px] truncate flex-1 ml-0.5">-</span></div>
+                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center gap-1.5"><span class="font-bold text-slate-600 text-[9px] shrink-0 w-[65px]"><i class="fa-regular fa-clock text-indigo-600 theme-icon mr-1.5"></i>MASA</span><span class="text-slate-400 font-bold">:</span><span id="out-masa" class="font-bold text-slate-900 text-[9.5px] truncate flex-1 ml-0.5">-</span></div>
+                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center gap-1.5"><span class="font-bold text-slate-600 text-[9px] shrink-0 w-[65px]"><i class="fa-solid fa-location-dot text-indigo-600 theme-icon mr-1.5"></i>TEMPAT</span><span class="text-slate-400 font-bold">:</span><span id="out-tempat" class="font-bold text-slate-900 text-[9.5px] truncate flex-1 ml-0.5">-</span></div>
+                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center gap-1.5"><span class="font-bold text-slate-600 text-[9px] shrink-0 w-[65px]"><i class="fa-solid fa-building text-indigo-600 theme-icon mr-1.5"></i>ANJURAN</span><span class="text-slate-400 font-bold">:</span><span id="out-anjuran" class="font-bold text-slate-900 text-[9.5px] truncate flex-1 ml-0.5">-</span></div>
+                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center gap-1.5"><span class="font-bold text-slate-600 text-[9px] shrink-0 w-[65px]"><i class="fa-solid fa-users text-indigo-600 theme-icon mr-1.5"></i>SASARAN</span><span class="text-slate-400 font-bold">:</span><span id="out-sasaran" class="font-bold text-slate-900 text-[9.5px] truncate flex-1 ml-0.5">-</span></div>
+                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center gap-1.5"><span class="font-bold text-slate-600 text-[9px] shrink-0 w-[65px]"><i class="fa-solid fa-user-check text-indigo-600 theme-icon mr-1.5"></i>KEHADIRAN</span><span class="text-slate-400 font-bold">:</span><span id="out-kehadiran" class="font-extrabold text-indigo-700 theme-highlight text-[9.5px] truncate flex-1 ml-0.5">-</span></div>
                         </div>
 
-                        <!-- Layout Pembahagi: Teks Kiri vs Gambar Kanan - Dynamic Grid Resize Ratio -->
+                        <!-- Layout Pembahagi -->
                         <div id="a4-main-grid" class="grid grid-cols-12 gap-3 flex-1 items-stretch min-h-0">
-                            
-                            <!-- LAJUR KIRI: Teks Kandungan Laporan (Dinamik col-span) -->
+                            <!-- LAJUR KIRI -->
                             <div id="a4-left-col" class="col-span-7 flex flex-col justify-between space-y-2 h-full min-h-0">
-                                
-                                <!-- 1. Objektif Program -->
                                 <div class="flex flex-col flex-1">
                                     <div id="theme-sec-1" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
                                         <i class="fa-solid fa-bullseye text-indigo-600 theme-icon text-xs"></i>
                                         <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">1. OBJEKTIF PROGRAM</h3>
                                     </div>
-                                    <div id="out-obj-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[9.5px] space-y-1.5 flex-1 leading-relaxed">
-                                        <!-- Penjana Objektif Dynamik -->
-                                    </div>
+                                    <div id="out-obj-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[9.5px] space-y-1.5 flex-1 leading-relaxed"></div>
                                 </div>
-
-                                <!-- 2. Ringkasan Implementasi -->
                                 <div class="flex flex-col flex-1">
                                     <div id="theme-sec-2" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
                                         <i class="fa-solid fa-list-check text-indigo-600 theme-icon text-xs"></i>
                                         <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">2. RINGKASAN IMPLEMENTASI</h3>
                                     </div>
-                                    <div id="out-imp-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[9.5px] space-y-1.5 flex-1 leading-relaxed">
-                                        <!-- Penjana Implementasi Dynamik -->
-                                    </div>
+                                    <div id="out-imp-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[9.5px] space-y-1.5 flex-1 leading-relaxed"></div>
                                 </div>
-
-                                <!-- 3. Impak & Analisis SWOT -->
                                 <div class="shrink-0">
                                     <div id="theme-sec-3" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5">
                                         <i class="fa-solid fa-chart-pie text-indigo-600 theme-icon text-xs"></i>
                                         <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">3. IMPAK & ANALISIS SWOT</h3>
                                     </div>
                                     <div class="grid grid-cols-2 gap-1.5 text-[9px]">
-                                        <!-- Kekuatan (Strengths) -->
-                                        <div class="bg-emerald-50/90 border border-emerald-300 rounded-lg p-1.5">
-                                            <span class="inline-block bg-emerald-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kekuatan (S)</span>
-                                            <div id="out-swoc-s" class="text-emerald-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
-                                        </div>
-                                        <!-- Kelemahan (Weaknesses) -->
-                                        <div class="bg-amber-50/90 border border-amber-300 rounded-lg p-1.5">
-                                            <span class="inline-block bg-amber-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kelemahan (W)</span>
-                                            <div id="out-swoc-w" class="text-amber-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
-                                        </div>
-                                        <!-- Peluang (Opportunities) -->
-                                        <div class="bg-sky-50/90 border border-sky-300 rounded-lg p-1.5">
-                                            <span class="inline-block bg-sky-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Peluang (O)</span>
-                                            <div id="out-swoc-o" class="text-sky-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
-                                        </div>
-                                        <!-- Ancaman/Cabaran (Threats) -->
-                                        <div class="bg-rose-50/90 border border-rose-300 rounded-lg p-1.5">
-                                            <span id="theme-swoc-badge" class="inline-block bg-rose-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Cabaran (T)</span>
-                                            <div id="out-swoc-t" class="text-rose-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
-                                        </div>
+                                        <div class="bg-emerald-50/90 border border-emerald-300 rounded-lg p-1.5"><span class="inline-block bg-emerald-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1">Kekuatan (S)</span><div id="out-swoc-s" class="text-emerald-950 font-medium text-[9px] space-y-0.5"></div></div>
+                                        <div class="bg-amber-50/90 border border-amber-300 rounded-lg p-1.5"><span class="inline-block bg-amber-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1">Kelemahan (W)</span><div id="out-swoc-w" class="text-amber-950 font-medium text-[9px] space-y-0.5"></div></div>
+                                        <div class="bg-sky-50/90 border border-sky-300 rounded-lg p-1.5"><span class="inline-block bg-sky-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1">Peluang (O)</span><div id="out-swoc-o" class="text-sky-950 font-medium text-[9px] space-y-0.5"></div></div>
+                                        <div class="bg-rose-50/90 border border-rose-300 rounded-lg p-1.5"><span id="theme-swoc-badge" class="inline-block bg-rose-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1">Cabaran (T)</span><div id="out-swoc-t" class="text-rose-950 font-medium text-[9px] space-y-0.5"></div></div>
                                     </div>
                                 </div>
-
                             </div>
 
-                            <!-- LAJUR KANAN: Galeri Gambar Dinamik (Dinamik col-span) -->
+                            <!-- LAJUR KANAN -->
                             <div id="a4-right-col" class="col-span-5 flex flex-col justify-between h-full min-h-0">
                                 <div id="theme-sec-4" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
                                     <i class="fa-solid fa-camera text-indigo-600 theme-icon text-xs"></i>
                                     <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">4. GALERI</h3>
                                 </div>
-                                
-                                <!-- Bekas Kontena Gambar Berpembolehubah -->
-                                <div id="out-img-gallery-container" class="flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-2 min-h-0 h-full">
-                                    <!-- Terjana Secara Dinamik Melalui updatePreview() -->
-                                </div>
+                                <div id="out-img-gallery-container" class="flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-2 min-h-0 h-full"></div>
                             </div>
-
                         </div>
                     </div>
 
-                    <!-- Ruangan Tandatangan Pengesahan (Sauh Bawah A4) -->
+                    <!-- Tandatangan -->
                     <div id="a4-signature-block" class="pt-3 border-t-2 border-slate-300 mt-2 shrink-0">
                         <div class="grid grid-cols-2 gap-4 text-[9px]">
-                            <!-- Kolum 1: Disediakan Oleh -->
                             <div class="bg-slate-50/80 p-3 rounded-lg border border-slate-300 flex flex-col justify-between">
                                 <div>
-                                    <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[8.5px] mb-0.5 flex items-center gap-1">
-                                        <i class="fa-solid fa-pen-nib text-indigo-600"></i> Disediakan Oleh:
-                                    </p>
+                                    <p class="font-extrabold text-slate-600 uppercase text-[8.5px] mb-0.5 flex items-center gap-1"><i class="fa-solid fa-pen-nib text-indigo-600"></i> Disediakan Oleh:</p>
                                     <div class="h-8"></div>
                                     <p class="font-black text-slate-900 border-b border-slate-400 pb-0.5 text-[9.5px]" id="out-p-nama">( Nama: ________________________ )</p>
                                 </div>
@@ -542,13 +442,9 @@
                                     <p id="out-p-tarikh" class="text-slate-700 font-semibold">Tarikh: ________________________</p>
                                 </div>
                             </div>
-
-                            <!-- Kolum 2: Disahkan Oleh -->
                             <div class="bg-slate-50/80 p-3 rounded-lg border border-slate-300 flex flex-col justify-between">
                                 <div>
-                                    <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[8.5px] mb-0.5 flex items-center gap-1">
-                                        <i class="fa-solid fa-user-check text-indigo-600"></i> Disahkan / Diterima Oleh:
-                                    </p>
+                                    <p class="font-extrabold text-slate-600 uppercase text-[8.5px] mb-0.5 flex items-center gap-1"><i class="fa-solid fa-user-check text-indigo-600"></i> Disahkan / Diterima Oleh:</p>
                                     <div class="h-8"></div>
                                     <p class="font-black text-slate-900 border-b border-slate-400 pb-0.5 text-[9.5px]" id="out-k-nama">( Nama: ________________________ )</p>
                                 </div>
@@ -565,18 +461,15 @@
         </section>
     </main>
 
-    <!-- Modal Pratonton Visual Hasil A4 -->
+    <!-- Modal Pratonton -->
     <div id="pdfVisualModal" class="no-print fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[94vh] flex flex-col overflow-hidden">
-            <!-- Modal Header -->
             <div class="bg-slate-900 text-white px-6 py-3.5 flex items-center justify-between border-b border-slate-800 shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg">
-                        <i class="fa-solid fa-print text-xl"></i>
-                    </div>
+                    <div class="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg"><i class="fa-solid fa-print text-xl"></i></div>
                     <div>
                         <h3 class="text-base font-bold">Pratonton Visual Dokumen A4</h3>
-                        <p class="text-xs text-slate-400">Paparan tepat nisbah muka surat A4 sebelum dicetak atau disimpan sebagai PDF</p>
+                        <p class="text-xs text-slate-400">Paparan tepat nisbah muka surat A4</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -588,30 +481,8 @@
                     </button>
                 </div>
             </div>
-            
-            <!-- Modal Body (Scaled A4 Render) -->
             <div class="p-6 overflow-y-auto flex-1 bg-slate-100 flex flex-col items-center justify-start">
-                <!-- Status Banner -->
-                <div class="w-full max-w-2xl bg-indigo-50 border border-indigo-200 text-indigo-900 px-4 py-2 rounded-lg text-xs font-medium mb-3 flex items-center justify-between shrink-0">
-                    <span class="flex items-center gap-2">
-                        <i class="fa-solid fa-circle-check text-indigo-600"></i>
-                        Format Standard A4 Portrait (210mm x 297mm) - 100% Fit Sehelai Halaman
-                    </span>
-                    <span class="text-[11px] bg-indigo-200/60 px-2 py-0.5 rounded text-indigo-900 font-bold">100% Presisi A4</span>
-                </div>
-
-                <!-- Visual Mockup Holder -->
-                <div id="pdf-visual-container" class="w-full flex justify-center py-2">
-                    <!-- Cloned A4 Preview content renders here -->
-                </div>
-            </div>
-
-            <!-- Modal Footer -->
-            <div class="bg-gray-50 border-t px-6 py-3 flex justify-between items-center text-xs text-gray-500 shrink-0">
-                <span>Dioptimumkan untuk cetakan kertas standard A4 & pencetakan PDF tempatan.</span>
-                <button onclick="closePdfVisualModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-lg transition">
-                    Tutup Pratonton
-                </button>
+                <div id="pdf-visual-container" class="w-full flex justify-center py-2"></div>
             </div>
         </div>
     </div>
@@ -619,8 +490,53 @@
     <script>
         let activeThemeKey = 'indigo';
         let loadedImages = { 1: '', 2: '', 3: '', 4: '' };
+        let isLargeFont = false;
+        let isLargeContainer = false;
 
-        // Penukar format tarikh: input date (YYYY-MM-DD) -> format Bahasa Melayu (18 Ogos 2026)
+        // FUNGSI TOGGLE BESARKAN FONT
+        function toggleFontSize() {
+            isLargeFont = !isLargeFont;
+            const paper = document.getElementById('a4-paper-element');
+            const lbl = document.getElementById('lbl-font-size');
+            
+            if (isLargeFont) {
+                paper.classList.add('large-font-mode');
+                lbl.textContent = 'Font: Besar';
+            } else {
+                paper.classList.remove('large-font-mode');
+                lbl.textContent = 'Font: Asal';
+            }
+            autoFitToPage();
+        }
+
+        // FUNGSI TOGGLE BESARKAN CONTAINER PREVIEW
+        function toggleContainerSize() {
+            isLargeContainer = !isLargeContainer;
+            const editorPanel = document.getElementById('sec-editor-panel');
+            const previewPanel = document.getElementById('sec-preview-panel');
+            const paper = document.getElementById('a4-paper-element');
+            const lbl = document.getElementById('lbl-container-size');
+
+            if (isLargeContainer) {
+                editorPanel.classList.remove('lg:col-span-5');
+                editorPanel.classList.add('lg:col-span-4');
+                previewPanel.classList.remove('lg:col-span-7');
+                previewPanel.classList.add('lg:col-span-8');
+                paper.style.transform = 'scale(1.15)';
+                paper.style.transformOrigin = 'top center';
+                lbl.textContent = 'Paparan: Luas (+15%)';
+            } else {
+                editorPanel.classList.remove('lg:col-span-4');
+                editorPanel.classList.add('lg:col-span-5');
+                previewPanel.classList.remove('lg:col-span-8');
+                previewPanel.classList.add('lg:col-span-7');
+                paper.style.transform = 'scale(1)';
+                paper.style.transformOrigin = 'top center';
+                lbl.textContent = 'Paparan: Normal';
+            }
+            autoFitToPage();
+        }
+
         const BULAN_MS = ['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];
         function formatTarikhMalay(isoStr) {
             if (!isoStr) return '';
@@ -633,12 +549,6 @@
             return `${day} ${BULAN_MS[monthIdx]} ${y}`;
         }
 
-        // --- JANA KANDUNGAN DENGAN GEMINI AI (via /api/generate di Vercel) --- //
-        // Memerlukan fail serverless /api/generate.js dideploy bersama dan
-        // GEMINI_API_KEY ditetapkan sebagai Environment Variable di Vercel.
-        // Butang ini tidak akan berfungsi jika dibuka terus sebagai fail HTML tempatan
-        // (tiada pelayan /api untuk dihubungi) — ia hanya berfungsi selepas dideploy ke Vercel.
-        // Satu panggilan sahaja menjana Objektif + Ringkasan Implementasi + Impak/SWOC serentak.
         async function generateWithAI() {
             const btn = document.getElementById('btn-ai-generate-all');
             if (!btn) return;
@@ -655,13 +565,12 @@
             };
 
             if (!context.namaProgram) {
-                alert('Sila isi "Nama Program / Aktiviti" terlebih dahulu sebelum menjana kandungan dengan AI.');
+                alert('Sila isi "Nama Program / Aktiviti" terlebih dahulu.');
                 return;
             }
 
             btn.disabled = true;
-            btn.classList.add('opacity-60', 'cursor-not-allowed');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Menjana Objektif, Ringkasan & Impak...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Menjana...';
 
             try {
                 const res = await fetch('/api/generate', {
@@ -670,23 +579,17 @@
                     body: JSON.stringify({ context }),
                 });
 
-                if (!res.ok) {
-                    const errData = await res.json().catch(() => ({}));
-                    throw new Error(errData.error || `Pelayan memulangkan ralat (${res.status}).`);
-                }
-
+                if (!res.ok) throw new Error(`Ralat (${res.status})`);
                 const data = await res.json();
 
                 if (Array.isArray(data.objektif) && data.objektif.length > 0) {
                     document.getElementById('obj-inputs-container').innerHTML = '';
                     data.objektif.forEach(v => addObjField(v));
                 }
-
                 if (Array.isArray(data.implementasi) && data.implementasi.length > 0) {
                     document.getElementById('imp-inputs-container').innerHTML = '';
                     data.implementasi.forEach(v => addImpField(v));
                 }
-
                 if (data.impak) {
                     document.getElementById('swoc-s-inputs').innerHTML = '';
                     document.getElementById('swoc-w-inputs').innerHTML = '';
@@ -697,126 +600,40 @@
                     (data.impak.peluang || []).forEach(v => addSwotField('o', v));
                     (data.impak.cabaran || []).forEach(v => addSwotField('t', v));
                 }
-
                 updatePreview();
             } catch (err) {
-                console.error(err);
-                alert(`Gagal menjana kandungan dengan AI: ${err.message || 'Sila cuba lagi.'}\n\n(Pastikan app sudah dideploy ke Vercel dengan fail /api/generate.js dan GEMINI_API_KEY ditetapkan.)`);
+                alert(`Gagal menjana kandungan dengan AI: ${err.message}`);
             } finally {
                 btn.disabled = false;
-                btn.classList.remove('opacity-60', 'cursor-not-allowed');
                 btn.innerHTML = originalHTML;
             }
         }
 
-        // Konfigurasi Tema
         const themes = {
-            indigo: {
-                accent: 'from-indigo-600 via-indigo-500 to-sky-400',
-                badge: 'bg-indigo-900 text-white',
-                mainCard: 'bg-slate-900 text-white',
-                icon: 'text-indigo-600',
-                highlight: 'text-indigo-700',
-                secBorder: 'border-indigo-600',
-                numBadge: 'bg-indigo-100 text-indigo-800',
-                swocBadge: 'bg-indigo-700 text-white'
-            },
-            emerald: {
-                accent: 'from-emerald-600 via-teal-500 to-emerald-400',
-                badge: 'bg-emerald-900 text-white',
-                mainCard: 'bg-emerald-950 text-white',
-                icon: 'text-emerald-600',
-                highlight: 'text-emerald-700',
-                secBorder: 'border-emerald-600',
-                numBadge: 'bg-emerald-100 text-emerald-800',
-                swocBadge: 'bg-teal-700 text-white'
-            },
-            navy: {
-                accent: 'from-sky-700 via-blue-600 to-cyan-400',
-                badge: 'bg-slate-900 text-white',
-                mainCard: 'bg-slate-900 text-white',
-                icon: 'text-sky-700',
-                highlight: 'text-sky-800',
-                secBorder: 'border-sky-700',
-                numBadge: 'bg-sky-100 text-sky-800',
-                swocBadge: 'bg-sky-800 text-white'
-            },
-            crimson: {
-                accent: 'from-rose-700 via-rose-500 to-amber-400',
-                badge: 'bg-rose-950 text-white',
-                mainCard: 'bg-rose-950 text-white',
-                icon: 'text-rose-700',
-                highlight: 'text-rose-800',
-                secBorder: 'border-rose-700',
-                numBadge: 'bg-rose-100 text-rose-800',
-                swocBadge: 'bg-rose-800 text-white'
-            }
+            indigo: { accent: 'from-indigo-600 via-indigo-500 to-sky-400', badge: 'bg-indigo-900 text-white', mainCard: 'bg-slate-900 text-white', icon: 'text-indigo-600', highlight: 'text-indigo-700', secBorder: 'border-indigo-600', numBadge: 'bg-indigo-100 text-indigo-800', swocBadge: 'bg-indigo-700 text-white' },
+            emerald: { accent: 'from-emerald-600 via-teal-500 to-emerald-400', badge: 'bg-emerald-900 text-white', mainCard: 'bg-emerald-950 text-white', icon: 'text-emerald-600', highlight: 'text-emerald-700', secBorder: 'border-emerald-600', numBadge: 'bg-emerald-100 text-emerald-800', swocBadge: 'bg-teal-700 text-white' },
+            navy: { accent: 'from-sky-700 via-blue-600 to-cyan-400', badge: 'bg-slate-900 text-white', mainCard: 'bg-slate-900 text-white', icon: 'text-sky-700', highlight: 'text-sky-800', secBorder: 'border-sky-700', numBadge: 'bg-sky-100 text-sky-800', swocBadge: 'bg-sky-800 text-white' },
+            crimson: { accent: 'from-rose-700 via-rose-500 to-amber-400', badge: 'bg-rose-950 text-white', mainCard: 'bg-rose-950 text-white', icon: 'text-rose-700', highlight: 'text-rose-800', secBorder: 'border-rose-700', numBadge: 'bg-rose-100 text-rose-800', swocBadge: 'bg-rose-800 text-white' }
         };
 
-        // Penjana SVG Tempatan untuk Logo & Gambar
         function generateLocalSvgDataUrl(title, colorHex) {
-            const svg = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
-                    <rect width="100%" height="100%" fill="#f1f5f9"/>
-                    <rect x="10" y="10" width="380" height="280" rx="12" fill="none" stroke="${colorHex}" stroke-width="3" stroke-dasharray="6,6"/>
-                    <circle cx="200" cy="120" r="45" fill="${colorHex}" opacity="0.15"/>
-                    <text x="200" y="130" font-family="sans-serif" font-size="36" text-anchor="middle" fill="${colorHex}">📷</text>
-                    <text x="200" y="210" font-family="sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#334155">${title}</text>
-                    <text x="200" y="235" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#64748b">Visual OPR Tempatan</text>
-                </svg>
-            `;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><rect width="100%" height="100%" fill="#f1f5f9"/><rect x="10" y="10" width="380" height="280" rx="12" fill="none" stroke="${colorHex}" stroke-width="3" stroke-dasharray="6,6"/><circle cx="200" cy="120" r="45" fill="${colorHex}" opacity="0.15"/><text x="200" y="130" font-family="sans-serif" font-size="36" text-anchor="middle" fill="${colorHex}">📷</text><text x="200" y="210" font-family="sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#334155">${title}</text></svg>`;
             return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
         }
 
         function generateDefaultLogoSvg() {
-            const svg = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140">
-                    <rect width="100%" height="100%" rx="20" fill="#1e293b"/>
-                    <circle cx="70" cy="58" r="34" stroke="#818cf8" stroke-width="5" fill="none"/>
-                    <path d="M70 30 L79 49 L100 52 L84 67 L89 88 L70 77 L51 88 L56 67 L40 52 L61 49 Z" fill="#818cf8"/>
-                    <text x="70" y="118" font-family="sans-serif" font-size="12" font-weight="extrabold" text-anchor="middle" fill="#ffffff">PPD SUBIS</text>
-                </svg>
-            `;
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><rect width="100%" height="100%" rx="20" fill="#1e293b"/><circle cx="70" cy="58" r="34" stroke="#818cf8" stroke-width="5" fill="none"/><path d="M70 30 L79 49 L100 52 L84 67 L89 88 L70 77 L51 88 L56 67 L40 52 L61 49 Z" fill="#818cf8"/><text x="70" y="118" font-family="sans-serif" font-size="12" font-weight="extrabold" text-anchor="middle" fill="#ffffff">PPD SUBIS</text></svg>`;
             return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
         }
 
-        // Fungsi Kawalan Tema
         function setPdfTheme(themeKey) {
             activeThemeKey = themeKey;
             const t = themes[themeKey] || themes.indigo;
-            
-            const accentBar = document.getElementById('theme-accent-bar');
-            if (accentBar) accentBar.className = `h-2.5 w-full bg-gradient-to-r ${t.accent}`;
-
-            const badge = document.getElementById('theme-badge');
-            if (badge) badge.className = `inline-block ${t.badge} text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm`;
-
-            const mainCard = document.getElementById('theme-main-card');
-            if (mainCard) mainCard.className = `col-span-2 ${t.mainCard} text-white p-2.5 rounded-lg flex items-center justify-start gap-2 shadow-xs border border-slate-800`;
-
-            document.querySelectorAll('.theme-icon').forEach(el => {
-                el.className = el.className.replace(/text-(indigo|emerald|sky|rose)-\d+/, t.icon);
-            });
-            document.querySelectorAll('.theme-highlight').forEach(el => {
-                el.className = `font-extrabold ${t.highlight} text-[10px] text-left truncate flex-1 ml-0.5`;
-            });
-
-            ['theme-sec-1', 'theme-sec-2', 'theme-sec-3', 'theme-sec-4'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.className = el.className.replace(/border-(indigo|emerald|sky|rose)-\d+/, t.secBorder);
-            });
-
-            document.querySelectorAll('.theme-num').forEach(el => {
-                el.className = `theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[8.5px] shrink-0 mt-0.5`;
-            });
-
-            const swocBadge = document.getElementById('theme-swoc-badge');
-            if (swocBadge) swocBadge.className = `inline-block ${t.swocBadge} text-white font-black text-[8px] px-2 py-0.5 rounded uppercase mb-1 shadow-2xs`;
+            document.getElementById('theme-accent-bar').className = `h-2.5 w-full bg-gradient-to-r ${t.accent}`;
+            document.getElementById('theme-badge').className = `inline-block ${t.badge} text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm`;
+            document.getElementById('theme-main-card').className = `col-span-2 ${t.mainCard} text-white p-2.5 rounded-lg flex items-center justify-start gap-2 shadow-xs border border-slate-800`;
         }
 
-        // Fungsi Mampatan Imej — resize + JPEG compress di sisi klien sebelum disimpan.
-        // Ini penting supaya PDF yang dijana (via html2canvas) kekal ringan & pantas,
-        // memandangkan gambar terus dari kamera boleh 4-8MB setiap satu.
         function compressImageFile(file, maxDim, quality) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -824,18 +641,11 @@
                     const img = new Image();
                     img.onload = () => {
                         let { width, height } = img;
-                        if (width > height && width > maxDim) {
-                            height = Math.round(height * (maxDim / width));
-                            width = maxDim;
-                        } else if (height > maxDim) {
-                            width = Math.round(width * (maxDim / height));
-                            height = maxDim;
-                        }
+                        if (width > height && width > maxDim) { height = Math.round(height * (maxDim / width)); width = maxDim; }
+                        else if (height > maxDim) { width = Math.round(width * (maxDim / height)); height = maxDim; }
                         const canvas = document.createElement('canvas');
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
+                        canvas.width = width; canvas.height = height;
+                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                         resolve(canvas.toDataURL('image/jpeg', quality));
                     };
                     img.onerror = reject;
@@ -848,108 +658,59 @@
 
         async function handleLogoUpload(event) {
             const file = event.target.files[0];
-            if (!file) return;
-            try {
-                const dataUrl = await compressImageFile(file, 400, 0.9);
-                document.getElementById('out-logo').src = dataUrl;
-            } catch (e) {
-                alert('Gagal memproses logo. Sila cuba fail imej lain.');
+            if (file) {
+                document.getElementById('out-logo').src = await compressImageFile(file, 400, 0.9);
             }
         }
 
         async function handleImageUpload(event, index) {
             const file = event.target.files[0];
-            if (!file) return;
-            try {
-                const dataUrl = await compressImageFile(file, 1000, 0.82);
-                loadedImages[index] = dataUrl;
+            if (file) {
+                loadedImages[index] = await compressImageFile(file, 1000, 0.82);
                 updatePreview();
-            } catch (e) {
-                alert('Gagal memproses gambar. Sila cuba fail imej lain.');
             }
         }
 
-        // Fungsi Dinamik Input Medan
         function addObjField(val = '') {
             const container = document.getElementById('obj-inputs-container');
-            if (!container) return;
             const div = document.createElement('div');
             div.className = 'flex items-center gap-1.5 obj-item';
-            div.innerHTML = `
-                <input type="text" value="${val}" oninput="updatePreview()" placeholder="Masukkan Objektif..." class="inp-obj-item w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                <button type="button" onclick="removeField(this)" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition" title="Padam">
-                    <i class="fa-solid fa-trash-can text-xs"></i>
-                </button>
-            `;
+            div.innerHTML = `<input type="text" value="${val}" oninput="updatePreview()" placeholder="Masukkan Objektif..." class="inp-obj-item w-full text-xs p-2 border border-gray-300 rounded-md outline-none"><button type="button" onclick="removeField(this)" class="p-2 text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash-can text-xs"></i></button>`;
             container.appendChild(div);
             updatePreview();
         }
 
         function addImpField(val = '') {
             const container = document.getElementById('imp-inputs-container');
-            if (!container) return;
             const div = document.createElement('div');
             div.className = 'flex items-center gap-1.5 imp-item';
-            div.innerHTML = `
-                <input type="text" value="${val}" oninput="updatePreview()" placeholder="Masukkan Ringkasan Aktiviti..." class="inp-imp-item w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                <button type="button" onclick="removeField(this)" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition" title="Padam">
-                    <i class="fa-solid fa-trash-can text-xs"></i>
-                </button>
-            `;
+            div.innerHTML = `<input type="text" value="${val}" oninput="updatePreview()" placeholder="Masukkan Ringkasan Aktiviti..." class="inp-imp-item w-full text-xs p-2 border border-gray-300 rounded-md outline-none"><button type="button" onclick="removeField(this)" class="p-2 text-rose-500 hover:text-rose-700"><i class="fa-solid fa-trash-can text-xs"></i></button>`;
             container.appendChild(div);
             updatePreview();
         }
 
         function addSwotField(type, val = '') {
             const container = document.getElementById(`swoc-${type}-inputs`);
-            if (!container) return;
             const div = document.createElement('div');
             div.className = `flex items-center gap-1.5 swoc-${type}-item`;
-            div.innerHTML = `
-                <input type="text" value="${val}" oninput="updatePreview()" placeholder="Tambah butiran SWOT..." class="inp-swoc-${type}-item w-full text-xs p-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                <button type="button" onclick="removeField(this)" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition" title="Padam">
-                    <i class="fa-solid fa-xmark text-xs"></i>
-                </button>
-            `;
+            div.innerHTML = `<input type="text" value="${val}" oninput="updatePreview()" placeholder="Tambah butiran..." class="inp-swoc-${type}-item w-full text-xs p-1.5 border border-gray-300 rounded-md outline-none"><button type="button" onclick="removeField(this)" class="p-1.5 text-rose-500 hover:text-rose-700"><i class="fa-solid fa-xmark text-xs"></i></button>`;
             container.appendChild(div);
             updatePreview();
         }
 
-        function addSwocField(type, val = '') {
-            addSwotField(type, val);
-        }
-
         function removeField(button) {
-            const row = button.parentElement;
-            if (row) row.remove();
+            button.parentElement.remove();
             updatePreview();
         }
 
-        // Fungsi Penjana HTML Galeri Gambar — SATU susun atur grid 1 lajur x 4 baris yang kukuh.
-        // Guna CSS Grid dengan auto-rows-fr supaya keempat-empat baris SENTIASA sama tinggi
-        // dan mengisi penuh ruang lajur kanan, tidak kira berapa panjang kapsyen setiap gambar.
         function renderGalleryHTML() {
             const fitMode = document.getElementById('sel-img-fit')?.value || 'cover';
             const fitClass = fitMode === 'contain' ? 'object-contain bg-slate-900/10' : 'object-cover';
             const showCaption = document.getElementById('chk-show-caption')?.checked ?? true;
-
-            const caps = [
-                (document.getElementById('inp-cap-1')?.value || 'Gambar 1').trim(),
-                (document.getElementById('inp-cap-2')?.value || 'Gambar 2').trim(),
-                (document.getElementById('inp-cap-3')?.value || 'Gambar 3').trim(),
-                (document.getElementById('inp-cap-4')?.value || 'Gambar 4').trim(),
-            ];
-
-            const imgs = [
-                loadedImages[1] || generateLocalSvgDataUrl('Gambar 1: Perasmian', '#4f46e5'),
-                loadedImages[2] || generateLocalSvgDataUrl('Gambar 2: Ceramah', '#0284c7'),
-                loadedImages[3] || generateLocalSvgDataUrl('Gambar 3: Aktiviti LDK', '#059669'),
-                loadedImages[4] || generateLocalSvgDataUrl('Gambar 4: Sijil', '#d97706'),
-            ];
+            const caps = [(document.getElementById('inp-cap-1')?.value || 'Gambar 1').trim(), (document.getElementById('inp-cap-2')?.value || 'Gambar 2').trim(), (document.getElementById('inp-cap-3')?.value || 'Gambar 3').trim(), (document.getElementById('inp-cap-4')?.value || 'Gambar 4').trim()];
+            const imgs = [loadedImages[1] || generateLocalSvgDataUrl('Gambar 1', '#4f46e5'), loadedImages[2] || generateLocalSvgDataUrl('Gambar 2', '#0284c7'), loadedImages[3] || generateLocalSvgDataUrl('Gambar 3', '#059669'), loadedImages[4] || generateLocalSvgDataUrl('Gambar 4', '#d97706')];
 
             const container = document.getElementById('out-img-gallery-container');
-            if (!container) return;
-
             container.className = 'flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-2 min-h-0 h-full';
             container.innerHTML = imgs.map((img, i) => `
                 <div class="bg-white border border-slate-300 p-1 rounded-lg shadow-xs flex flex-row items-center gap-1.5 h-full min-h-0">
@@ -962,10 +723,7 @@
             `).join('');
         }
 
-        // Fungsi Auto-Fit Sebenar — ukur ketinggian kandungan sebenar berbanding
-        // ruang sebenar yang ada pada halaman A4, dan susutkan sehingga muat betul-betul.
-        // Ini menggantikan heuristik lama yang cuma meneka ikut kiraan aksara.
-        const FIT_MIN_ZOOM = 78;   // had bawah supaya teks tidak jadi terlalu kecil untuk dibaca/dicetak
+        const FIT_MIN_ZOOM = 78;
         const FIT_STEP = 2;
 
         function autoFitToPage() {
@@ -974,11 +732,8 @@
             const signatureBlock = document.getElementById('a4-signature-block');
             const statusCard = document.getElementById('fit-status-card');
             const statusText = document.getElementById('fit-status-text');
-            if (!wrapper || !innerContent || !signatureBlock) return;
 
-            // Reset ke 100% dahulu supaya ukuran bermula dari saiz sebenar
             wrapper.style.zoom = '100%';
-
             requestAnimationFrame(() => {
                 const availableHeight = innerContent.clientHeight - signatureBlock.offsetHeight;
                 let zoom = 100;
@@ -993,35 +748,24 @@
                 if (statusCard && statusText) {
                     if (fits) {
                         statusCard.className = 'bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
-                        statusText.parentElement.querySelector('i').className = 'fa-solid fa-circle-check text-emerald-600';
-                        statusText.textContent = zoom === 100
-                            ? 'Kandungan muat penuh dalam 1 muka surat A4.'
-                            : `Kandungan disesuaikan automatik kepada ${zoom}% supaya muat dalam 1 muka surat.`;
+                        statusText.textContent = zoom === 100 ? 'Kandungan muat penuh dalam 1 muka surat A4.' : `Kandungan disesuaikan automatik (${zoom}% zoom).`;
                     } else {
                         statusCard.className = 'bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
-                        statusText.parentElement.querySelector('i').className = 'fa-solid fa-triangle-exclamation text-rose-600';
-                        statusText.textContent = `Kandungan terlalu panjang walaupun pada ${FIT_MIN_ZOOM}% — sila kurangkan bilangan/panjang butiran (Objektif, Implementasi atau SWOT).`;
+                        statusText.textContent = 'Kandungan terlalu panjang — sila kurangkan teks.';
                     }
                 }
             });
         }
 
-        // Fungsi Kemaskini Pratonton A4
         function updatePreview() {
-            // Header & Maklumat Asas
             const orgVal = document.getElementById('inp-org').value.trim();
             if (orgVal) {
                 const lines = orgVal.split('\n');
                 document.getElementById('out-org').textContent = lines[0] || 'SEKTOR PEMBANGUNAN MURID';
                 document.getElementById('out-sub-org').textContent = lines.slice(1).join(' ') || 'PEJABAT PENDIDIKAN DAERAH SUBIS';
-            } else {
-                document.getElementById('out-org').textContent = 'SEKTOR PEMBANGUNAN MURID';
-                document.getElementById('out-sub-org').textContent = 'PEJABAT PENDIDIKAN DAERAH SUBIS';
             }
 
-            const prog = document.getElementById('inp-nama-program').value.trim();
-            document.getElementById('out-nama-program').textContent = prog || 'LAPORAN PROGRAM / AKTIVITI';
-
+            document.getElementById('out-nama-program').textContent = document.getElementById('inp-nama-program').value.trim() || 'LAPORAN PROGRAM / AKTIVITI';
             document.getElementById('out-tarikh').textContent = formatTarikhMalay(document.getElementById('inp-tarikh').value) || '-';
             document.getElementById('out-masa').textContent = document.getElementById('inp-masa').value.trim() || '-';
             document.getElementById('out-tempat').textContent = document.getElementById('inp-tempat').value.trim() || '-';
@@ -1029,110 +773,50 @@
             document.getElementById('out-sasaran').textContent = document.getElementById('inp-sasaran').value.trim() || '-';
             document.getElementById('out-kehadiran').textContent = document.getElementById('inp-kehadiran').value.trim() || '-';
 
-            // 1. Penjana Objektif
-            const objContainer = document.getElementById('out-obj-list');
-            const objInputs = document.querySelectorAll('.inp-obj-item');
-            objContainer.innerHTML = '';
             const t = themes[activeThemeKey] || themes.indigo;
-
-            if (objInputs.length === 0) {
-                objContainer.innerHTML = '<p class="text-slate-400 italic text-[9px]">- Tiada Objektif Dinyatakan -</p>';
-            } else {
-                objInputs.forEach((inp, idx) => {
-                    const text = inp.value.trim();
-                    if (text || objInputs.length === 1) {
-                        const div = document.createElement('div');
-                        div.className = 'flex items-start gap-1.5';
-                        div.innerHTML = `
-                            <span class="theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[8.5px] shrink-0 mt-0.5">${idx + 1}</span>
-                            <p class="text-slate-800 leading-snug font-medium text-[9.5px]">${text || '-'}</p>
-                        `;
-                        objContainer.appendChild(div);
-                    }
-                });
-            }
-
-            // 2. Penjana Implementasi
-            const impContainer = document.getElementById('out-imp-list');
-            const impInputs = document.querySelectorAll('.inp-imp-item');
-            impContainer.innerHTML = '';
-
-            if (impInputs.length === 0) {
-                impContainer.innerHTML = '<p class="text-slate-400 italic text-[9px]">- Tiada Ringkasan Aktiviti Dinyatakan -</p>';
-            } else {
-                impInputs.forEach((inp) => {
-                    const text = inp.value.trim();
-                    if (text || impInputs.length === 1) {
-                        const p = document.createElement('p');
-                        p.className = 'text-slate-800 font-medium leading-snug text-[9.5px] flex items-start gap-1.5';
-                        p.innerHTML = `<span class="${t.icon} font-bold theme-icon">•</span> <span>${text || '-'}</span>`;
-                        impContainer.appendChild(p);
-                    }
-                });
-            }
-
-            // 3. Penjana SWOT (Strengths, Weaknesses, Opportunities, Threats)
-            ['s', 'w', 'o', 't'].forEach(type => {
-                const outBox = document.getElementById(`out-swoc-${type}`);
-                if (!outBox) return;
-                const inputs = document.querySelectorAll(`.inp-swoc-${type}-item`);
-                outBox.innerHTML = '';
-
-                if (inputs.length === 0) {
-                    outBox.innerHTML = '<p class="text-slate-400 italic text-[8.5px]">-</p>';
-                } else {
-                    inputs.forEach(inp => {
-                        const val = inp.value.trim();
-                        if (val || inputs.length === 1) {
-                            const p = document.createElement('p');
-                            p.className = 'flex items-start gap-1 leading-snug text-[8.5px]';
-                            p.innerHTML = `<span class="opacity-60">•</span> <span>${val || '-'}</span>`;
-                            outBox.appendChild(p);
-                        }
-                    });
+            const objContainer = document.getElementById('out-obj-list');
+            objContainer.innerHTML = '';
+            document.querySelectorAll('.inp-obj-item').forEach((inp, idx) => {
+                if (inp.value.trim()) {
+                    objContainer.innerHTML += `<div class="flex items-start gap-1.5"><span class="theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[8.5px] shrink-0 mt-0.5">${idx + 1}</span><p class="text-slate-800 leading-snug font-medium text-[9.5px]">${inp.value.trim()}</p></div>`;
                 }
             });
 
-            // 4. Penjana Galeri Gambar
+            const impContainer = document.getElementById('out-imp-list');
+            impContainer.innerHTML = '';
+            document.querySelectorAll('.inp-imp-item').forEach(inp => {
+                if (inp.value.trim()) {
+                    impContainer.innerHTML += `<p class="text-slate-800 font-medium leading-snug text-[9.5px] flex items-start gap-1.5"><span class="${t.icon} font-bold">•</span> <span>${inp.value.trim()}</span></p>`;
+                }
+            });
+
+            ['s', 'w', 'o', 't'].forEach(type => {
+                const outBox = document.getElementById(`out-swoc-${type}`);
+                outBox.innerHTML = '';
+                document.querySelectorAll(`.inp-swoc-${type}-item`).forEach(inp => {
+                    if (inp.value.trim()) {
+                        outBox.innerHTML += `<p class="flex items-start gap-1 leading-snug text-[8.5px]"><span class="opacity-60">•</span> <span>${inp.value.trim()}</span></p>`;
+                    }
+                });
+            });
+
             renderGalleryHTML();
 
-            // Tandatangan
-            const getInpValue = (id) => (document.getElementById(id)?.value || '').trim();
+            document.getElementById('out-p-nama').textContent = document.getElementById('inp-p-nama').value.trim() ? `( ${document.getElementById('inp-p-nama').value.trim()} )` : '( Nama: ________________________ )';
+            document.getElementById('out-p-jawatan').textContent = document.getElementById('inp-p-jawatan').value.trim() ? `Jawatan: ${document.getElementById('inp-p-jawatan').value.trim()}` : 'Jawatan: ________________________';
+            document.getElementById('out-p-tarikh').textContent = document.getElementById('inp-p-tarikh').value.trim() ? `Tarikh: ${document.getElementById('inp-p-tarikh').value.trim()}` : 'Tarikh: ________________________';
 
-            const pNama = getInpValue('inp-p-nama');
-            const pJawatan = getInpValue('inp-p-jawatan');
-            const pTarikh = getInpValue('inp-p-tarikh');
+            document.getElementById('out-k-nama').textContent = document.getElementById('inp-k-nama').value.trim() ? `( ${document.getElementById('inp-k-nama').value.trim()} )` : '( Nama: ________________________ )';
+            document.getElementById('out-k-jawatan').textContent = document.getElementById('inp-k-jawatan').value.trim() ? `Jawatan: ${document.getElementById('inp-k-jawatan').value.trim()}` : 'Jawatan: ________________________';
+            document.getElementById('out-k-tarikh').textContent = document.getElementById('inp-k-tarikh').value.trim() ? `Tarikh: ${document.getElementById('inp-k-tarikh').value.trim()}` : 'Tarikh: ________________________';
 
-            const outPNama = document.getElementById('out-p-nama');
-            const outPJawatan = document.getElementById('out-p-jawatan');
-            const outPTarikh = document.getElementById('out-p-tarikh');
-
-            if (outPNama) outPNama.textContent = pNama ? `( ${pNama} )` : '( Nama: ________________________ )';
-            if (outPJawatan) outPJawatan.textContent = pJawatan ? `Jawatan: ${pJawatan}` : 'Jawatan: ________________________';
-            if (outPTarikh) outPTarikh.textContent = pTarikh ? `Tarikh: ${pTarikh}` : 'Tarikh: ________________________';
-
-            const kNama = getInpValue('inp-k-nama');
-            const kJawatan = getInpValue('inp-k-jawatan');
-            const kTarikh = getInpValue('inp-k-tarikh');
-
-            const outKNama = document.getElementById('out-k-nama');
-            const outKJawatan = document.getElementById('out-k-jawatan');
-            const outKTarikh = document.getElementById('out-k-tarikh');
-
-            if (outKNama) outKNama.textContent = kNama ? `( ${kNama} )` : '( Nama: ________________________ )';
-            if (outKJawatan) outKJawatan.textContent = kJawatan ? `Jawatan: ${kJawatan}` : 'Jawatan: ________________________';
-            if (outKTarikh) outKTarikh.textContent = kTarikh ? `Tarikh: ${kTarikh}` : 'Tarikh: ________________________';
-
-            saveDraftToStorage();
             autoFitToPage();
         }
 
         function loadSampleData() {
             document.getElementById('out-logo').src = generateDefaultLogoSvg();
-
             document.getElementById('inp-org').value = 'SEKTOR PEMBANGUNAN MURID\nPEJABAT PENDIDIKAN DAERAH SUBIS';
             document.getElementById('inp-nama-program').value = 'KURSUS PEMANTAPAN INTEGRITI DAN KECERDASAN EMOSI PEGAWAI 2026';
-            document.getElementById('inp-keterangan-ai').value = 'Kursus 1 hari untuk semua pegawai dan staf sokongan, fokus kepada integriti dan pengurusan emosi di tempat kerja. Ada ceramah utama, aktiviti LDK dalam kumpulan, dan sesi pembentangan pelan tindakan.';
             document.getElementById('inp-tarikh').value = '2026-08-18';
             document.getElementById('inp-masa').value = '8.30 Pagi - 4.30 Petang';
             document.getElementById('inp-tempat').value = 'Dewan Perdana, PPD Subis';
@@ -1144,193 +828,64 @@
             document.getElementById('imp-inputs-container').innerHTML = '';
             document.getElementById('swoc-s-inputs').innerHTML = '';
             document.getElementById('swoc-w-inputs').innerHTML = '';
-            const oContainer = document.getElementById('swoc-o-inputs');
-            if (oContainer) oContainer.innerHTML = '';
-            const tContainer = document.getElementById('swoc-t-inputs');
-            if (tContainer) tContainer.innerHTML = '';
+            document.getElementById('swoc-o-inputs').innerHTML = '';
+            document.getElementById('swoc-t-inputs').innerHTML = '';
 
-            addObjField('Meningkatkan kesedaran integriti dan budaya kerja cemerlang dalam organisasi.');
-            addObjField('Memantapkan semangat kerjasama pasukan dan komunikasi efektif antara sektor.');
-            addObjField('Memberi pendedahan praktikal pengurusan emosi dan tekanan di tempat kerja.');
+            addObjField('Meningkatkan kesedaran integriti dan budaya kerja cemerlang.');
+            addObjField('Memantapkan semangat kerjasama pasukan.');
+            addObjField('Pengurusan emosi dan tekanan di tempat kerja.');
 
-            addImpField('Sesi Pendaftaran, Ucapan Aluan Pengerusi Majlis & Taklimat Asas Kursus.');
-            addImpField('Ceramah Utama: Etika Kerja Profesional & Pengurusan Emosi Moden.');
-            addImpField('Aktiviti Latihan Dalam Kumpulan (LDK) & Pembentangan Hasil Pelan Tindakan.');
+            addImpField('Sesi Pendaftaran & Taklimat Asas Kursus.');
+            addImpField('Ceramah Utama: Etika Kerja Profesional.');
+            addImpField('Aktiviti Latihan Dalam Kumpulan (LDK).');
 
-            addSwotField('s', 'Penglibatan aktif peserta dan penyampaian penceramah yang highly interactive.');
-            addSwotField('w', 'Masa perbincangan simulasi LDK agak suntuk disebabkan kepadatan jadual.');
-            addSwotField('o', 'Kerjasama padu bersama penceramah luar dan pendedahan kaedah baharu.');
-            addSwotField('t', 'Pertembungan jadual tugas hakiki sesetengah pegawai semasa kursus.');
+            addSwotField('s', 'Penglibatan aktif peserta.');
+            addSwotField('w', 'Masa perbincangan LDK agak suntuk.');
+            addSwotField('o', 'Kerjasama padu penceramah luar.');
+            addSwotField('t', 'Pertembungan jadual tugas hakiki.');
 
-            document.getElementById('inp-cap-1').value = 'Ucapan Pembukaan Pengerusi';
-            document.getElementById('inp-cap-2').value = 'Sesi Ceramah Utama Integriti';
-            document.getElementById('inp-cap-3').value = 'Aktiviti LDK Kumpulan 3';
-            document.getElementById('inp-cap-4').value = 'Sesi Penyerahan Sijil & Cenderamata';
+            loadedImages[1] = generateLocalSvgDataUrl('Gambar 1', '#4f46e5');
+            loadedImages[2] = generateLocalSvgDataUrl('Gambar 2', '#0284c7');
+            loadedImages[3] = generateLocalSvgDataUrl('Gambar 3', '#059669');
+            loadedImages[4] = generateLocalSvgDataUrl('Gambar 4', '#d97706');
 
-            loadedImages[1] = generateLocalSvgDataUrl('Gambar 1: Perasmian', '#4f46e5');
-            loadedImages[2] = generateLocalSvgDataUrl('Gambar 2: Sesi Ceramah', '#0284c7');
-            loadedImages[3] = generateLocalSvgDataUrl('Gambar 3: Aktiviti LDK', '#059669');
-            loadedImages[4] = generateLocalSvgDataUrl('Gambar 4: Penyampaian Sijil', '#d97706');
+            document.getElementById('inp-p-nama').value = 'Ahmad Bin Zulkifli';
+            document.getElementById('inp-p-jawatan').value = 'Penolong Pengarah';
+            document.getElementById('inp-p-tarikh').value = '18 Ogos 2026';
 
-            const setInpValue = (id, val) => {
-                const el = document.getElementById(id);
-                if (el) el.value = val;
-            };
-
-            setInpValue('inp-p-nama', 'Ahmad Bin Zulkifli');
-            setInpValue('inp-p-jawatan', 'Penolong Pengarah / Setiausaha');
-            setInpValue('inp-p-tarikh', '18 Ogos 2026');
-
-            setInpValue('inp-k-nama', 'Pegawai Pendidikan Daerah Subis');
-            setInpValue('inp-k-jawatan', 'Ketua Sektor / PPD Subis');
-            setInpValue('inp-k-tarikh', '19 Ogos 2026');
+            document.getElementById('inp-k-nama').value = 'Irwan bin Tambi';
+            document.getElementById('inp-k-jawatan').value = 'Timbalan PPD Subis';
+            document.getElementById('inp-k-tarikh').value = '19 Ogos 2026';
 
             updatePreview();
         }
 
         function clearForm() {
-            const inputs = document.querySelectorAll('input[type="text"], input[type="date"], textarea');
-            inputs.forEach(input => input.value = '');
-            const chkCapReset = document.getElementById('chk-show-caption');
-            if (chkCapReset) chkCapReset.checked = true;
-            
+            document.querySelectorAll('input[type="text"], input[type="date"], textarea').forEach(i => i.value = '');
             document.getElementById('obj-inputs-container').innerHTML = '';
             document.getElementById('imp-inputs-container').innerHTML = '';
             document.getElementById('swoc-s-inputs').innerHTML = '';
             document.getElementById('swoc-w-inputs').innerHTML = '';
-            if (document.getElementById('swoc-o-inputs')) document.getElementById('swoc-o-inputs').innerHTML = '';
-            if (document.getElementById('swoc-t-inputs')) document.getElementById('swoc-t-inputs').innerHTML = '';
+            document.getElementById('swoc-o-inputs').innerHTML = '';
+            document.getElementById('swoc-t-inputs').innerHTML = '';
 
-            addObjField();
-            addImpField();
-            addSwotField('s');
-            addSwotField('w');
-            addSwotField('o');
-            addSwotField('t');
+            addObjField(); addImpField();
+            addSwotField('s'); addSwotField('w'); addSwotField('o'); addSwotField('t');
 
             loadedImages = { 1: '', 2: '', 3: '', 4: '' };
             document.getElementById('out-logo').src = generateDefaultLogoSvg();
-
-            try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
-
             updatePreview();
         }
 
-        // --- SIMPAN & PULIH DRAF (localStorage) --- //
-        // Supaya kerja pegawai tidak hilang jika tab tertutup / peranti restart secara
-        // tidak sengaja sebelum sempat muat turun PDF.
-        const DRAFT_KEY = 'opr_subis_draft_v1';
-        let saveDraftTimer = null;
-
-        function collectDraftData() {
-            const getVal = (id) => document.getElementById(id)?.value ?? '';
-            const listVals = (cls) => Array.from(document.querySelectorAll(`.${cls}`)).map(el => el.value);
-
-            return {
-                org: getVal('inp-org'),
-                namaProgram: getVal('inp-nama-program'),
-                keteranganAi: getVal('inp-keterangan-ai'),
-                tarikh: getVal('inp-tarikh'),
-                masa: getVal('inp-masa'),
-                tempat: getVal('inp-tempat'),
-                anjuran: getVal('inp-anjuran'),
-                sasaran: getVal('inp-sasaran'),
-                kehadiran: getVal('inp-kehadiran'),
-                objectives: listVals('inp-obj-item'),
-                implementation: listVals('inp-imp-item'),
-                swotS: listVals('inp-swoc-s-item'),
-                swotW: listVals('inp-swoc-w-item'),
-                swotO: listVals('inp-swoc-o-item'),
-                swotT: listVals('inp-swoc-t-item'),
-                caps: [getVal('inp-cap-1'), getVal('inp-cap-2'), getVal('inp-cap-3'), getVal('inp-cap-4')],
-                imgFit: getVal('sel-img-fit'),
-                showCaption: document.getElementById('chk-show-caption')?.checked ?? true,
-                loadedImages,
-                logoSrc: document.getElementById('out-logo')?.src || '',
-                pNama: getVal('inp-p-nama'), pJawatan: getVal('inp-p-jawatan'), pTarikh: getVal('inp-p-tarikh'),
-                kNama: getVal('inp-k-nama'), kJawatan: getVal('inp-k-jawatan'), kTarikh: getVal('inp-k-tarikh'),
-                theme: activeThemeKey,
-            };
-        }
-
-        function saveDraftToStorage() {
-            clearTimeout(saveDraftTimer);
-            saveDraftTimer = setTimeout(() => {
-                try {
-                    localStorage.setItem(DRAFT_KEY, JSON.stringify(collectDraftData()));
-                } catch (e) {
-                    // Storan penuh / tidak tersedia — abaikan senyap, tidak kritikal.
-                }
-            }, 400);
-        }
-
-        function restoreDraftFromStorage() {
-            let data;
-            try {
-                const raw = localStorage.getItem(DRAFT_KEY);
-                if (!raw) return false;
-                data = JSON.parse(raw);
-            } catch (e) {
-                return false;
-            }
-
-            const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
-
-            setVal('inp-org', data.org);
-            setVal('inp-nama-program', data.namaProgram);
-            setVal('inp-keterangan-ai', data.keteranganAi);
-            setVal('inp-tarikh', data.tarikh);
-            setVal('inp-masa', data.masa);
-            setVal('inp-tempat', data.tempat);
-            setVal('inp-anjuran', data.anjuran);
-            setVal('inp-sasaran', data.sasaran);
-            setVal('inp-kehadiran', data.kehadiran);
-            setVal('sel-img-fit', data.imgFit || 'cover');
-            const chkCap = document.getElementById('chk-show-caption');
-            if (chkCap) chkCap.checked = data.showCaption !== false;
-            setVal('inp-cap-1', data.caps?.[0]); setVal('inp-cap-2', data.caps?.[1]);
-            setVal('inp-cap-3', data.caps?.[2]); setVal('inp-cap-4', data.caps?.[3]);
-            setVal('inp-p-nama', data.pNama); setVal('inp-p-jawatan', data.pJawatan); setVal('inp-p-tarikh', data.pTarikh);
-            setVal('inp-k-nama', data.kNama); setVal('inp-k-jawatan', data.kJawatan); setVal('inp-k-tarikh', data.kTarikh);
-
-            document.getElementById('obj-inputs-container').innerHTML = '';
-            document.getElementById('imp-inputs-container').innerHTML = '';
-            document.getElementById('swoc-s-inputs').innerHTML = '';
-            document.getElementById('swoc-w-inputs').innerHTML = '';
-            if (document.getElementById('swoc-o-inputs')) document.getElementById('swoc-o-inputs').innerHTML = '';
-            if (document.getElementById('swoc-t-inputs')) document.getElementById('swoc-t-inputs').innerHTML = '';
-
-            (data.objectives || []).forEach(v => addObjField(v));
-            (data.implementation || []).forEach(v => addImpField(v));
-            (data.swotS || []).forEach(v => addSwotField('s', v));
-            (data.swotW || []).forEach(v => addSwotField('w', v));
-            (data.swotO || []).forEach(v => addSwotField('o', v));
-            (data.swotT || []).forEach(v => addSwotField('t', v));
-
-            if (data.loadedImages) loadedImages = data.loadedImages;
-            if (data.logoSrc) document.getElementById('out-logo').src = data.logoSrc;
-            setPdfTheme(data.theme || 'indigo');
-
-            updatePreview();
-            return true;
-        }
-
-        function triggerPrint() {
-            window.print();
-        }
+        function triggerPrint() { window.print(); }
 
         function openPdfVisualModal() {
             const source = document.getElementById('a4-paper-element');
             const container = document.getElementById('pdf-visual-container');
-            
             container.innerHTML = '';
             const clone = source.cloneNode(true);
-            clone.id = 'a4-paper-modal-clone';
-            clone.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.3)';
-            clone.style.margin = '0 auto';
             clone.style.transform = 'scale(0.85)';
             clone.style.transformOrigin = 'top center';
-            
             container.appendChild(clone);
             document.getElementById('pdfVisualModal').classList.remove('hidden');
         }
@@ -1339,74 +894,29 @@
             document.getElementById('pdfVisualModal').classList.add('hidden');
         }
 
-        // --- PENJANAAN PDF IN-HOUSE (html2canvas + jsPDF) --- //
-        // Menangkap paparan A4 yang sama seperti apa yang dilihat pengguna,
-        // dan memuat turunkan terus sebagai fail .pdf tanpa bergantung pada
-        // dialog cetak pelayar.
-        function slugifyForFilename(text) {
-            return (text || 'Laporan_OPR')
-                .trim()
-                .replace(/[^\p{L}\p{N}\s-]/gu, '')
-                .replace(/\s+/g, '_')
-                .substring(0, 60) || 'Laporan_OPR';
-        }
-
         async function generateAndDownloadPDF() {
             const btn = document.getElementById('btn-download-pdf');
-            const label = document.getElementById('btn-download-pdf-label');
-            if (!btn || !label) return;
-
-            if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
-                alert('Pustaka penjana PDF gagal dimuatkan. Sila semak sambungan internet anda dan cuba lagi.');
-                return;
-            }
-
-            const originalLabel = label.textContent;
             btn.disabled = true;
-            btn.classList.add('opacity-60', 'cursor-not-allowed');
-            label.textContent = 'Menjana PDF...';
-
-            // Pastikan auto-fit sudah dikira sebelum tangkapan supaya PDF sepadan pratonton.
             autoFitToPage();
             await new Promise(r => setTimeout(r, 150));
 
             try {
                 const source = document.getElementById('a4-paper-element');
-                const canvas = await html2canvas(source, {
-                    scale: 3,
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                    windowWidth: source.scrollWidth,
-                    windowHeight: source.scrollHeight,
-                });
-
+                const canvas = await html2canvas(source, { scale: 3, useCORS: true, backgroundColor: '#ffffff' });
                 const imgData = canvas.toDataURL('image/jpeg', 0.95);
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
                 pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
-
-                const programName = document.getElementById('inp-nama-program')?.value || 'Laporan_OPR';
-                const tarikh = formatTarikhMalay(document.getElementById('inp-tarikh')?.value || '').replace(/\s+/g, '');
-                const filename = `OPR_${slugifyForFilename(programName)}${tarikh ? '_' + slugifyForFilename(tarikh) : ''}.pdf`;
-
-                pdf.save(filename);
+                pdf.save(`OPR_Laporan.pdf`);
             } catch (err) {
-                console.error(err);
-                alert('Ralat berlaku semasa menjana PDF. Sila cuba lagi, atau guna butang "Cetak" sebagai alternatif.');
+                alert('Ralat semasa menjana PDF.');
             } finally {
                 btn.disabled = false;
-                btn.classList.remove('opacity-60', 'cursor-not-allowed');
-                label.textContent = originalLabel;
             }
         }
 
         window.onload = function() {
-            const restored = restoreDraftFromStorage();
-            if (!restored) {
-                loadSampleData();
-            } else {
-                autoFitToPage();
-            }
+            loadSampleData();
         };
 
         window.addEventListener('resize', () => autoFitToPage());
