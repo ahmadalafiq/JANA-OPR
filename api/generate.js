@@ -31,14 +31,15 @@ export default async function handler(req, res) {
     if (typeof body === 'string') {
         try { body = JSON.parse(body); } catch { body = {}; }
     }
-    const { section, context } = body || {};
+    const { context } = body || {};
 
-    if (!section || !context) {
-        return res.status(400).json({ error: 'Data tidak lengkap. Perlukan "section" dan "context".' });
+    if (!context || !context.namaProgram) {
+        return res.status(400).json({ error: 'Data tidak lengkap. Perlukan "context" dengan sekurang-kurangnya namaProgram.' });
     }
 
     const konteksTeks = [
         `Nama Program: ${context.namaProgram || '-'}`,
+        `Keterangan Ringkas: ${context.keterangan || '-'}`,
         `Tarikh: ${context.tarikh || '-'}`,
         `Tempat: ${context.tempat || '-'}`,
         `Anjuran: ${context.anjuran || '-'}`,
@@ -46,51 +47,36 @@ export default async function handler(req, res) {
         `Kehadiran: ${context.kehadiran || '-'}`,
     ].join('\n');
 
-    let prompt;
-    let schema;
+    const prompt = `Anda seorang pegawai Pejabat Pendidikan Daerah (PPD) di Malaysia yang menyediakan One Page Report (OPR) rasmi.
+Berdasarkan maklumat program di bawah (terutamanya "Keterangan Ringkas" yang diberikan oleh pegawai), jana KETIGA-TIGA kandungan berikut sekaligus dalam Bahasa Melayu formal, ringkas dan padat:
 
-    if (section === 'objektif') {
-        prompt = `Anda seorang pegawai Pejabat Pendidikan Daerah (PPD) di Malaysia yang menyediakan One Page Report (OPR) rasmi.
-Berdasarkan maklumat program di bawah, jana 3 hingga 4 objektif program dalam Bahasa Melayu formal, ringkas dan padat (tidak lebih 25 patah perkataan setiap satu). Setiap objektif mesti bermula dengan kata kerja transitif seperti "Meningkatkan", "Memantapkan", "Memberi", "Melahirkan", "Mewujudkan".
+1. "objektif" — 3 hingga 4 objektif program. Setiap objektif mesti bermula dengan kata kerja transitif seperti "Meningkatkan", "Memantapkan", "Memberi", "Melahirkan", "Mewujudkan". Tidak lebih 25 patah perkataan setiap satu.
 
+2. "implementasi" — 3 hingga 4 butiran ringkasan perjalanan/implementasi program secara kronologi (dari permulaan hingga penutup). Tidak lebih 25 patah perkataan setiap satu.
+
+3. "impak" — analisis SWOC (Kekuatan, Kelemahan, Peluang, Cabaran) untuk pelaksanaan program ini, dengan 2 hingga 3 butiran bagi setiap kategori (kekuatan, kelemahan, peluang, cabaran). Tidak lebih 20 patah perkataan setiap satu.
+
+Maklumat Program:
 ${konteksTeks}`;
-        schema = {
-            type: 'OBJECT',
-            properties: {
-                items: { type: 'ARRAY', items: { type: 'STRING' } },
-            },
-            required: ['items'],
-        };
-    } else if (section === 'implementasi') {
-        prompt = `Anda seorang pegawai Pejabat Pendidikan Daerah (PPD) di Malaysia yang menyediakan One Page Report (OPR) rasmi.
-Berdasarkan maklumat program di bawah, jana 3 hingga 4 butiran ringkasan perjalanan/implementasi program secara kronologi (dari permulaan hingga penutup), dalam Bahasa Melayu formal, ringkas dan padat (tidak lebih 25 patah perkataan setiap satu).
 
-${konteksTeks}`;
-        schema = {
-            type: 'OBJECT',
-            properties: {
-                items: { type: 'ARRAY', items: { type: 'STRING' } },
+    const schema = {
+        type: 'OBJECT',
+        properties: {
+            objektif: { type: 'ARRAY', items: { type: 'STRING' } },
+            implementasi: { type: 'ARRAY', items: { type: 'STRING' } },
+            impak: {
+                type: 'OBJECT',
+                properties: {
+                    kekuatan: { type: 'ARRAY', items: { type: 'STRING' } },
+                    kelemahan: { type: 'ARRAY', items: { type: 'STRING' } },
+                    peluang: { type: 'ARRAY', items: { type: 'STRING' } },
+                    cabaran: { type: 'ARRAY', items: { type: 'STRING' } },
+                },
+                required: ['kekuatan', 'kelemahan', 'peluang', 'cabaran'],
             },
-            required: ['items'],
-        };
-    } else if (section === 'impak') {
-        prompt = `Anda seorang pegawai Pejabat Pendidikan Daerah (PPD) di Malaysia yang menyediakan One Page Report (OPR) rasmi.
-Berdasarkan maklumat program di bawah, jana analisis SWOC (Kekuatan, Kelemahan, Peluang, Cabaran) untuk pelaksanaan program ini. Berikan 2 hingga 3 butiran bagi setiap kategori, dalam Bahasa Melayu formal, ringkas dan padat (tidak lebih 20 patah perkataan setiap satu).
-
-${konteksTeks}`;
-        schema = {
-            type: 'OBJECT',
-            properties: {
-                kekuatan: { type: 'ARRAY', items: { type: 'STRING' } },
-                kelemahan: { type: 'ARRAY', items: { type: 'STRING' } },
-                peluang: { type: 'ARRAY', items: { type: 'STRING' } },
-                cabaran: { type: 'ARRAY', items: { type: 'STRING' } },
-            },
-            required: ['kekuatan', 'kelemahan', 'peluang', 'cabaran'],
-        };
-    } else {
-        return res.status(400).json({ error: `Jenis seksyen tidak sah: "${section}".` });
-    }
+        },
+        required: ['objektif', 'implementasi', 'impak'],
+    };
 
     try {
         const { status, ok, data, errText } = await callGeminiWithRetry(prompt, schema, apiKey);
