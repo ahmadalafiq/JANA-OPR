@@ -93,32 +93,18 @@ ${konteksTeks}`;
     }
 
     try {
-        const geminiRes = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${BULAN_MODEL}:generateContent`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-goog-api-key': apiKey,
-                },
-                body: JSON.stringify({
-                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        responseMimeType: 'application/json',
-                        responseSchema: schema,
-                        temperature: 0.7,
-                    },
-                }),
-            }
-        );
+        const { status, ok, data, errText } = await callGeminiWithRetry(prompt, schema, apiKey);
 
-        if (!geminiRes.ok) {
-            const errText = await geminiRes.text();
-            console.error('Gemini API error:', geminiRes.status, errText);
-            return res.status(502).json({ error: 'Ralat semasa menghubungi Gemini API. Sila semak API key atau kuota.' });
+        if (!ok) {
+            // Beza mesej ikut jenis ralat supaya senang didiagnosis di sisi pengguna.
+            let userMsg = 'Ralat semasa menghubungi Gemini API. Sila semak API key atau kuota.';
+            if (status === 429) userMsg = 'Had kadar (rate limit) Gemini API tercapai. Sila tunggu seketika dan cuba lagi.';
+            else if (status === 400 || status === 403) userMsg = 'API key tidak sah atau tiada kebenaran. Sila semak GEMINI_API_KEY di Vercel.';
+            else if (status === 503) userMsg = 'Pelayan Gemini sedang sibuk (overloaded). Sila cuba lagi sebentar lagi.';
+            console.error('Gemini API error (selepas cuba semula):', status, errText);
+            return res.status(502).json({ error: userMsg });
         }
 
-        const data = await geminiRes.json();
         const textOut = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (!textOut) {
@@ -139,4 +125,49 @@ ${konteksTeks}`;
         console.error('Ralat pelayan:', err);
         return res.status(500).json({ error: 'Ralat pelayan semasa menjana kandungan. Sila cuba lagi.' });
     }
+}
+
+// Panggil Gemini dengan cuba-semula automatik untuk ralat sementara (429 / 503).
+// Ralat 400/403 (API key tak sah) tidak diulang kerana pasti akan gagal lagi.
+async function callGeminiWithRetry(prompt, schema, apiKey, maxRetries = 2) {
+    let lastStatus = 0;
+    let lastErrText = '';
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        const geminiRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${BULAN_MODEL}:generateContent`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-goog-api-key': apiKey,
+                },
+                body: JSON.stringify({
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: 'application/json',
+                        responseSchema: schema,
+                        temperature: 0.7,
+                    },
+                }),
+            }
+        );
+
+        if (geminiRes.ok) {
+            return { ok: true, status: geminiRes.status, data: await geminiRes.json() };
+        }
+
+        lastStatus = geminiRes.status;
+        lastErrText = await geminiRes.text();
+
+        const isRetryable = lastStatus === 429 || lastStatus === 503;
+        if (!isRetryable || attempt === maxRetries) {
+            return { ok: false, status: lastStatus, errText: lastErrText };
+        }
+
+        // Backoff ringkas sebelum cuba semula: 500ms, 1000ms, ...
+        await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+    }
+
+    return { ok: false, status: lastStatus, errText: lastErrText };
 }
