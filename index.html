@@ -16,17 +16,22 @@
             background-color: #0b1329;
         }
 
-        /* Hierarki Saiz Tulisan Laporan OPR — semua tahap dikira daripada satu
-           nisbah asas (--opr-scale) supaya hierarki visual kekal (Tahap 1
-           label/badge kecil < 2 label/keterangan < 3 teks isi < 4 penekanan),
-           tetapi kesemuanya membesar/mengecil serentak secara automatik
-           mengikut ruang & saiz kandungan yang ada (lihat autoFitToPage()). */
+        /* Hierarki Saiz Tulisan Laporan OPR — semua tahap bermula minimum 10px
+           supaya kekal mudah dibaca, dengan hierarki visual dikekalkan.
+           Tahap 1 (label/badge kecil) < 2 (label/keterangan) < 3 (teks isi) < 4 (penekanan).
+           Saiz efektif pada halaman dikawal oleh autoFitToPage() melalui
+           transform:scale pada #a4-scale-inner (lihat skrip di bawah) — ini
+           membesarkan/mengecilkan TEKS BERSAMA ruang/jidar/gambar secara
+           berkadar supaya kandungan tidak pernah terpotong walau sepadat mana pun. */
         html {
-            --opr-scale: 1;
-            --opr-fs-1: calc(10px * var(--opr-scale));
-            --opr-fs-2: calc(10.5px * var(--opr-scale));
-            --opr-fs-3: calc(11px * var(--opr-scale));
-            --opr-fs-4: calc(11.5px * var(--opr-scale));
+            --opr-fs-1: 10px;
+            --opr-fs-2: 10.5px;
+            --opr-fs-3: 11px;
+            --opr-fs-4: 11.5px;
+        }
+
+        #a4-scale-inner {
+            transform-origin: top left;
         }
 
         /* Dimensions A4 Standard - Perfect Fit 1-Page Layout */
@@ -328,32 +333,14 @@
                 </div>
             </div>
 
-            <!-- Kad 7: Pengesahan & Pengesah -->
+            <!-- Kad 7: Pengesahan Laporan -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2 border-b pb-2">
                     <i class="fa-solid fa-signature text-indigo-600"></i> Pengesahan Laporan
                 </h2>
-                <div class="space-y-3">
-                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        <p class="text-xs font-bold text-gray-700 mb-2">Maklumat Penyedia (Disediakan Oleh)</p>
-                        <div class="space-y-2">
-                            <input type="text" id="inp-p-nama" oninput="updatePreview()" placeholder="Nama Penyedia" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="inp-p-jawatan" oninput="updatePreview()" placeholder="Jawatan Penyedia" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                                <input type="text" id="inp-p-tarikh" oninput="updatePreview()" placeholder="Tarikh" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                        <p class="text-xs font-bold text-gray-700 mb-2">Maklumat Pengesah (Disahkan Oleh)</p>
-                        <div class="space-y-2">
-                            <input type="text" id="inp-k-nama" oninput="updatePreview()" placeholder="Nama Pengesah" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <div class="grid grid-cols-2 gap-2">
-                                <input type="text" id="inp-k-jawatan" oninput="updatePreview()" placeholder="Jawatan Pengesah" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                                <input type="text" id="inp-k-tarikh" oninput="updatePreview()" placeholder="Tarikh" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
-                            </div>
-                        </div>
-                    </div>
+                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Disediakan Oleh (Nama Unit / Bahagian)</label>
+                    <input type="text" id="inp-disediakan-unit" oninput="updatePreview()" placeholder="Cth: Unit Pembangunan Bakat Murid" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                 </div>
             </div>
         </section>
@@ -536,36 +523,11 @@
 
                     <!-- Ruangan Tandatangan Pengesahan (Sauh Bawah A4) -->
                     <div id="a4-signature-block" class="pt-3 border-t-2 border-slate-300 mt-2 shrink-0">
-                        <div class="grid grid-cols-2 gap-4 text-[length:var(--opr-fs-2)]">
-                            <!-- Kolum 1: Disediakan Oleh -->
-                            <div class="bg-slate-50/80 p-3 rounded-lg border border-slate-300 flex flex-col justify-between">
-                                <div>
-                                    <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[length:var(--opr-fs-2)] mb-0.5 flex items-center gap-1">
-                                        <i class="fa-solid fa-pen-nib text-indigo-600"></i> Disediakan Oleh:
-                                    </p>
-                                    <div class="h-8"></div>
-                                    <p class="font-black text-slate-900 border-b border-slate-400 pb-0.5 text-[length:var(--opr-fs-3)]" id="out-p-nama">( Nama: ________________________ )</p>
-                                </div>
-                                <div class="mt-1.5">
-                                    <p id="out-p-jawatan" class="text-slate-700 font-semibold">Jawatan: ________________________</p>
-                                    <p id="out-p-tarikh" class="text-slate-700 font-semibold">Tarikh: ________________________</p>
-                                </div>
-                            </div>
-
-                            <!-- Kolum 2: Disahkan Oleh -->
-                            <div class="bg-slate-50/80 p-3 rounded-lg border border-slate-300 flex flex-col justify-between">
-                                <div>
-                                    <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[length:var(--opr-fs-2)] mb-0.5 flex items-center gap-1">
-                                        <i class="fa-solid fa-user-check text-indigo-600"></i> Disahkan / Diterima Oleh:
-                                    </p>
-                                    <div class="h-8"></div>
-                                    <p class="font-black text-slate-900 border-b border-slate-400 pb-0.5 text-[length:var(--opr-fs-3)]" id="out-k-nama">( Nama: ________________________ )</p>
-                                </div>
-                                <div class="mt-1.5">
-                                    <p id="out-k-jawatan" class="text-slate-700 font-semibold">Jawatan: ________________________</p>
-                                    <p id="out-k-tarikh" class="text-slate-700 font-semibold">Tarikh: ________________________</p>
-                                </div>
-                            </div>
+                        <div class="bg-slate-50/80 p-3 rounded-lg border border-slate-300 text-[length:var(--opr-fs-2)]">
+                            <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[length:var(--opr-fs-2)] mb-1 flex items-center gap-1">
+                                <i class="fa-solid fa-pen-nib text-indigo-600"></i> Disediakan Oleh:
+                            </p>
+                            <p class="font-black text-slate-900 text-[length:var(--opr-fs-4)]" id="out-disediakan-unit">Unit / Bahagian Penyedia</p>
                         </div>
                     </div>
                 </div>
@@ -972,94 +934,70 @@
         }
 
         // Fungsi Auto Saiz Tulisan — ukur ketinggian kandungan sebenar berbanding
-        // ruang sebenar yang ada pada halaman A4, kemudian BESARKAN tulisan secara
+        // ruang sebenar yang ada pada halaman A4, kemudian BESARKAN paparan secara
         // automatik apabila ruang berlebihan, atau KECILKAN apabila kandungan
         // terlalu panjang, supaya laporan sentiasa muat kemas dalam 1 muka surat —
         // tanpa perlu sebarang butang tetapan manual.
         //
-        // Cara kerja: --opr-scale (pekali saiz tulisan sebenar, bukan sekadar zoom
-        // visual) dicuba merentasi julat FONT_SCALE_MIN..FONT_SCALE_MAX menggunakan
-        // gelung carian dua-bahagi (binary search) sehingga ditemui nilai TERBESAR
-        // yang masih muat dalam ruang yang ada. Ini memberi kesan "auto increase/
-        // decrease" — tulisan membesar bila ruang kosong banyak, dan mengecil bila
-        // kandungan padat — semuanya automatik berdasarkan saiz kandungan semasa.
-        const FONT_SCALE_MIN = 0.72;   // had bawah — kekal mudah dibaca walaupun kandungan sangat panjang
-        const FONT_SCALE_MAX = 1.45;   // had atas — elak tulisan jadi keterlaluan besar bila kandungan sedikit
-        const FONT_SCALE_PRECISION = 0.01;
-
-        function measureContentHeight() {
-            // "Reflow" dipaksa dengan membaca scrollHeight selepas set scale,
-            // supaya ukuran sentiasa tepat mengikut --opr-scale semasa.
-            const inner = document.getElementById('a4-scale-inner');
-            return inner ? inner.scrollHeight : 0;
-        }
+        // PENTING: penskalaan guna transform:scale ke atas keseluruhan blok
+        // (#a4-scale-inner), BUKAN sekadar saiz fon (CSS var). Ini sengaja dipilih
+        // supaya teks, jidar/ruang, jarak antara seksyen dan gambar semuanya
+        // membesar/mengecil SERENTAK secara berkadar — mengelakkan sebarang
+        // kandungan (cth: kotak SWOT) terpotong akibat ruang tetap (padding/gap)
+        // yang tidak ikut mengecil bersama fon. Satu ukuran sudah cukup kerana
+        // hubungan antara scale dan ketinggian adalah linear (scale 2x = tinggi 2x).
+        const FIT_MIN_ZOOM = 65;   // had bawah — kekal mudah dibaca walaupun kandungan sangat panjang
+        const FIT_MAX_ZOOM = 130;  // had atas — elak paparan jadi keterlaluan besar bila kandungan sedikit
 
         function autoFitToPage() {
+            const inner = document.getElementById('a4-scale-inner');
             const innerContent = document.getElementById('a4-inner-content-el');
             const signatureBlock = document.getElementById('a4-signature-block');
             const statusCard = document.getElementById('fit-status-card');
             const statusText = document.getElementById('fit-status-text');
-            const root = document.documentElement;
-            if (!innerContent || !signatureBlock) return;
+            if (!inner || !innerContent || !signatureBlock) return;
+
+            // Reset dahulu supaya ukuran sebenar (100%) diukur dari kandungan asal
+            inner.style.transform = 'none';
+            inner.style.width = '100%';
 
             requestAnimationFrame(() => {
+                const naturalHeight = inner.scrollHeight;
                 const availableHeight = innerContent.clientHeight - signatureBlock.offsetHeight;
 
-                // Semak dahulu sama ada had ATAS (paling besar) sudah muat — jika ya,
-                // terus guna itu supaya tulisan sebesar mungkin mengisi ruang kosong.
-                root.style.setProperty('--opr-scale', FONT_SCALE_MAX);
-                let best = FONT_SCALE_MAX;
-                let fitsAtMax = measureContentHeight() <= availableHeight + 1;
+                const rawScale = naturalHeight > 0 ? availableHeight / naturalHeight : 1;
+                const scale = Math.min(FIT_MAX_ZOOM / 100, Math.max(FIT_MIN_ZOOM / 100, rawScale));
+                const zoom = Math.round(scale * 100);
+                const fits = rawScale >= (FIT_MIN_ZOOM / 100);
 
-                if (!fitsAtMax) {
-                    // Semak had BAWAH (paling kecil) — jika masih tidak muat, itulah
-                    // yang terbaik yang boleh dicapai (kandungan memang terlalu panjang).
-                    root.style.setProperty('--opr-scale', FONT_SCALE_MIN);
-                    const fitsAtMin = measureContentHeight() <= availableHeight + 1;
-
-                    if (!fitsAtMin) {
-                        best = FONT_SCALE_MIN;
-                    } else {
-                        // Carian dua-bahagi antara MIN (muat) dan MAX (tidak muat)
-                        // untuk cari nilai terbesar yang masih muat, dengan pantas (~12 lelaran).
-                        let lo = FONT_SCALE_MIN, hi = FONT_SCALE_MAX;
-                        for (let i = 0; i < 14 && (hi - lo) > FONT_SCALE_PRECISION; i++) {
-                            const mid = (lo + hi) / 2;
-                            root.style.setProperty('--opr-scale', mid);
-                            if (measureContentHeight() <= availableHeight + 1) {
-                                lo = mid;
-                            } else {
-                                hi = mid;
-                            }
-                        }
-                        best = lo;
-                    }
+                if (Math.abs(scale - 1) > 0.005) {
+                    inner.style.transform = `scale(${scale})`;
+                    inner.style.width = `${100 / scale}%`;
+                } else {
+                    inner.style.transform = 'none';
+                    inner.style.width = '100%';
                 }
-
-                root.style.setProperty('--opr-scale', best);
-                const finalHeight = measureContentHeight();
-                const fits = finalHeight <= availableHeight + 1;
-                const percent = Math.round(best * 100);
 
                 if (statusCard && statusText) {
                     if (fits) {
                         statusCard.className = 'bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
                         statusText.parentElement.querySelector('i').className = 'fa-solid fa-circle-check text-emerald-600';
-                        if (percent > 102) {
-                            statusText.textContent = `Tulisan dibesarkan automatik kepada ${percent}% untuk mengisi ruang muka surat.`;
-                        } else if (percent < 98) {
-                            statusText.textContent = `Tulisan dikecilkan automatik kepada ${percent}% supaya muat dalam 1 muka surat.`;
+                        if (zoom > 102) {
+                            statusText.textContent = `Paparan dibesarkan automatik kepada ${zoom}% untuk mengisi ruang muka surat.`;
+                        } else if (zoom < 98) {
+                            statusText.textContent = `Paparan dikecilkan automatik kepada ${zoom}% supaya muat dalam 1 muka surat.`;
                         } else {
                             statusText.textContent = 'Kandungan muat penuh dalam 1 muka surat A4.';
                         }
                     } else {
                         statusCard.className = 'bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
                         statusText.parentElement.querySelector('i').className = 'fa-solid fa-triangle-exclamation text-rose-600';
-                        statusText.textContent = `Kandungan terlalu panjang walaupun tulisan sudah dikecilkan ke had minimum — sila kurangkan bilangan/panjang butiran (Objektif, Implementasi atau SWOT).`;
+                        statusText.textContent = `Kandungan terlalu panjang walaupun pada ${FIT_MIN_ZOOM}% — sila kurangkan bilangan/panjang butiran (Objektif, Implementasi atau SWOT).`;
                     }
                 }
             });
         }
+
 
         // Fungsi Kemaskini Pratonton A4
         function updatePreview() {
@@ -1151,32 +1089,10 @@
             // 4. Penjana Galeri Gambar
             renderGalleryHTML();
 
-            // Tandatangan
-            const getInpValue = (id) => (document.getElementById(id)?.value || '').trim();
-
-            const pNama = getInpValue('inp-p-nama');
-            const pJawatan = getInpValue('inp-p-jawatan');
-            const pTarikh = getInpValue('inp-p-tarikh');
-
-            const outPNama = document.getElementById('out-p-nama');
-            const outPJawatan = document.getElementById('out-p-jawatan');
-            const outPTarikh = document.getElementById('out-p-tarikh');
-
-            if (outPNama) outPNama.textContent = pNama ? `( ${pNama} )` : '( Nama: ________________________ )';
-            if (outPJawatan) outPJawatan.textContent = pJawatan ? `Jawatan: ${pJawatan}` : 'Jawatan: ________________________';
-            if (outPTarikh) outPTarikh.textContent = pTarikh ? `Tarikh: ${pTarikh}` : 'Tarikh: ________________________';
-
-            const kNama = getInpValue('inp-k-nama');
-            const kJawatan = getInpValue('inp-k-jawatan');
-            const kTarikh = getInpValue('inp-k-tarikh');
-
-            const outKNama = document.getElementById('out-k-nama');
-            const outKJawatan = document.getElementById('out-k-jawatan');
-            const outKTarikh = document.getElementById('out-k-tarikh');
-
-            if (outKNama) outKNama.textContent = kNama ? `( ${kNama} )` : '( Nama: ________________________ )';
-            if (outKJawatan) outKJawatan.textContent = kJawatan ? `Jawatan: ${kJawatan}` : 'Jawatan: ________________________';
-            if (outKTarikh) outKTarikh.textContent = kTarikh ? `Tarikh: ${kTarikh}` : 'Tarikh: ________________________';
+            // Disediakan Oleh (Unit/Bahagian)
+            const disediakanUnit = (document.getElementById('inp-disediakan-unit')?.value || '').trim();
+            const outDisediakanUnit = document.getElementById('out-disediakan-unit');
+            if (outDisediakanUnit) outDisediakanUnit.textContent = disediakanUnit || 'Unit / Bahagian Penyedia';
 
             saveDraftToStorage();
             autoFitToPage();
@@ -1232,13 +1148,7 @@
                 if (el) el.value = val;
             };
 
-            setInpValue('inp-p-nama', 'Ahmad Bin Zulkifli');
-            setInpValue('inp-p-jawatan', 'Penolong Pengarah / Setiausaha');
-            setInpValue('inp-p-tarikh', '18 Ogos 2026');
-
-            setInpValue('inp-k-nama', 'Pegawai Pendidikan Daerah Subis');
-            setInpValue('inp-k-jawatan', 'Ketua Sektor / PPD Subis');
-            setInpValue('inp-k-tarikh', '19 Ogos 2026');
+            setInpValue('inp-disediakan-unit', 'Unit Pembangunan Bakat Murid');
 
             updatePreview();
         }
@@ -1302,8 +1212,7 @@
                 showCaption: document.getElementById('chk-show-caption')?.checked ?? true,
                 loadedImages,
                 logoSrc: document.getElementById('out-logo')?.src || '',
-                pNama: getVal('inp-p-nama'), pJawatan: getVal('inp-p-jawatan'), pTarikh: getVal('inp-p-tarikh'),
-                kNama: getVal('inp-k-nama'), kJawatan: getVal('inp-k-jawatan'), kTarikh: getVal('inp-k-tarikh'),
+                disediakanUnit: getVal('inp-disediakan-unit'),
                 theme: activeThemeKey,
             };
         }
@@ -1345,8 +1254,7 @@
             if (chkCap) chkCap.checked = data.showCaption !== false;
             setVal('inp-cap-1', data.caps?.[0]); setVal('inp-cap-2', data.caps?.[1]);
             setVal('inp-cap-3', data.caps?.[2]); setVal('inp-cap-4', data.caps?.[3]);
-            setVal('inp-p-nama', data.pNama); setVal('inp-p-jawatan', data.pJawatan); setVal('inp-p-tarikh', data.pTarikh);
-            setVal('inp-k-nama', data.kNama); setVal('inp-k-jawatan', data.kJawatan); setVal('inp-k-tarikh', data.kTarikh);
+            setVal('inp-disediakan-unit', data.disediakanUnit);
 
             document.getElementById('obj-inputs-container').innerHTML = '';
             document.getElementById('imp-inputs-container').innerHTML = '';
