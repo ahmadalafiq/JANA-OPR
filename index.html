@@ -31,10 +31,10 @@
         /* Apabila toggle "Besarkan Tulisan" diaktifkan, semua tahap dibesarkan
            sekali gus mengikut nisbah hierarki yang sama. */
         html.opr-text-boost {
-            --opr-fs-1: 12px;
-            --opr-fs-2: 12.5px;
-            --opr-fs-3: 13px;
-            --opr-fs-4: 13.5px;
+            --opr-fs-1: 11.5px;
+            --opr-fs-2: 12px;
+            --opr-fs-3: 12.5px;
+            --opr-fs-4: 13px;
         }
 
         /* Dimensions A4 Standard - Perfect Fit 1-Page Layout */
@@ -417,7 +417,7 @@
 
                             <!-- Tarikh -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-regular fa-calendar-days text-indigo-600 theme-icon mr-1.5"></i>TARIKH
                                 </span>
                                 <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
@@ -426,7 +426,7 @@
 
                             <!-- Masa -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-regular fa-clock text-indigo-600 theme-icon mr-1.5"></i>MASA
                                 </span>
                                 <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
@@ -435,7 +435,7 @@
 
                             <!-- Tempat -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-solid fa-location-dot text-indigo-600 theme-icon mr-1.5"></i>TEMPAT
                                 </span>
                                 <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
@@ -444,7 +444,7 @@
 
                             <!-- Anjuran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-solid fa-building text-indigo-600 theme-icon mr-1.5"></i>ANJURAN
                                 </span>
                                 <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
@@ -453,7 +453,7 @@
 
                             <!-- Sasaran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-solid fa-users text-indigo-600 theme-icon mr-1.5"></i>SASARAN
                                 </span>
                                 <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
@@ -462,7 +462,7 @@
 
                             <!-- Kehadiran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-solid fa-user-check text-indigo-600 theme-icon mr-1.5"></i>KEHADIRAN
                                 </span>
                                 <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
@@ -986,7 +986,7 @@
         // Fungsi Auto-Fit Sebenar — ukur ketinggian kandungan sebenar berbanding
         // ruang sebenar yang ada pada halaman A4, dan susutkan sehingga muat betul-betul.
         // Ini menggantikan heuristik lama yang cuma meneka ikut kiraan aksara.
-        const FIT_MIN_ZOOM = 90;   // had bawah dinaikkan supaya saiz tulisan minimum (10-11px) kekal mudah dibaca/dicetak
+        const FIT_MIN_ZOOM = 80;   // had bawah — cukup ruang untuk auto-fit menyusut apabila "Besarkan Tulisan" aktif, supaya kandungan tidak bertindih
         const FIT_STEP = 2;
 
         function autoFitToPage() {
@@ -1370,7 +1370,8 @@
         }
 
         function triggerPrint() {
-            window.print();
+            autoFitToPage();
+            setTimeout(() => window.print(), 150);
         }
 
         function openPdfVisualModal() {
