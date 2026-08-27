@@ -10,49 +10,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Penjana PDF In-House (menangkap paparan A4 terus sebagai fail .pdf) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #0b1329;
-        }
-
-        /* Hierarki Saiz Tulisan Laporan OPR — saiz reka bentuk penuh (100%)
-           bermula 10-11.5px, dengan had minimum SEBENAR 9px (tahap 1) apabila
-           dikecilkan oleh autoFitToPage(). Tahap 1 (label/badge kecil) < 2
-           (label/keterangan) < 3 (teks isi) < 4 (penekanan).
-           Saiz sebenar pada halaman dikawal oleh autoFitToPage(): LAPIS 1
-           kecilkan --opr-fs-* (font-size BENAR, bukan transform) sehingga
-           muat atau sehingga had 9px; LAPIS 2 (jaring keselamatan) barulah
-           transform:scale pada #a4-scale-inner mengecilkan ruang+gambar+fon
-           serentak jika 9px pun masih tak cukup — supaya kandungan tidak
-           pernah terpotong walau sepadat mana pun. */
-        html {
-            --opr-fs-1: 10px;
-            --opr-fs-2: 10.5px;
-            --opr-fs-3: 11px;
-            --opr-fs-4: 11.5px;
-            /* Fon TETAP untuk Header & Maklumat Program — TIDAK PERNAH dikecilkan
-               oleh autoFitToPage(); bahagian ini kekal "almost fit-to-content". */
-            --opr-fs-fixed-1: 10px;
-            --opr-fs-fixed-2: 10.5px;
-            --opr-fs-fixed-3: 11px;
-            --opr-fs-fixed-4: 11.5px;
-        }
-
-        #a4-scale-inner {
-            transform-origin: top left;
-        }
-
-        /* #a4-main-grid is the element actually scaled by autoFitToPage() (LAPIS 2
-           jaring keselamatan / pembesaran). Its width is temporarily changed to
-           100/zoomScale% and then counter-scaled back to 100% — this only lines
-           up correctly if the scale anchors at the top-left corner. Without this,
-           the browser defaults to scaling from the CENTER, which pushes content
-           outward/inward symmetrically on BOTH left and right edges — causing
-           text to be clipped at the start of lines and elements on the right
-           (e.g. gallery badges) to spill outside their boxes. */
-        #a4-main-grid {
-            transform-origin: top left;
         }
 
         /* Dimensions A4 Standard - Perfect Fit 1-Page Layout */
@@ -78,7 +42,7 @@
             justify-content: space-between;
         }
 
-        /* Gaya Khusus Cetakan Browser Native (Print) */
+        /* Gaya Khusus Cetakan Browser Native Print / PDF */
         @media print {
             @page {
                 size: A4 portrait;
@@ -124,9 +88,9 @@
                 <div>
                     <h1 class="text-base font-extrabold leading-tight flex items-center gap-2">
                         Penjana OPR
-                        <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-bold">Auto Saiz Tulisan • 1 Muka Surat</span>
+                        <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-bold">Auto-Fit 1 Muka Surat</span>
                     </h1>
-                    <p class="text-xs text-slate-400">Sektor Pembangunan Murid / PPD Subis — Cetak Terus 1 Muka Surat A4</p>
+                    <p class="text-xs text-slate-400">Sektor Pembangunan Murid / PPD Subis — Muat Turun PDF Terus</p>
                 </div>
             </div>
             
@@ -149,8 +113,11 @@
                 <button onclick="openPdfVisualModal()" class="px-3 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-teal-600/20 transition flex items-center gap-1.5">
                     <i class="fa-solid fa-eye text-sm"></i> Pratonton
                 </button>
-                <button onclick="triggerPrint()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-indigo-600/30 transition flex items-center gap-2" title="Guna dialog cetak pelayar (untuk cetak kertas terus)">
+                <button onclick="triggerPrint()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700" title="Guna dialog cetak pelayar (untuk cetak kertas terus)">
                     <i class="fa-solid fa-print text-sm"></i> Cetak
+                </button>
+                <button id="btn-download-pdf" onclick="generateAndDownloadPDF()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-indigo-600/30 transition flex items-center gap-2">
+                    <i class="fa-solid fa-file-arrow-down text-sm"></i> <span id="btn-download-pdf-label">Muat Turun PDF</span>
                 </button>
             </div>
         </div>
@@ -322,7 +289,7 @@
                         <input type="checkbox" id="chk-show-caption" checked onchange="updatePreview()" class="w-3.5 h-3.5 accent-indigo-600">
                         <label for="chk-show-caption" class="text-xs font-semibold text-gray-700 cursor-pointer">Papar Keterangan (Caption) Gambar dalam Galeri</label>
                     </div>
-                    <p class="text-[10.5px] text-slate-500 leading-snug">Gambar dimampatkan secara automatik semasa dimuat naik untuk memastikan draf kekal ringan dan pantas dimuat semula.</p>
+                    <p class="text-[10.5px] text-slate-500 leading-snug">Gambar dimampatkan secara automatik semasa dimuat naik untuk memastikan PDF kekal ringan dan cepat dijana.</p>
                 </div>
 
                 <!-- Input Muat Naik Gambar 1-4 -->
@@ -354,14 +321,32 @@
                 </div>
             </div>
 
-            <!-- Kad 7: Pengesahan Laporan -->
+            <!-- Kad 7: Pengesahan & Pengesah -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2 border-b pb-2">
                     <i class="fa-solid fa-signature text-indigo-600"></i> Pengesahan Laporan
                 </h2>
-                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                    <label class="block text-xs font-semibold text-gray-700 mb-1">Disediakan Oleh (Nama Unit / Bahagian)</label>
-                    <input type="text" id="inp-disediakan-unit" oninput="updatePreview()" placeholder="Cth: Unit Pembangunan Bakat Murid" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                <div class="space-y-3">
+                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <p class="text-xs font-bold text-gray-700 mb-2">Maklumat Penyedia (Disediakan Oleh)</p>
+                        <div class="space-y-2">
+                            <input type="text" id="inp-p-nama" oninput="updatePreview()" placeholder="Nama Penyedia" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="inp-p-jawatan" oninput="updatePreview()" placeholder="Jawatan Penyedia" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <input type="text" id="inp-p-tarikh" oninput="updatePreview()" placeholder="Tarikh" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <p class="text-xs font-bold text-gray-700 mb-2">Maklumat Pengesah (Disahkan Oleh)</p>
+                        <div class="space-y-2">
+                            <input type="text" id="inp-k-nama" oninput="updatePreview()" placeholder="Nama Pengesah" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="inp-k-jawatan" oninput="updatePreview()" placeholder="Jawatan Pengesah" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <input type="text" id="inp-k-tarikh" oninput="updatePreview()" placeholder="Tarikh" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -375,36 +360,35 @@
 
                 <div id="a4-inner-content-el" class="a4-inner-content">
                     <!-- Pembungkus Kandungan Utama Mengembang Penuh (flex-1) -->
-                    <div id="a4-scalable-wrapper" class="flex-1 flex flex-col min-h-0 overflow-hidden transition-all duration-200">
-                    <div id="a4-scale-inner" class="flex flex-col justify-between space-y-2">
+                    <div id="a4-scalable-wrapper" class="flex-1 flex flex-col justify-between space-y-2.5 min-h-0 transition-all duration-200">
                         
                         <!-- Pengepala Utama (Logo & Header Besarkan Saiz) -->
-                        <div class="flex items-center justify-between border-b-2 pb-1.5 border-slate-900 shrink-0">
-                            <div class="flex items-center space-x-2.5">
-                                <div class="w-[54px] h-[54px] min-w-[54px] min-h-[54px] rounded-lg bg-slate-50 border border-slate-300 p-1 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+                        <div class="flex items-center justify-between border-b-2 pb-2.5 border-slate-900 shrink-0">
+                            <div class="flex items-center space-x-3.5">
+                                <div class="w-[76px] h-[76px] min-w-[76px] min-h-[76px] rounded-xl bg-slate-50 border border-slate-300 p-1.5 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
                                     <img id="out-logo" src="" alt="Logo Organisasi" class="max-h-full max-w-full object-contain block">
                                 </div>
                                 <div class="flex-1">
-                                    <h2 id="out-org" class="text-sm font-black tracking-wider text-slate-900 uppercase leading-tight">
+                                    <h2 id="out-org" class="text-sm sm:text-base md:text-lg font-black tracking-wider text-slate-900 uppercase leading-tight">
                                         SEKTOR PEMBANGUNAN MURID
                                     </h2>
-                                    <p id="out-sub-org" class="text-[10px] text-slate-700 uppercase tracking-wide font-black mt-0.5">
+                                    <p id="out-sub-org" class="text-xs sm:text-sm text-slate-700 uppercase tracking-wide font-black mt-1">
                                         PEJABAT PENDIDIKAN DAERAH SUBIS
                                     </p>
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <span id="theme-badge" class="inline-block bg-slate-900 text-white text-[length:var(--opr-fs-fixed-4)] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                                <span id="theme-badge" class="inline-block bg-slate-900 text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                                     ONE PAGE REPORT (OPR)
                                 </span>
                             </div>
                         </div>
 
                         <!-- Grid Kad Maklumat Program -->
-                        <div class="grid grid-cols-2 gap-1.5 text-[length:var(--opr-fs-fixed-3)] shrink-0">
+                        <div class="grid grid-cols-2 gap-1.5 text-[9.5px] shrink-0">
                             <!-- Nama Program -->
                             <div id="theme-main-card" class="col-span-2 bg-slate-900 text-white p-2.5 rounded-lg flex items-center justify-start gap-2 shadow-xs border border-slate-800">
-                                <span class="text-[length:var(--opr-fs-fixed-2)] font-extrabold text-slate-300 uppercase tracking-wider shrink-0 bg-white/10 px-2 py-0.5 rounded">NAMA PROGRAM</span>
+                                <span class="text-[8.5px] font-extrabold text-slate-300 uppercase tracking-wider shrink-0 bg-white/10 px-2 py-0.5 rounded">NAMA PROGRAM</span>
                                 <h3 id="out-nama-program" class="font-bold text-xs uppercase tracking-wide text-white text-left flex-1 leading-snug">
                                     LAPORAN PROGRAM / AKTIVITI
                                 </h3>
@@ -412,117 +396,113 @@
 
                             <!-- Tarikh -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-regular fa-calendar-days text-indigo-600 theme-icon mr-1.5"></i>TARIKH
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
-                                <span id="out-tarikh" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
+                                <span id="out-tarikh" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Masa -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-regular fa-clock text-indigo-600 theme-icon mr-1.5"></i>MASA
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
-                                <span id="out-masa" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
+                                <span id="out-masa" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Tempat -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-solid fa-location-dot text-indigo-600 theme-icon mr-1.5"></i>TEMPAT
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
-                                <span id="out-tempat" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
+                                <span id="out-tempat" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Anjuran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-solid fa-building text-indigo-600 theme-icon mr-1.5"></i>ANJURAN
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
-                                <span id="out-anjuran" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
+                                <span id="out-anjuran" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Sasaran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-solid fa-users text-indigo-600 theme-icon mr-1.5"></i>SASARAN
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
-                                <span id="out-sasaran" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
+                                <span id="out-sasaran" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Kehadiran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-solid fa-user-check text-indigo-600 theme-icon mr-1.5"></i>KEHADIRAN
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
-                                <span id="out-kehadiran" class="font-extrabold text-indigo-700 theme-highlight text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
+                                <span id="out-kehadiran" class="font-extrabold text-indigo-700 theme-highlight text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
                         </div>
 
-                        <!-- Kontena KUNCI (Lock) — had ruang tegas untuk kandungan boleh-kecil sahaja.
-                             Header & Maklumat Program di ATAS kontena ni KEKAL saiz asal (fit-to-content),
-                             tidak pernah disentuh oleh autoFitToPage(). -->
-                        <div id="a4-main-grid-lock" class="flex-1 min-h-0 flex flex-col overflow-hidden">
                         <!-- Layout Pembahagi: Teks Kiri vs Gambar Kanan - Dynamic Grid Resize Ratio -->
-                        <div id="a4-main-grid" class="grid grid-cols-12 gap-2.5 items-stretch min-h-0 flex-1">
+                        <div id="a4-main-grid" class="grid grid-cols-12 gap-3 flex-1 items-stretch min-h-0">
                             
                             <!-- LAJUR KIRI: Teks Kandungan Laporan (Dinamik col-span) -->
-                            <div id="a4-left-col" class="col-span-7 flex flex-col justify-between space-y-1.5 h-full min-h-0">
+                            <div id="a4-left-col" class="col-span-7 flex flex-col justify-between space-y-2 h-full min-h-0">
                                 
                                 <!-- 1. Objektif Program -->
                                 <div class="flex flex-col flex-1">
-                                    <div id="theme-sec-1" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1 shrink-0">
+                                    <div id="theme-sec-1" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
                                         <i class="fa-solid fa-bullseye text-indigo-600 theme-icon text-xs"></i>
-                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">1. OBJEKTIF PROGRAM</h3>
+                                        <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">1. OBJEKTIF PROGRAM</h3>
                                     </div>
-                                    <div id="out-obj-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2 text-[length:var(--opr-fs-3)] space-y-1 flex-1 leading-relaxed">
+                                    <div id="out-obj-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[9.5px] space-y-1.5 flex-1 leading-relaxed">
                                         <!-- Penjana Objektif Dynamik -->
                                     </div>
                                 </div>
 
                                 <!-- 2. Ringkasan Implementasi -->
                                 <div class="flex flex-col flex-1">
-                                    <div id="theme-sec-2" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1 shrink-0">
+                                    <div id="theme-sec-2" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
                                         <i class="fa-solid fa-list-check text-indigo-600 theme-icon text-xs"></i>
-                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">2. RINGKASAN IMPLEMENTASI</h3>
+                                        <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">2. RINGKASAN IMPLEMENTASI</h3>
                                     </div>
-                                    <div id="out-imp-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2 text-[length:var(--opr-fs-3)] space-y-1 flex-1 leading-relaxed">
+                                    <div id="out-imp-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[9.5px] space-y-1.5 flex-1 leading-relaxed">
                                         <!-- Penjana Implementasi Dynamik -->
                                     </div>
                                 </div>
 
                                 <!-- 3. Impak & Analisis SWOT -->
                                 <div class="shrink-0">
-                                    <div id="theme-sec-3" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1">
+                                    <div id="theme-sec-3" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5">
                                         <i class="fa-solid fa-chart-pie text-indigo-600 theme-icon text-xs"></i>
-                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">3. IMPAK & ANALISIS SWOT</h3>
+                                        <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">3. IMPAK & ANALISIS SWOT</h3>
                                     </div>
-                                    <div class="grid grid-cols-2 gap-1.5 text-[length:var(--opr-fs-2)]">
+                                    <div class="grid grid-cols-2 gap-1.5 text-[9px]">
                                         <!-- Kekuatan (Strengths) -->
                                         <div class="bg-emerald-50/90 border border-emerald-300 rounded-lg p-1.5">
-                                            <span class="inline-block bg-emerald-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kekuatan (S)</span>
-                                            <div id="out-swoc-s" class="text-emerald-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
+                                            <span class="inline-block bg-emerald-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kekuatan (S)</span>
+                                            <div id="out-swoc-s" class="text-emerald-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
                                         </div>
                                         <!-- Kelemahan (Weaknesses) -->
                                         <div class="bg-amber-50/90 border border-amber-300 rounded-lg p-1.5">
-                                            <span class="inline-block bg-amber-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kelemahan (W)</span>
-                                            <div id="out-swoc-w" class="text-amber-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
+                                            <span class="inline-block bg-amber-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kelemahan (W)</span>
+                                            <div id="out-swoc-w" class="text-amber-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
                                         </div>
                                         <!-- Peluang (Opportunities) -->
                                         <div class="bg-sky-50/90 border border-sky-300 rounded-lg p-1.5">
-                                            <span class="inline-block bg-sky-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Peluang (O)</span>
-                                            <div id="out-swoc-o" class="text-sky-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
+                                            <span class="inline-block bg-sky-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Peluang (O)</span>
+                                            <div id="out-swoc-o" class="text-sky-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
                                         </div>
                                         <!-- Ancaman/Cabaran (Threats) -->
                                         <div class="bg-rose-50/90 border border-rose-300 rounded-lg p-1.5">
-                                            <span id="theme-swoc-badge" class="inline-block bg-rose-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Cabaran (T)</span>
-                                            <div id="out-swoc-t" class="text-rose-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
+                                            <span id="theme-swoc-badge" class="inline-block bg-rose-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Cabaran (T)</span>
+                                            <div id="out-swoc-t" class="text-rose-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -531,30 +511,53 @@
 
                             <!-- LAJUR KANAN: Galeri Gambar Dinamik (Dinamik col-span) -->
                             <div id="a4-right-col" class="col-span-5 flex flex-col justify-between h-full min-h-0">
-                                <div id="theme-sec-4" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1 shrink-0">
+                                <div id="theme-sec-4" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
                                     <i class="fa-solid fa-camera text-indigo-600 theme-icon text-xs"></i>
-                                    <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">4. GALERI</h3>
+                                    <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">4. GALERI</h3>
                                 </div>
                                 
                                 <!-- Bekas Kontena Gambar Berpembolehubah -->
-                                <div id="out-img-gallery-container" class="flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-1.5 min-h-0 h-full">
+                                <div id="out-img-gallery-container" class="flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-2 min-h-0 h-full">
                                     <!-- Terjana Secara Dinamik Melalui updatePreview() -->
-                                </div>
-
-                                <!-- Ruangan Tandatangan Pengesahan (Bawah Galeri, Lajur Kanan Sahaja) -->
-                                <div id="a4-signature-block" class="pt-1.5 mt-1.5 border-t-2 border-slate-300 shrink-0">
-                                    <div class="bg-slate-50/80 p-2 rounded-lg border border-slate-300 text-[length:var(--opr-fs-2)]">
-                                        <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[length:var(--opr-fs-2)] mb-1 flex items-center gap-1">
-                                            <i class="fa-solid fa-pen-nib text-indigo-600"></i> Disediakan Oleh:
-                                        </p>
-                                        <p class="font-black text-slate-900 text-[length:var(--opr-fs-4)]" id="out-disediakan-unit">Unit / Bahagian Penyedia</p>
-                                    </div>
                                 </div>
                             </div>
 
                         </div>
-                        </div>
                     </div>
+
+                    <!-- Ruangan Tandatangan Pengesahan (Sauh Bawah A4) -->
+                    <div id="a4-signature-block" class="pt-3 border-t-2 border-slate-300 mt-2 shrink-0">
+                        <div class="grid grid-cols-2 gap-4 text-[9px]">
+                            <!-- Kolum 1: Disediakan Oleh -->
+                            <div class="bg-slate-50/80 p-3 rounded-lg border border-slate-300 flex flex-col justify-between">
+                                <div>
+                                    <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[8.5px] mb-0.5 flex items-center gap-1">
+                                        <i class="fa-solid fa-pen-nib text-indigo-600"></i> Disediakan Oleh:
+                                    </p>
+                                    <div class="h-8"></div>
+                                    <p class="font-black text-slate-900 border-b border-slate-400 pb-0.5 text-[9.5px]" id="out-p-nama">( Nama: ________________________ )</p>
+                                </div>
+                                <div class="mt-1.5">
+                                    <p id="out-p-jawatan" class="text-slate-700 font-semibold">Jawatan: ________________________</p>
+                                    <p id="out-p-tarikh" class="text-slate-700 font-semibold">Tarikh: ________________________</p>
+                                </div>
+                            </div>
+
+                            <!-- Kolum 2: Disahkan Oleh -->
+                            <div class="bg-slate-50/80 p-3 rounded-lg border border-slate-300 flex flex-col justify-between">
+                                <div>
+                                    <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[8.5px] mb-0.5 flex items-center gap-1">
+                                        <i class="fa-solid fa-user-check text-indigo-600"></i> Disahkan / Diterima Oleh:
+                                    </p>
+                                    <div class="h-8"></div>
+                                    <p class="font-black text-slate-900 border-b border-slate-400 pb-0.5 text-[9.5px]" id="out-k-nama">( Nama: ________________________ )</p>
+                                </div>
+                                <div class="mt-1.5">
+                                    <p id="out-k-jawatan" class="text-slate-700 font-semibold">Jawatan: ________________________</p>
+                                    <p id="out-k-tarikh" class="text-slate-700 font-semibold">Tarikh: ________________________</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -573,12 +576,12 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold">Pratonton Visual Dokumen A4</h3>
-                        <p class="text-xs text-slate-400">Paparan tepat nisbah muka surat A4 sebelum dicetak</p>
+                        <p class="text-xs text-slate-400">Paparan tepat nisbah muka surat A4 sebelum dicetak atau disimpan sebagai PDF</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="triggerPrint()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-print"></i> Cetak
+                    <button onclick="generateAndDownloadPDF()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-file-arrow-down"></i> Muat Turun PDF
                     </button>
                     <button onclick="closePdfVisualModal()" class="p-2 text-slate-400 hover:text-white rounded-lg text-lg transition">
                         <i class="fa-solid fa-xmark"></i>
@@ -605,7 +608,7 @@
 
             <!-- Modal Footer -->
             <div class="bg-gray-50 border-t px-6 py-3 flex justify-between items-center text-xs text-gray-500 shrink-0">
-                <span>Dioptimumkan untuk cetakan kertas standard A4.</span>
+                <span>Dioptimumkan untuk cetakan kertas standard A4 & pencetakan PDF tempatan.</span>
                 <button onclick="closePdfVisualModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-lg transition">
                     Tutup Pratonton
                 </button>
@@ -649,16 +652,6 @@
                 anjuran: document.getElementById('inp-anjuran')?.value.trim() || '',
                 sasaran: document.getElementById('inp-sasaran')?.value.trim() || '',
                 kehadiran: document.getElementById('inp-kehadiran')?.value.trim() || '',
-                // PENTING: ini hanya PETUNJUK gaya dihantar ke /api/generate — ia
-                // TIDAK menguatkuasakan apa-apa dengan sendirinya. Prompt SEBENAR
-                // yang dihantar kepada model AI (Gemini) berada di dalam fail
-                // pelayan /api/generate.js (bukan sebahagian fail HTML ini), jadi
-                // fail itu MESTI dikemaskini untuk benar-benar membaca medan ini
-                // dan menyisipkannya ke dalam arahan sistem/prompt Gemini —
-                // contohnya: "Setiap ayat Objektif/Implementasi/SWOT MESTI ringkas
-                // (maksimum ± 15-18 patah perkataan sahaja), padat dan terus ke
-                // isi penting — elak ayat berjela atau berulang."
-                gayaFormat: 'ringkas-bermakna',
             };
 
             if (!context.namaProgram) {
@@ -796,7 +789,7 @@
             if (accentBar) accentBar.className = `h-2.5 w-full bg-gradient-to-r ${t.accent}`;
 
             const badge = document.getElementById('theme-badge');
-            if (badge) badge.className = `inline-block ${t.badge} text-[length:var(--opr-fs-fixed-4)] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm`;
+            if (badge) badge.className = `inline-block ${t.badge} text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm`;
 
             const mainCard = document.getElementById('theme-main-card');
             if (mainCard) mainCard.className = `col-span-2 ${t.mainCard} text-white p-2.5 rounded-lg flex items-center justify-start gap-2 shadow-xs border border-slate-800`;
@@ -805,7 +798,7 @@
                 el.className = el.className.replace(/text-(indigo|emerald|sky|rose)-\d+/, t.icon);
             });
             document.querySelectorAll('.theme-highlight').forEach(el => {
-                el.className = `font-extrabold ${t.highlight} text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5`;
+                el.className = `font-extrabold ${t.highlight} text-[10px] text-left truncate flex-1 ml-0.5`;
             });
 
             ['theme-sec-1', 'theme-sec-2', 'theme-sec-3', 'theme-sec-4'].forEach(id => {
@@ -814,15 +807,15 @@
             });
 
             document.querySelectorAll('.theme-num').forEach(el => {
-                el.className = `theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[length:var(--opr-fs-2)] shrink-0 mt-0.5`;
+                el.className = `theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[8.5px] shrink-0 mt-0.5`;
             });
 
             const swocBadge = document.getElementById('theme-swoc-badge');
-            if (swocBadge) swocBadge.className = `inline-block ${t.swocBadge} text-white font-black text-[length:var(--opr-fs-1)] px-2 py-0.5 rounded uppercase mb-1 shadow-2xs`;
+            if (swocBadge) swocBadge.className = `inline-block ${t.swocBadge} text-white font-black text-[8px] px-2 py-0.5 rounded uppercase mb-1 shadow-2xs`;
         }
 
         // Fungsi Mampatan Imej — resize + JPEG compress di sisi klien sebelum disimpan.
-        // Ini penting supaya draf/cetakan kekal ringan & pantas dipaparkan,
+        // Ini penting supaya PDF yang dijana (via html2canvas) kekal ringan & pantas,
         // memandangkan gambar terus dari kamera boleh 4-8MB setiap satu.
         function compressImageFile(file, maxDim, quality) {
             return new Promise((resolve, reject) => {
@@ -960,198 +953,58 @@
             container.className = 'flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-2 min-h-0 h-full';
             container.innerHTML = imgs.map((img, i) => `
                 <div class="bg-white border border-slate-300 p-1 rounded-lg shadow-xs flex flex-row items-center gap-1.5 h-full min-h-0">
-                    <div class="${showCaption ? 'h-24 w-32 shrink-0' : 'h-28 w-full shrink-0'} min-h-0 bg-slate-100 rounded overflow-hidden relative border border-slate-200">
-                        <span class="absolute top-0.5 left-0.5 bg-slate-900/80 text-white text-[length:var(--opr-fs-1)] px-1 py-0.5 rounded font-black z-10">#${i + 1}</span>
+                    <div class="h-full ${showCaption ? 'aspect-[4/3] shrink-0' : 'flex-1 w-full'} min-h-0 bg-slate-100 rounded overflow-hidden relative border border-slate-200">
+                        <span class="absolute top-0.5 left-0.5 bg-slate-900/80 text-white text-[7.5px] px-1 py-0.5 rounded font-black z-10">#${i + 1}</span>
                         <img src="${img}" class="w-full h-full ${fitClass} absolute inset-0" alt="Gambar ${i + 1}">
                     </div>
-                    ${showCaption ? `<p class="text-[length:var(--opr-fs-2)] font-bold text-slate-800 text-left leading-tight flex-1 min-w-0 line-clamp-3">${caps[i]}</p>` : ''}
+                    ${showCaption ? `<p class="text-[8.5px] font-bold text-slate-800 text-left leading-tight flex-1 min-w-0 line-clamp-3">${caps[i]}</p>` : ''}
                 </div>
             `).join('');
         }
 
-        // Fungsi Auto Saiz Tulisan — SISTEM BERLAPIS BARU:
-        //
-        // Header & grid "Maklumat Program" (tarikh/masa/tempat/anjuran/sasaran/
-        // kehadiran) KINI KEKAL SAIZ ASAL (fit-to-content) — TIDAK PERNAH
-        // disentuh oleh fungsi ini (guna --opr-fs-fixed-* yang statik).
-        //
-        // Hanya kandungan di dalam #a4-main-grid (Objektif, Ringkasan, SWOT,
-        // Galeri, Tandatangan) — dibalut dalam kontena KUNCI #a4-main-grid-lock
-        // — yang diselaraskan, ikut LAPISAN:
-        //
-        // LAPIS 1 (Fon Sebenar, --opr-fs-*): dikecilkan BENAR (bukan transform)
-        // langkah demi langkah dari 100% sehingga had minimum 9px (tahap 1),
-        // sambil ukur semula susun atur sebenar #a4-main-grid pada setiap langkah.
-        //
-        // LAPIS 2 (Ruang — jaring keselamatan + KUNCI): jika #a4-main-grid masih
-        // tak muat dalam ruang yang diperuntukkan (selepas tolak tinggi Header +
-        // Maklumat Program) walaupun fon dah pada 9px, blok #a4-main-grid
-        // dikecilkan lagi melalui transform:scale. Kontena #a4-main-grid-lock
-        // sentiasa overflow:hidden pada tinggi yang diperuntukkan — jadi
-        // TIDAK MUNGKIN melebihi (over) atau terpotong secara tidak terkawal;
-        // had bawah paling teruk ialah teks jadi kecil, bukan hilang.
-        const FONT_SCALE_MIN = 0.9;   // 0.9 x 10px tahap-1 = 9px (had minimum bacaan)
-        const FONT_SCALE_STEP = 0.02;
-        const FIT_MIN_ZOOM = 45;      // had bawah lapis 2 (jaring keselamatan sahaja)
-        const FIT_MAX_ZOOM = 130;     // had atas — elak paparan jadi keterlaluan besar bila kandungan sedikit
-
-        function setFontScale(scale) {
-            const root = document.documentElement;
-            root.style.setProperty('--opr-fs-1', (10 * scale).toFixed(2) + 'px');
-            root.style.setProperty('--opr-fs-2', (10.5 * scale).toFixed(2) + 'px');
-            root.style.setProperty('--opr-fs-3', (11 * scale).toFixed(2) + 'px');
-            root.style.setProperty('--opr-fs-4', (11.5 * scale).toFixed(2) + 'px');
-        }
+        // Fungsi Auto-Fit Sebenar — ukur ketinggian kandungan sebenar berbanding
+        // ruang sebenar yang ada pada halaman A4, dan susutkan sehingga muat betul-betul.
+        // Ini menggantikan heuristik lama yang cuma meneka ikut kiraan aksara.
+        const FIT_MIN_ZOOM = 78;   // had bawah supaya teks tidak jadi terlalu kecil untuk dibaca/dicetak
+        const FIT_STEP = 2;
 
         function autoFitToPage() {
-            const scaleInner = document.getElementById('a4-scale-inner');
-            const lockWrapper = document.getElementById('a4-main-grid-lock');
-            const mainGrid = document.getElementById('a4-main-grid');
+            const wrapper = document.getElementById('a4-scalable-wrapper');
             const innerContent = document.getElementById('a4-inner-content-el');
+            const signatureBlock = document.getElementById('a4-signature-block');
             const statusCard = document.getElementById('fit-status-card');
             const statusText = document.getElementById('fit-status-text');
-            if (!scaleInner || !lockWrapper || !mainGrid || !innerContent) return;
+            if (!wrapper || !innerContent || !signatureBlock) return;
 
-            // Reset dahulu supaya ukuran sebenar (100%) diukur dari kandungan asal —
-            // header & maklumat program TIDAK PERNAH direset/diubah di sini.
-            mainGrid.style.transform = 'none';
-            mainGrid.style.width = '100%';
-            lockWrapper.style.height = 'auto';
-            lockWrapper.style.maxHeight = 'none';
-            setFontScale(1);
-
-            // PENTING: #a4-main-grid guna kelas Tailwind "flex-1" (flex:1 1 0%).
-            // Ini bermaksud SEBAIK SAHAJA #a4-main-grid-lock diberi tinggi TETAP
-            // (langkah "KUNCI kontena" di bawah), flexbox akan CUBA REGANGKAN
-            // #a4-main-grid semula untuk memenuhi tinggi tetap itu — MENIMPA
-            // skala/lebar yang kita dah kira dengan teliti, menyebabkan skala
-            // terpakai DUA KALI (sekali oleh kita, sekali oleh flex-grow) →
-            // kandungan jadi terlebih kecil dengan ruang putih kosong di bawah
-            // (kes kecilkan) ATAU melimpah terpotong semula di bawah (kes
-            // besarkan). Jadi kita nyahaktifkan regangan flex di sini supaya
-            // saiz #a4-main-grid selepas ini HANYA ditentukan oleh transform
-            // yang kita tetapkan sendiri, bukan oleh flexbox.
-            mainGrid.style.flexGrow = '0';
-            mainGrid.style.flexShrink = '0';
-            mainGrid.style.flexBasis = 'auto';
+            // Reset ke 100% dahulu supaya ukuran bermula dari saiz sebenar
+            wrapper.style.zoom = '100%';
 
             requestAnimationFrame(() => {
-                const totalAvailable = innerContent.clientHeight * 0.98;
+                const availableHeight = innerContent.clientHeight - signatureBlock.offsetHeight;
+                let zoom = 100;
+                let fits = wrapper.scrollHeight <= availableHeight;
 
-                // Tinggi sebenar Header + Maklumat Program (KEKAL, tak dikecilkan) +
-                // jurang (space-y-2 = 0.5rem/8px) antara header/info-grid/kontena kunci.
-                const fixedSections = Array.from(scaleInner.children).filter(
-                    el => el !== lockWrapper
-                );
-                const fixedHeight = fixedSections.reduce((sum, el) => sum + el.offsetHeight, 0);
-                const gapPx = 8 * fixedSections.length; // ~1 jurang selepas setiap seksyen tetap
-
-                const availableForMainGrid = Math.max(40, totalAvailable - fixedHeight - gapPx);
-
-                // LAPIS 1: cuba kecilkan fon SEBENAR (kandungan utama sahaja) langkah
-                // demi langkah sehingga muat dalam ruang yang diperuntukkan, atau
-                // sehingga had minimum 9px (tahap 1) tercapai.
-                let fontScale = 1;
-                let naturalHeight = mainGrid.scrollHeight;
-
-                while (naturalHeight > availableForMainGrid && fontScale > FONT_SCALE_MIN) {
-                    fontScale = Math.max(FONT_SCALE_MIN, fontScale - FONT_SCALE_STEP);
-                    setFontScale(fontScale);
-                    naturalHeight = mainGrid.scrollHeight;
+                while (!fits && zoom > FIT_MIN_ZOOM) {
+                    zoom -= FIT_STEP;
+                    wrapper.style.zoom = `${zoom}%`;
+                    fits = wrapper.scrollHeight <= availableHeight;
                 }
-
-                // LAPIS 2 (jaring keselamatan): kalau pada fon 9px pun masih tak muat,
-                // kecilkan #a4-main-grid (ruang + gambar + fon serentak) sikit lagi.
-                //
-                // PENTING: naturalHeight di atas diukur pada LEBAR 100%. Teknik
-                // scale+width di sini SENGAJA mengubah lebar sebenar #a4-main-grid
-                // (menyempit bila besarkan, melebar bila kecilkan) supaya selepas
-                // di-scale semula ia kembali litup 100% lebar induk. Tetapi
-                // menyempitkan lebar menyebabkan teks membalut lebih banyak baris
-                // (jadi LEBIH TINGGI) — jadi anggaran satu-langkah berasaskan
-                // naturalHeight (lebar 100%) BOLEH SILAP selepas lebar berubah,
-                // dan silap itulah punca kandungan "hilang" di BAWAH (dipotong oleh
-                // overflow-hidden lockWrapper walaupun dalam pratonton biasa, bukan
-                // sahaja semasa cetak). Jadi di sini kita UKUR SEBENAR
-                // (getBoundingClientRect, yang mengambil kira transform) selepas
-                // setiap langkah dan undur balik jika ia melampaui ruang.
-                const rawZoomScale = naturalHeight > 0 ? availableForMainGrid / naturalHeight : 1;
-
-                function applyZoom(scale) {
-                    if (Math.abs(scale - 1) < 0.001) {
-                        mainGrid.style.transform = 'none';
-                        mainGrid.style.width = '100%';
-                    } else {
-                        mainGrid.style.transform = `scale(${scale})`;
-                        mainGrid.style.width = `${100 / scale}%`;
-                    }
-                }
-
-                let zoomScale = 1;
-                applyZoom(1);
-                let renderedHeight = mainGrid.getBoundingClientRect().height;
-
-                if (renderedHeight > availableForMainGrid + 2) {
-                    // Kecilkan langkah demi langkah, ukur SEBENAR setiap kali,
-                    // sehingga benar-benar muat atau had bawah tercapai.
-                    let guard = 0;
-                    while (renderedHeight > availableForMainGrid + 2 && zoomScale > FIT_MIN_ZOOM / 100 && guard < 40) {
-                        zoomScale = Math.max(FIT_MIN_ZOOM / 100, zoomScale - 0.02);
-                        applyZoom(zoomScale);
-                        renderedHeight = mainGrid.getBoundingClientRect().height;
-                        guard++;
-                    }
-                } else if (rawZoomScale > 1.02 && fontScale >= FONT_SCALE_MIN) {
-                    // Kandungan sikit & fon dah pada saiz penuh — besarkan langkah
-                    // demi langkah, TAPI ukur SEBENAR selepas setiap langkah dan
-                    // BERHENTI + UNDUR sebaik sahaja ia akan melebihi ruang —
-                    // supaya tidak sekali-kali terlebih tinggi lalu terpotong di bawah.
-                    let guard = 0;
-                    while (renderedHeight < availableForMainGrid * 0.98 && zoomScale < FIT_MAX_ZOOM / 100 && guard < 40) {
-                        const nextZoom = Math.min(FIT_MAX_ZOOM / 100, zoomScale + 0.02);
-                        applyZoom(nextZoom);
-                        const nextHeight = mainGrid.getBoundingClientRect().height;
-                        if (nextHeight > availableForMainGrid + 2) {
-                            applyZoom(zoomScale); // undur ke langkah selamat terakhir
-                            renderedHeight = mainGrid.getBoundingClientRect().height;
-                            break;
-                        }
-                        zoomScale = nextZoom;
-                        renderedHeight = nextHeight;
-                        guard++;
-                    }
-                }
-
-                // KUNCI kontena: tetapkan tinggi TEPAT pada ruang yang diperuntukkan
-                // (overflow-hidden sedia ada pada lockWrapper) — supaya TIDAK PERNAH
-                // melebihi (over) mahupun terpotong secara tidak terkawal.
-                lockWrapper.style.height = `${availableForMainGrid}px`;
-                lockWrapper.style.maxHeight = `${availableForMainGrid}px`;
-
-                const trulyFits = renderedHeight <= (availableForMainGrid + 2);
 
                 if (statusCard && statusText) {
-                    if (trulyFits) {
+                    if (fits) {
                         statusCard.className = 'bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
                         statusText.parentElement.querySelector('i').className = 'fa-solid fa-circle-check text-emerald-600';
-                        if (fontScale < 0.999 && zoomScale < 0.999) {
-                            statusText.textContent = `Header & Maklumat Program kekal saiz asal. Fon kandungan lain dikecilkan kepada ${Math.round(fontScale * 100)}% (min 9px) dan ruang dikecilkan lagi kepada ${Math.round(zoomScale * 100)}% supaya muat 1 muka surat.`;
-                        } else if (fontScale < 0.999) {
-                            statusText.textContent = `Header & Maklumat Program kekal saiz asal. Fon kandungan lain dikecilkan automatik kepada ${Math.round(fontScale * 100)}% (min 9px) supaya muat.`;
-                        } else if (zoomScale > 1.02) {
-                            statusText.textContent = `Kandungan dibesarkan automatik kepada ${Math.round(zoomScale * 100)}% untuk mengisi ruang lebihan.`;
-                        } else {
-                            statusText.textContent = 'Kandungan muat penuh dalam 1 muka surat A4.';
-                        }
+                        statusText.textContent = zoom === 100
+                            ? 'Kandungan muat penuh dalam 1 muka surat A4.'
+                            : `Kandungan disesuaikan automatik kepada ${zoom}% supaya muat dalam 1 muka surat.`;
                     } else {
                         statusCard.className = 'bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
                         statusText.parentElement.querySelector('i').className = 'fa-solid fa-triangle-exclamation text-rose-600';
-                        statusText.textContent = `Kandungan terlalu panjang walaupun fon pada had minimum 9px — sila kurangkan bilangan/panjang butiran (Objektif, Implementasi, SWOT atau Galeri).`;
+                        statusText.textContent = `Kandungan terlalu panjang walaupun pada ${FIT_MIN_ZOOM}% — sila kurangkan bilangan/panjang butiran (Objektif, Implementasi atau SWOT).`;
                     }
                 }
             });
         }
-
 
         // Fungsi Kemaskini Pratonton A4
         function updatePreview() {
@@ -1183,7 +1036,7 @@
             const t = themes[activeThemeKey] || themes.indigo;
 
             if (objInputs.length === 0) {
-                objContainer.innerHTML = '<p class="text-slate-400 italic text-[length:var(--opr-fs-2)]">- Tiada Objektif Dinyatakan -</p>';
+                objContainer.innerHTML = '<p class="text-slate-400 italic text-[9px]">- Tiada Objektif Dinyatakan -</p>';
             } else {
                 objInputs.forEach((inp, idx) => {
                     const text = inp.value.trim();
@@ -1191,8 +1044,8 @@
                         const div = document.createElement('div');
                         div.className = 'flex items-start gap-1.5';
                         div.innerHTML = `
-                            <span class="theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[length:var(--opr-fs-2)] shrink-0 mt-0.5">${idx + 1}</span>
-                            <p class="text-slate-800 leading-snug font-medium text-[length:var(--opr-fs-3)]">${text || '-'}</p>
+                            <span class="theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[8.5px] shrink-0 mt-0.5">${idx + 1}</span>
+                            <p class="text-slate-800 leading-snug font-medium text-[9.5px]">${text || '-'}</p>
                         `;
                         objContainer.appendChild(div);
                     }
@@ -1205,13 +1058,13 @@
             impContainer.innerHTML = '';
 
             if (impInputs.length === 0) {
-                impContainer.innerHTML = '<p class="text-slate-400 italic text-[length:var(--opr-fs-2)]">- Tiada Ringkasan Aktiviti Dinyatakan -</p>';
+                impContainer.innerHTML = '<p class="text-slate-400 italic text-[9px]">- Tiada Ringkasan Aktiviti Dinyatakan -</p>';
             } else {
                 impInputs.forEach((inp) => {
                     const text = inp.value.trim();
                     if (text || impInputs.length === 1) {
                         const p = document.createElement('p');
-                        p.className = 'text-slate-800 font-medium leading-snug text-[length:var(--opr-fs-3)] flex items-start gap-1.5';
+                        p.className = 'text-slate-800 font-medium leading-snug text-[9.5px] flex items-start gap-1.5';
                         p.innerHTML = `<span class="${t.icon} font-bold theme-icon">•</span> <span>${text || '-'}</span>`;
                         impContainer.appendChild(p);
                     }
@@ -1226,13 +1079,13 @@
                 outBox.innerHTML = '';
 
                 if (inputs.length === 0) {
-                    outBox.innerHTML = '<p class="text-slate-400 italic text-[length:var(--opr-fs-2)]">-</p>';
+                    outBox.innerHTML = '<p class="text-slate-400 italic text-[8.5px]">-</p>';
                 } else {
                     inputs.forEach(inp => {
                         const val = inp.value.trim();
                         if (val || inputs.length === 1) {
                             const p = document.createElement('p');
-                            p.className = 'flex items-start gap-1 leading-snug text-[length:var(--opr-fs-2)]';
+                            p.className = 'flex items-start gap-1 leading-snug text-[8.5px]';
                             p.innerHTML = `<span class="opacity-60">•</span> <span>${val || '-'}</span>`;
                             outBox.appendChild(p);
                         }
@@ -1243,10 +1096,32 @@
             // 4. Penjana Galeri Gambar
             renderGalleryHTML();
 
-            // Disediakan Oleh (Unit/Bahagian)
-            const disediakanUnit = (document.getElementById('inp-disediakan-unit')?.value || '').trim();
-            const outDisediakanUnit = document.getElementById('out-disediakan-unit');
-            if (outDisediakanUnit) outDisediakanUnit.textContent = disediakanUnit || 'Unit / Bahagian Penyedia';
+            // Tandatangan
+            const getInpValue = (id) => (document.getElementById(id)?.value || '').trim();
+
+            const pNama = getInpValue('inp-p-nama');
+            const pJawatan = getInpValue('inp-p-jawatan');
+            const pTarikh = getInpValue('inp-p-tarikh');
+
+            const outPNama = document.getElementById('out-p-nama');
+            const outPJawatan = document.getElementById('out-p-jawatan');
+            const outPTarikh = document.getElementById('out-p-tarikh');
+
+            if (outPNama) outPNama.textContent = pNama ? `( ${pNama} )` : '( Nama: ________________________ )';
+            if (outPJawatan) outPJawatan.textContent = pJawatan ? `Jawatan: ${pJawatan}` : 'Jawatan: ________________________';
+            if (outPTarikh) outPTarikh.textContent = pTarikh ? `Tarikh: ${pTarikh}` : 'Tarikh: ________________________';
+
+            const kNama = getInpValue('inp-k-nama');
+            const kJawatan = getInpValue('inp-k-jawatan');
+            const kTarikh = getInpValue('inp-k-tarikh');
+
+            const outKNama = document.getElementById('out-k-nama');
+            const outKJawatan = document.getElementById('out-k-jawatan');
+            const outKTarikh = document.getElementById('out-k-tarikh');
+
+            if (outKNama) outKNama.textContent = kNama ? `( ${kNama} )` : '( Nama: ________________________ )';
+            if (outKJawatan) outKJawatan.textContent = kJawatan ? `Jawatan: ${kJawatan}` : 'Jawatan: ________________________';
+            if (outKTarikh) outKTarikh.textContent = kTarikh ? `Tarikh: ${kTarikh}` : 'Tarikh: ________________________';
 
             saveDraftToStorage();
             autoFitToPage();
@@ -1302,7 +1177,13 @@
                 if (el) el.value = val;
             };
 
-            setInpValue('inp-disediakan-unit', 'Unit Pembangunan Bakat Murid');
+            setInpValue('inp-p-nama', 'Ahmad Bin Zulkifli');
+            setInpValue('inp-p-jawatan', 'Penolong Pengarah / Setiausaha');
+            setInpValue('inp-p-tarikh', '18 Ogos 2026');
+
+            setInpValue('inp-k-nama', 'Pegawai Pendidikan Daerah Subis');
+            setInpValue('inp-k-jawatan', 'Ketua Sektor / PPD Subis');
+            setInpValue('inp-k-tarikh', '19 Ogos 2026');
 
             updatePreview();
         }
@@ -1337,7 +1218,7 @@
 
         // --- SIMPAN & PULIH DRAF (localStorage) --- //
         // Supaya kerja pegawai tidak hilang jika tab tertutup / peranti restart secara
-        // tidak sengaja sebelum sempat dicetak.
+        // tidak sengaja sebelum sempat muat turun PDF.
         const DRAFT_KEY = 'opr_subis_draft_v1';
         let saveDraftTimer = null;
 
@@ -1366,7 +1247,8 @@
                 showCaption: document.getElementById('chk-show-caption')?.checked ?? true,
                 loadedImages,
                 logoSrc: document.getElementById('out-logo')?.src || '',
-                disediakanUnit: getVal('inp-disediakan-unit'),
+                pNama: getVal('inp-p-nama'), pJawatan: getVal('inp-p-jawatan'), pTarikh: getVal('inp-p-tarikh'),
+                kNama: getVal('inp-k-nama'), kJawatan: getVal('inp-k-jawatan'), kTarikh: getVal('inp-k-tarikh'),
                 theme: activeThemeKey,
             };
         }
@@ -1408,7 +1290,8 @@
             if (chkCap) chkCap.checked = data.showCaption !== false;
             setVal('inp-cap-1', data.caps?.[0]); setVal('inp-cap-2', data.caps?.[1]);
             setVal('inp-cap-3', data.caps?.[2]); setVal('inp-cap-4', data.caps?.[3]);
-            setVal('inp-disediakan-unit', data.disediakanUnit);
+            setVal('inp-p-nama', data.pNama); setVal('inp-p-jawatan', data.pJawatan); setVal('inp-p-tarikh', data.pTarikh);
+            setVal('inp-k-nama', data.kNama); setVal('inp-k-jawatan', data.kJawatan); setVal('inp-k-tarikh', data.kTarikh);
 
             document.getElementById('obj-inputs-container').innerHTML = '';
             document.getElementById('imp-inputs-container').innerHTML = '';
@@ -1433,8 +1316,7 @@
         }
 
         function triggerPrint() {
-            autoFitToPage();
-            setTimeout(() => window.print(), 150);
+            window.print();
         }
 
         function openPdfVisualModal() {
@@ -1455,6 +1337,67 @@
 
         function closePdfVisualModal() {
             document.getElementById('pdfVisualModal').classList.add('hidden');
+        }
+
+        // --- PENJANAAN PDF IN-HOUSE (html2canvas + jsPDF) --- //
+        // Menangkap paparan A4 yang sama seperti apa yang dilihat pengguna,
+        // dan memuat turunkan terus sebagai fail .pdf tanpa bergantung pada
+        // dialog cetak pelayar.
+        function slugifyForFilename(text) {
+            return (text || 'Laporan_OPR')
+                .trim()
+                .replace(/[^\p{L}\p{N}\s-]/gu, '')
+                .replace(/\s+/g, '_')
+                .substring(0, 60) || 'Laporan_OPR';
+        }
+
+        async function generateAndDownloadPDF() {
+            const btn = document.getElementById('btn-download-pdf');
+            const label = document.getElementById('btn-download-pdf-label');
+            if (!btn || !label) return;
+
+            if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
+                alert('Pustaka penjana PDF gagal dimuatkan. Sila semak sambungan internet anda dan cuba lagi.');
+                return;
+            }
+
+            const originalLabel = label.textContent;
+            btn.disabled = true;
+            btn.classList.add('opacity-60', 'cursor-not-allowed');
+            label.textContent = 'Menjana PDF...';
+
+            // Pastikan auto-fit sudah dikira sebelum tangkapan supaya PDF sepadan pratonton.
+            autoFitToPage();
+            await new Promise(r => setTimeout(r, 150));
+
+            try {
+                const source = document.getElementById('a4-paper-element');
+                const canvas = await html2canvas(source, {
+                    scale: 3,
+                    useCORS: true,
+                    backgroundColor: '#ffffff',
+                    windowWidth: source.scrollWidth,
+                    windowHeight: source.scrollHeight,
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
+
+                const programName = document.getElementById('inp-nama-program')?.value || 'Laporan_OPR';
+                const tarikh = formatTarikhMalay(document.getElementById('inp-tarikh')?.value || '').replace(/\s+/g, '');
+                const filename = `OPR_${slugifyForFilename(programName)}${tarikh ? '_' + slugifyForFilename(tarikh) : ''}.pdf`;
+
+                pdf.save(filename);
+            } catch (err) {
+                console.error(err);
+                alert('Ralat berlaku semasa menjana PDF. Sila cuba lagi, atau guna butang "Cetak" sebagai alternatif.');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-60', 'cursor-not-allowed');
+                label.textContent = originalLabel;
+            }
         }
 
         window.onload = function() {
