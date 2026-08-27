@@ -515,20 +515,20 @@
                                 <div id="out-img-gallery-container" class="flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-2 min-h-0 h-full">
                                     <!-- Terjana Secara Dinamik Melalui updatePreview() -->
                                 </div>
+
+                                <!-- Ruangan Tandatangan Pengesahan (Bawah Galeri, Lajur Kanan Sahaja) -->
+                                <div id="a4-signature-block" class="pt-2 mt-2 border-t-2 border-slate-300 shrink-0">
+                                    <div class="bg-slate-50/80 p-2 rounded-lg border border-slate-300 text-[length:var(--opr-fs-2)]">
+                                        <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[length:var(--opr-fs-2)] mb-1 flex items-center gap-1">
+                                            <i class="fa-solid fa-pen-nib text-indigo-600"></i> Disediakan Oleh:
+                                        </p>
+                                        <p class="font-black text-slate-900 text-[length:var(--opr-fs-4)]" id="out-disediakan-unit">Unit / Bahagian Penyedia</p>
+                                    </div>
+                                </div>
                             </div>
 
                         </div>
                     </div>
-                    </div>
-
-                    <!-- Ruangan Tandatangan Pengesahan (Sauh Bawah A4) -->
-                    <div id="a4-signature-block" class="pt-3 border-t-2 border-slate-300 mt-2 shrink-0">
-                        <div class="bg-slate-50/80 p-3 rounded-lg border border-slate-300 text-[length:var(--opr-fs-2)]">
-                            <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[length:var(--opr-fs-2)] mb-1 flex items-center gap-1">
-                                <i class="fa-solid fa-pen-nib text-indigo-600"></i> Disediakan Oleh:
-                            </p>
-                            <p class="font-black text-slate-900 text-[length:var(--opr-fs-4)]" id="out-disediakan-unit">Unit / Bahagian Penyedia</p>
-                        </div>
                     </div>
                 </div>
 
@@ -952,10 +952,9 @@
         function autoFitToPage() {
             const inner = document.getElementById('a4-scale-inner');
             const innerContent = document.getElementById('a4-inner-content-el');
-            const signatureBlock = document.getElementById('a4-signature-block');
             const statusCard = document.getElementById('fit-status-card');
             const statusText = document.getElementById('fit-status-text');
-            if (!inner || !innerContent || !signatureBlock) return;
+            if (!inner || !innerContent) return;
 
             // Reset dahulu supaya ukuran sebenar (100%) diukur dari kandungan asal
             inner.style.transform = 'none';
@@ -963,7 +962,10 @@
 
             requestAnimationFrame(() => {
                 const naturalHeight = inner.scrollHeight;
-                const availableHeight = innerContent.clientHeight - signatureBlock.offsetHeight;
+                // "Disediakan Oleh" kini sebahagian daripada #a4-scale-inner (dalam lajur
+                // kanan, bawah galeri), jadi ia sudah termasuk dalam naturalHeight —
+                // tiada lagi tolak berasingan seperti dahulu.
+                const availableHeight = innerContent.clientHeight;
 
                 const rawScale = naturalHeight > 0 ? availableHeight / naturalHeight : 1;
                 const scale = Math.min(FIT_MAX_ZOOM / 100, Math.max(FIT_MIN_ZOOM / 100, rawScale));
