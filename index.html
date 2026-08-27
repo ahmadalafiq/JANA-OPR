@@ -10,31 +10,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <!-- Penjana PDF In-House (menangkap paparan A4 terus sebagai fail .pdf) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #0b1329;
         }
 
-        /* Hierarki Saiz Tulisan Laporan OPR — semua tahap bermula minimum 10px
-           supaya kekal mudah dibaca, dengan hierarki visual dikekalkan.
-           Tahap 1 (label/badge kecil) < 2 (label/keterangan) < 3 (teks isi) < 4 (penekanan). */
+        /* Hierarki Saiz Tulisan Laporan OPR — semua tahap dikira daripada satu
+           nisbah asas (--opr-scale) supaya hierarki visual kekal (Tahap 1
+           label/badge kecil < 2 label/keterangan < 3 teks isi < 4 penekanan),
+           tetapi kesemuanya membesar/mengecil serentak secara automatik
+           mengikut ruang & saiz kandungan yang ada (lihat autoFitToPage()). */
         html {
-            --opr-fs-1: 10px;
-            --opr-fs-2: 10.5px;
-            --opr-fs-3: 11px;
-            --opr-fs-4: 11.5px;
-        }
-        /* Apabila toggle "Besarkan Tulisan" diaktifkan, semua tahap dibesarkan
-           sekali gus mengikut nisbah hierarki yang sama. */
-        html.opr-text-boost {
-            --opr-fs-1: 11.5px;
-            --opr-fs-2: 12px;
-            --opr-fs-3: 12.5px;
-            --opr-fs-4: 13px;
+            --opr-scale: 1;
+            --opr-fs-1: calc(10px * var(--opr-scale));
+            --opr-fs-2: calc(10.5px * var(--opr-scale));
+            --opr-fs-3: calc(11px * var(--opr-scale));
+            --opr-fs-4: calc(11.5px * var(--opr-scale));
         }
 
         /* Dimensions A4 Standard - Perfect Fit 1-Page Layout */
@@ -60,7 +52,7 @@
             justify-content: space-between;
         }
 
-        /* Gaya Khusus Cetakan Browser Native Print / PDF */
+        /* Gaya Khusus Cetakan Browser Native (Print) */
         @media print {
             @page {
                 size: A4 portrait;
@@ -106,9 +98,9 @@
                 <div>
                     <h1 class="text-base font-extrabold leading-tight flex items-center gap-2">
                         Penjana OPR
-                        <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-bold">Auto-Fit 1 Muka Surat</span>
+                        <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-bold">Auto Saiz Tulisan • 1 Muka Surat</span>
                     </h1>
-                    <p class="text-xs text-slate-400">Sektor Pembangunan Murid / PPD Subis — Muat Turun PDF Terus</p>
+                    <p class="text-xs text-slate-400">Sektor Pembangunan Murid / PPD Subis — Cetak Terus 1 Muka Surat A4</p>
                 </div>
             </div>
             
@@ -122,9 +114,6 @@
                     <button onclick="setPdfTheme('crimson')" class="w-5 h-5 rounded-full bg-rose-700 hover:scale-110 transition border border-white/40 ml-1" title="Crimson Red"></button>
                 </div>
 
-                <button id="btn-font-boost" onclick="toggleFontBoost()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700" title="Besarkan / kecilkan saiz tulisan pada laporan">
-                    <i class="fa-solid fa-text-height text-sky-400"></i> <span id="btn-font-boost-label">Besarkan Tulisan</span>
-                </button>
                 <button onclick="loadSampleData()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700">
                     <i class="fa-solid fa-database text-amber-400"></i> Data Contoh
                 </button>
@@ -134,11 +123,8 @@
                 <button onclick="openPdfVisualModal()" class="px-3 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-teal-600/20 transition flex items-center gap-1.5">
                     <i class="fa-solid fa-eye text-sm"></i> Pratonton
                 </button>
-                <button onclick="triggerPrint()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700" title="Guna dialog cetak pelayar (untuk cetak kertas terus)">
+                <button onclick="triggerPrint()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-indigo-600/30 transition flex items-center gap-2" title="Guna dialog cetak pelayar (untuk cetak kertas terus)">
                     <i class="fa-solid fa-print text-sm"></i> Cetak
-                </button>
-                <button id="btn-download-pdf" onclick="generateAndDownloadPDF()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-indigo-600/30 transition flex items-center gap-2">
-                    <i class="fa-solid fa-file-arrow-down text-sm"></i> <span id="btn-download-pdf-label">Muat Turun PDF</span>
                 </button>
             </div>
         </div>
@@ -310,7 +296,7 @@
                         <input type="checkbox" id="chk-show-caption" checked onchange="updatePreview()" class="w-3.5 h-3.5 accent-indigo-600">
                         <label for="chk-show-caption" class="text-xs font-semibold text-gray-700 cursor-pointer">Papar Keterangan (Caption) Gambar dalam Galeri</label>
                     </div>
-                    <p class="text-[10.5px] text-slate-500 leading-snug">Gambar dimampatkan secara automatik semasa dimuat naik untuk memastikan PDF kekal ringan dan cepat dijana.</p>
+                    <p class="text-[10.5px] text-slate-500 leading-snug">Gambar dimampatkan secara automatik semasa dimuat naik untuk memastikan draf kekal ringan dan pantas dimuat semula.</p>
                 </div>
 
                 <!-- Input Muat Naik Gambar 1-4 -->
@@ -382,7 +368,7 @@
                 <div id="a4-inner-content-el" class="a4-inner-content">
                     <!-- Pembungkus Kandungan Utama Mengembang Penuh (flex-1) -->
                     <div id="a4-scalable-wrapper" class="flex-1 flex flex-col min-h-0 overflow-hidden transition-all duration-200">
-                    <div id="a4-scale-inner" class="flex flex-col justify-between space-y-2.5" style="transform-origin: top left;">
+                    <div id="a4-scale-inner" class="flex flex-col justify-between space-y-2.5">
                         
                         <!-- Pengepala Utama (Logo & Header Besarkan Saiz) -->
                         <div class="flex items-center justify-between border-b-2 pb-2.5 border-slate-900 shrink-0">
@@ -599,12 +585,12 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold">Pratonton Visual Dokumen A4</h3>
-                        <p class="text-xs text-slate-400">Paparan tepat nisbah muka surat A4 sebelum dicetak atau disimpan sebagai PDF</p>
+                        <p class="text-xs text-slate-400">Paparan tepat nisbah muka surat A4 sebelum dicetak</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button onclick="generateAndDownloadPDF()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
-                        <i class="fa-solid fa-file-arrow-down"></i> Muat Turun PDF
+                    <button onclick="triggerPrint()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-print"></i> Cetak
                     </button>
                     <button onclick="closePdfVisualModal()" class="p-2 text-slate-400 hover:text-white rounded-lg text-lg transition">
                         <i class="fa-solid fa-xmark"></i>
@@ -631,7 +617,7 @@
 
             <!-- Modal Footer -->
             <div class="bg-gray-50 border-t px-6 py-3 flex justify-between items-center text-xs text-gray-500 shrink-0">
-                <span>Dioptimumkan untuk cetakan kertas standard A4 & pencetakan PDF tempatan.</span>
+                <span>Dioptimumkan untuk cetakan kertas standard A4.</span>
                 <button onclick="closePdfVisualModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-lg transition">
                     Tutup Pratonton
                 </button>
@@ -838,7 +824,7 @@
         }
 
         // Fungsi Mampatan Imej — resize + JPEG compress di sisi klien sebelum disimpan.
-        // Ini penting supaya PDF yang dijana (via html2canvas) kekal ringan & pantas,
+        // Ini penting supaya draf/cetakan kekal ringan & pantas dipaparkan,
         // memandangkan gambar terus dari kamera boleh 4-8MB setiap satu.
         function compressImageFile(file, maxDim, quality) {
             return new Promise((resolve, reject) => {
@@ -985,96 +971,94 @@
             `).join('');
         }
 
-        // Fungsi Auto-Fit Sebenar — ukur ketinggian kandungan sebenar berbanding
-        // ruang sebenar yang ada pada halaman A4, dan susutkan sehingga muat betul-betul.
-        // PENTING: guna transform:scale (bukan CSS "zoom") untuk penyusutan ini.
-        // "zoom" tidak disokong dengan tepat oleh html2canvas (pustaka penjana PDF/
-        // pratonton) — ia boleh menyebabkan teks bertindih/berlanggar tanpa jarak
-        // semasa muat turun PDF atau cetak, walaupun kelihatan okay pada skrin.
-        // transform:scale pula disokong sepenuhnya dan selamat untuk tangkapan kanvas.
-        const FIT_MIN_ZOOM = 80;   // had bawah — cukup ruang untuk auto-fit menyusut apabila "Besarkan Tulisan" aktif, supaya kandungan tidak bertindih
-        const FIT_STEP = 2;
+        // Fungsi Auto Saiz Tulisan — ukur ketinggian kandungan sebenar berbanding
+        // ruang sebenar yang ada pada halaman A4, kemudian BESARKAN tulisan secara
+        // automatik apabila ruang berlebihan, atau KECILKAN apabila kandungan
+        // terlalu panjang, supaya laporan sentiasa muat kemas dalam 1 muka surat —
+        // tanpa perlu sebarang butang tetapan manual.
+        //
+        // Cara kerja: --opr-scale (pekali saiz tulisan sebenar, bukan sekadar zoom
+        // visual) dicuba merentasi julat FONT_SCALE_MIN..FONT_SCALE_MAX menggunakan
+        // gelung carian dua-bahagi (binary search) sehingga ditemui nilai TERBESAR
+        // yang masih muat dalam ruang yang ada. Ini memberi kesan "auto increase/
+        // decrease" — tulisan membesar bila ruang kosong banyak, dan mengecil bila
+        // kandungan padat — semuanya automatik berdasarkan saiz kandungan semasa.
+        const FONT_SCALE_MIN = 0.72;   // had bawah — kekal mudah dibaca walaupun kandungan sangat panjang
+        const FONT_SCALE_MAX = 1.45;   // had atas — elak tulisan jadi keterlaluan besar bila kandungan sedikit
+        const FONT_SCALE_PRECISION = 0.01;
+
+        function measureContentHeight() {
+            // "Reflow" dipaksa dengan membaca scrollHeight selepas set scale,
+            // supaya ukuran sentiasa tepat mengikut --opr-scale semasa.
+            const inner = document.getElementById('a4-scale-inner');
+            return inner ? inner.scrollHeight : 0;
+        }
 
         function autoFitToPage() {
-            const inner = document.getElementById('a4-scale-inner');
             const innerContent = document.getElementById('a4-inner-content-el');
             const signatureBlock = document.getElementById('a4-signature-block');
             const statusCard = document.getElementById('fit-status-card');
             const statusText = document.getElementById('fit-status-text');
-            if (!inner || !innerContent || !signatureBlock) return;
-
-            // Reset dahulu supaya ukuran sebenar (100%) diukur dari kandungan asal
-            inner.style.transform = 'none';
-            inner.style.width = '100%';
+            const root = document.documentElement;
+            if (!innerContent || !signatureBlock) return;
 
             requestAnimationFrame(() => {
-                const naturalHeight = inner.scrollHeight;
                 const availableHeight = innerContent.clientHeight - signatureBlock.offsetHeight;
 
-                let scale = naturalHeight > 0 ? Math.min(1, availableHeight / naturalHeight) : 1;
-                scale = Math.max(scale, FIT_MIN_ZOOM / 100);
-                // Bundarkan ke gandaan FIT_STEP terdekat (ke bawah) supaya peratusan
-                // dipaparkan konsisten dengan tingkah laku auto-fit yang lama.
-                let zoom = Math.floor(scale * 100 / FIT_STEP) * FIT_STEP;
-                zoom = Math.min(100, Math.max(FIT_MIN_ZOOM, zoom));
-                scale = zoom / 100;
-                const fits = (naturalHeight * scale) <= availableHeight + 1;
+                // Semak dahulu sama ada had ATAS (paling besar) sudah muat — jika ya,
+                // terus guna itu supaya tulisan sebesar mungkin mengisi ruang kosong.
+                root.style.setProperty('--opr-scale', FONT_SCALE_MAX);
+                let best = FONT_SCALE_MAX;
+                let fitsAtMax = measureContentHeight() <= availableHeight + 1;
 
-                if (zoom < 100) {
-                    inner.style.transform = `scale(${scale})`;
-                    inner.style.width = `${100 / scale}%`;
-                } else {
-                    inner.style.transform = 'none';
-                    inner.style.width = '100%';
+                if (!fitsAtMax) {
+                    // Semak had BAWAH (paling kecil) — jika masih tidak muat, itulah
+                    // yang terbaik yang boleh dicapai (kandungan memang terlalu panjang).
+                    root.style.setProperty('--opr-scale', FONT_SCALE_MIN);
+                    const fitsAtMin = measureContentHeight() <= availableHeight + 1;
+
+                    if (!fitsAtMin) {
+                        best = FONT_SCALE_MIN;
+                    } else {
+                        // Carian dua-bahagi antara MIN (muat) dan MAX (tidak muat)
+                        // untuk cari nilai terbesar yang masih muat, dengan pantas (~12 lelaran).
+                        let lo = FONT_SCALE_MIN, hi = FONT_SCALE_MAX;
+                        for (let i = 0; i < 14 && (hi - lo) > FONT_SCALE_PRECISION; i++) {
+                            const mid = (lo + hi) / 2;
+                            root.style.setProperty('--opr-scale', mid);
+                            if (measureContentHeight() <= availableHeight + 1) {
+                                lo = mid;
+                            } else {
+                                hi = mid;
+                            }
+                        }
+                        best = lo;
+                    }
                 }
+
+                root.style.setProperty('--opr-scale', best);
+                const finalHeight = measureContentHeight();
+                const fits = finalHeight <= availableHeight + 1;
+                const percent = Math.round(best * 100);
 
                 if (statusCard && statusText) {
                     if (fits) {
                         statusCard.className = 'bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
                         statusText.parentElement.querySelector('i').className = 'fa-solid fa-circle-check text-emerald-600';
-                        statusText.textContent = zoom >= 100
-                            ? 'Kandungan muat penuh dalam 1 muka surat A4.'
-                            : `Kandungan disesuaikan automatik kepada ${zoom}% supaya muat dalam 1 muka surat.`;
+                        if (percent > 102) {
+                            statusText.textContent = `Tulisan dibesarkan automatik kepada ${percent}% untuk mengisi ruang muka surat.`;
+                        } else if (percent < 98) {
+                            statusText.textContent = `Tulisan dikecilkan automatik kepada ${percent}% supaya muat dalam 1 muka surat.`;
+                        } else {
+                            statusText.textContent = 'Kandungan muat penuh dalam 1 muka surat A4.';
+                        }
                     } else {
                         statusCard.className = 'bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
                         statusText.parentElement.querySelector('i').className = 'fa-solid fa-triangle-exclamation text-rose-600';
-                        statusText.textContent = `Kandungan terlalu panjang walaupun pada ${FIT_MIN_ZOOM}% — sila kurangkan bilangan/panjang butiran (Objektif, Implementasi atau SWOT).`;
+                        statusText.textContent = `Kandungan terlalu panjang walaupun tulisan sudah dikecilkan ke had minimum — sila kurangkan bilangan/panjang butiran (Objektif, Implementasi atau SWOT).`;
                     }
                 }
             });
-        }
-
-        // Toggle Saiz Tulisan Laporan — membesarkan semua tahap hierarki teks
-        // pada komponen A4 sekali gus (bukan sekadar zoom auto-fit), dan
-        // menyimpan pilihan pengguna supaya kekal selepas muat semula halaman.
-        const FONT_BOOST_KEY = 'oprFontBoost';
-
-        function applyFontBoostUI(isBoosted) {
-            const btn = document.getElementById('btn-font-boost');
-            const label = document.getElementById('btn-font-boost-label');
-            const icon = btn ? btn.querySelector('i') : null;
-            if (icon) icon.className = isBoosted ? 'fa-solid fa-text-height text-emerald-400' : 'fa-solid fa-text-height text-sky-400';
-            if (label) label.textContent = isBoosted ? 'Tulisan Besar (Aktif)' : 'Besarkan Tulisan';
-            if (btn) btn.classList.toggle('border-emerald-500', isBoosted);
-        }
-
-        function setFontBoost(isBoosted) {
-            document.documentElement.classList.toggle('opr-text-boost', isBoosted);
-            applyFontBoostUI(isBoosted);
-            try { localStorage.setItem(FONT_BOOST_KEY, isBoosted ? '1' : '0'); } catch (e) {}
-            autoFitToPage();
-        }
-
-        function toggleFontBoost() {
-            const isBoosted = !document.documentElement.classList.contains('opr-text-boost');
-            setFontBoost(isBoosted);
-        }
-
-        function restoreFontBoostPreference() {
-            let isBoosted = false;
-            try { isBoosted = localStorage.getItem(FONT_BOOST_KEY) === '1'; } catch (e) {}
-            document.documentElement.classList.toggle('opr-text-boost', isBoosted);
-            applyFontBoostUI(isBoosted);
         }
 
         // Fungsi Kemaskini Pratonton A4
@@ -1289,7 +1273,7 @@
 
         // --- SIMPAN & PULIH DRAF (localStorage) --- //
         // Supaya kerja pegawai tidak hilang jika tab tertutup / peranti restart secara
-        // tidak sengaja sebelum sempat muat turun PDF.
+        // tidak sengaja sebelum sempat dicetak.
         const DRAFT_KEY = 'opr_subis_draft_v1';
         let saveDraftTimer = null;
 
@@ -1411,69 +1395,7 @@
             document.getElementById('pdfVisualModal').classList.add('hidden');
         }
 
-        // --- PENJANAAN PDF IN-HOUSE (html2canvas + jsPDF) --- //
-        // Menangkap paparan A4 yang sama seperti apa yang dilihat pengguna,
-        // dan memuat turunkan terus sebagai fail .pdf tanpa bergantung pada
-        // dialog cetak pelayar.
-        function slugifyForFilename(text) {
-            return (text || 'Laporan_OPR')
-                .trim()
-                .replace(/[^\p{L}\p{N}\s-]/gu, '')
-                .replace(/\s+/g, '_')
-                .substring(0, 60) || 'Laporan_OPR';
-        }
-
-        async function generateAndDownloadPDF() {
-            const btn = document.getElementById('btn-download-pdf');
-            const label = document.getElementById('btn-download-pdf-label');
-            if (!btn || !label) return;
-
-            if (typeof html2canvas === 'undefined' || typeof window.jspdf === 'undefined') {
-                alert('Pustaka penjana PDF gagal dimuatkan. Sila semak sambungan internet anda dan cuba lagi.');
-                return;
-            }
-
-            const originalLabel = label.textContent;
-            btn.disabled = true;
-            btn.classList.add('opacity-60', 'cursor-not-allowed');
-            label.textContent = 'Menjana PDF...';
-
-            // Pastikan auto-fit sudah dikira sebelum tangkapan supaya PDF sepadan pratonton.
-            autoFitToPage();
-            await new Promise(r => setTimeout(r, 150));
-
-            try {
-                const source = document.getElementById('a4-paper-element');
-                const canvas = await html2canvas(source, {
-                    scale: 3,
-                    useCORS: true,
-                    backgroundColor: '#ffffff',
-                    windowWidth: source.scrollWidth,
-                    windowHeight: source.scrollHeight,
-                });
-
-                const imgData = canvas.toDataURL('image/jpeg', 0.95);
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-                pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
-
-                const programName = document.getElementById('inp-nama-program')?.value || 'Laporan_OPR';
-                const tarikh = formatTarikhMalay(document.getElementById('inp-tarikh')?.value || '').replace(/\s+/g, '');
-                const filename = `OPR_${slugifyForFilename(programName)}${tarikh ? '_' + slugifyForFilename(tarikh) : ''}.pdf`;
-
-                pdf.save(filename);
-            } catch (err) {
-                console.error(err);
-                alert('Ralat berlaku semasa menjana PDF. Sila cuba lagi, atau guna butang "Cetak" sebagai alternatif.');
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('opacity-60', 'cursor-not-allowed');
-                label.textContent = originalLabel;
-            }
-        }
-
         window.onload = function() {
-            restoreFontBoostPreference();
             const restored = restoreDraftFromStorage();
             if (!restored) {
                 loadSampleData();
