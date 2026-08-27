@@ -924,7 +924,7 @@
             container.className = 'flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-2 min-h-0 h-full';
             container.innerHTML = imgs.map((img, i) => `
                 <div class="bg-white border border-slate-300 p-1 rounded-lg shadow-xs flex flex-row items-center gap-1.5 h-full min-h-0">
-                    <div class="h-full ${showCaption ? 'aspect-[4/3] shrink-0' : 'flex-1 w-full'} min-h-0 bg-slate-100 rounded overflow-hidden relative border border-slate-200">
+                    <div class="${showCaption ? 'h-24 w-32 shrink-0' : 'h-28 w-full shrink-0'} min-h-0 bg-slate-100 rounded overflow-hidden relative border border-slate-200">
                         <span class="absolute top-0.5 left-0.5 bg-slate-900/80 text-white text-[length:var(--opr-fs-1)] px-1 py-0.5 rounded font-black z-10">#${i + 1}</span>
                         <img src="${img}" class="w-full h-full ${fitClass} absolute inset-0" alt="Gambar ${i + 1}">
                     </div>
@@ -946,7 +946,7 @@
         // kandungan (cth: kotak SWOT) terpotong akibat ruang tetap (padding/gap)
         // yang tidak ikut mengecil bersama fon. Satu ukuran sudah cukup kerana
         // hubungan antara scale dan ketinggian adalah linear (scale 2x = tinggi 2x).
-        const FIT_MIN_ZOOM = 65;   // had bawah — kekal mudah dibaca walaupun kandungan sangat panjang
+        const FIT_MIN_ZOOM = 50;   // had bawah — jaring keselamatan tambahan jika butiran sangat panjang
         const FIT_MAX_ZOOM = 130;  // had atas — elak paparan jadi keterlaluan besar bila kandungan sedikit
 
         function autoFitToPage() {
@@ -965,7 +965,9 @@
                 // "Disediakan Oleh" kini sebahagian daripada #a4-scale-inner (dalam lajur
                 // kanan, bawah galeri), jadi ia sudah termasuk dalam naturalHeight —
                 // tiada lagi tolak berasingan seperti dahulu.
-                const availableHeight = innerContent.clientHeight;
+                // Jidar keselamatan kecil (2%) untuk elak overflow disebabkan pembundaran
+                // sub-piksel semasa teks dibalut pada saiz skala berbeza.
+                const availableHeight = innerContent.clientHeight * 0.98;
 
                 const rawScale = naturalHeight > 0 ? availableHeight / naturalHeight : 1;
                 const scale = Math.min(FIT_MAX_ZOOM / 100, Math.max(FIT_MIN_ZOOM / 100, rawScale));
