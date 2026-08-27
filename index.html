@@ -19,6 +19,24 @@
             background-color: #0b1329;
         }
 
+        /* Hierarki Saiz Tulisan Laporan OPR — semua tahap bermula minimum 10px
+           supaya kekal mudah dibaca, dengan hierarki visual dikekalkan.
+           Tahap 1 (label/badge kecil) < 2 (label/keterangan) < 3 (teks isi) < 4 (penekanan). */
+        html {
+            --opr-fs-1: 10px;
+            --opr-fs-2: 10.5px;
+            --opr-fs-3: 11px;
+            --opr-fs-4: 11.5px;
+        }
+        /* Apabila toggle "Besarkan Tulisan" diaktifkan, semua tahap dibesarkan
+           sekali gus mengikut nisbah hierarki yang sama. */
+        html.opr-text-boost {
+            --opr-fs-1: 12px;
+            --opr-fs-2: 12.5px;
+            --opr-fs-3: 13px;
+            --opr-fs-4: 13.5px;
+        }
+
         /* Dimensions A4 Standard - Perfect Fit 1-Page Layout */
         .a4-paper {
             width: 210mm;
@@ -104,6 +122,9 @@
                     <button onclick="setPdfTheme('crimson')" class="w-5 h-5 rounded-full bg-rose-700 hover:scale-110 transition border border-white/40 ml-1" title="Crimson Red"></button>
                 </div>
 
+                <button id="btn-font-boost" onclick="toggleFontBoost()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700" title="Besarkan / kecilkan saiz tulisan pada laporan">
+                    <i class="fa-solid fa-text-height text-sky-400"></i> <span id="btn-font-boost-label">Besarkan Tulisan</span>
+                </button>
                 <button onclick="loadSampleData()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700">
                     <i class="fa-solid fa-database text-amber-400"></i> Data Contoh
                 </button>
@@ -378,17 +399,17 @@
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <span id="theme-badge" class="inline-block bg-slate-900 text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+                                <span id="theme-badge" class="inline-block bg-slate-900 text-white text-[length:var(--opr-fs-4)] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
                                     ONE PAGE REPORT (OPR)
                                 </span>
                             </div>
                         </div>
 
                         <!-- Grid Kad Maklumat Program -->
-                        <div class="grid grid-cols-2 gap-1.5 text-[9.5px] shrink-0">
+                        <div class="grid grid-cols-2 gap-1.5 text-[length:var(--opr-fs-3)] shrink-0">
                             <!-- Nama Program -->
                             <div id="theme-main-card" class="col-span-2 bg-slate-900 text-white p-2.5 rounded-lg flex items-center justify-start gap-2 shadow-xs border border-slate-800">
-                                <span class="text-[8.5px] font-extrabold text-slate-300 uppercase tracking-wider shrink-0 bg-white/10 px-2 py-0.5 rounded">NAMA PROGRAM</span>
+                                <span class="text-[length:var(--opr-fs-2)] font-extrabold text-slate-300 uppercase tracking-wider shrink-0 bg-white/10 px-2 py-0.5 rounded">NAMA PROGRAM</span>
                                 <h3 id="out-nama-program" class="font-bold text-xs uppercase tracking-wide text-white text-left flex-1 leading-snug">
                                     LAPORAN PROGRAM / AKTIVITI
                                 </h3>
@@ -396,56 +417,56 @@
 
                             <!-- Tarikh -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-regular fa-calendar-days text-indigo-600 theme-icon mr-1.5"></i>TARIKH
                                 </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-tarikh" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
+                                <span id="out-tarikh" class="font-bold text-slate-900 text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Masa -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-regular fa-clock text-indigo-600 theme-icon mr-1.5"></i>MASA
                                 </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-masa" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
+                                <span id="out-masa" class="font-bold text-slate-900 text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Tempat -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-solid fa-location-dot text-indigo-600 theme-icon mr-1.5"></i>TEMPAT
                                 </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-tempat" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
+                                <span id="out-tempat" class="font-bold text-slate-900 text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Anjuran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-solid fa-building text-indigo-600 theme-icon mr-1.5"></i>ANJURAN
                                 </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-anjuran" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
+                                <span id="out-anjuran" class="font-bold text-slate-900 text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Sasaran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-solid fa-users text-indigo-600 theme-icon mr-1.5"></i>SASARAN
                                 </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-sasaran" class="font-bold text-slate-900 text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
+                                <span id="out-sasaran" class="font-bold text-slate-900 text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Kehadiran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[9px] flex items-center shrink-0 w-[65px]">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 w-[65px]">
                                     <i class="fa-solid fa-user-check text-indigo-600 theme-icon mr-1.5"></i>KEHADIRAN
                                 </span>
-                                <span class="text-slate-400 font-bold text-[9px] shrink-0">:</span>
-                                <span id="out-kehadiran" class="font-extrabold text-indigo-700 theme-highlight text-[9.5px] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
+                                <span id="out-kehadiran" class="font-extrabold text-indigo-700 theme-highlight text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
                         </div>
 
@@ -459,9 +480,9 @@
                                 <div class="flex flex-col flex-1">
                                     <div id="theme-sec-1" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
                                         <i class="fa-solid fa-bullseye text-indigo-600 theme-icon text-xs"></i>
-                                        <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">1. OBJEKTIF PROGRAM</h3>
+                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">1. OBJEKTIF PROGRAM</h3>
                                     </div>
-                                    <div id="out-obj-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[9.5px] space-y-1.5 flex-1 leading-relaxed">
+                                    <div id="out-obj-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[length:var(--opr-fs-3)] space-y-1.5 flex-1 leading-relaxed">
                                         <!-- Penjana Objektif Dynamik -->
                                     </div>
                                 </div>
@@ -470,9 +491,9 @@
                                 <div class="flex flex-col flex-1">
                                     <div id="theme-sec-2" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
                                         <i class="fa-solid fa-list-check text-indigo-600 theme-icon text-xs"></i>
-                                        <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">2. RINGKASAN IMPLEMENTASI</h3>
+                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">2. RINGKASAN IMPLEMENTASI</h3>
                                     </div>
-                                    <div id="out-imp-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[9.5px] space-y-1.5 flex-1 leading-relaxed">
+                                    <div id="out-imp-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[length:var(--opr-fs-3)] space-y-1.5 flex-1 leading-relaxed">
                                         <!-- Penjana Implementasi Dynamik -->
                                     </div>
                                 </div>
@@ -481,28 +502,28 @@
                                 <div class="shrink-0">
                                     <div id="theme-sec-3" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5">
                                         <i class="fa-solid fa-chart-pie text-indigo-600 theme-icon text-xs"></i>
-                                        <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">3. IMPAK & ANALISIS SWOT</h3>
+                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">3. IMPAK & ANALISIS SWOT</h3>
                                     </div>
-                                    <div class="grid grid-cols-2 gap-1.5 text-[9px]">
+                                    <div class="grid grid-cols-2 gap-1.5 text-[length:var(--opr-fs-2)]">
                                         <!-- Kekuatan (Strengths) -->
                                         <div class="bg-emerald-50/90 border border-emerald-300 rounded-lg p-1.5">
-                                            <span class="inline-block bg-emerald-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kekuatan (S)</span>
-                                            <div id="out-swoc-s" class="text-emerald-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
+                                            <span class="inline-block bg-emerald-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kekuatan (S)</span>
+                                            <div id="out-swoc-s" class="text-emerald-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
                                         </div>
                                         <!-- Kelemahan (Weaknesses) -->
                                         <div class="bg-amber-50/90 border border-amber-300 rounded-lg p-1.5">
-                                            <span class="inline-block bg-amber-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kelemahan (W)</span>
-                                            <div id="out-swoc-w" class="text-amber-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
+                                            <span class="inline-block bg-amber-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kelemahan (W)</span>
+                                            <div id="out-swoc-w" class="text-amber-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
                                         </div>
                                         <!-- Peluang (Opportunities) -->
                                         <div class="bg-sky-50/90 border border-sky-300 rounded-lg p-1.5">
-                                            <span class="inline-block bg-sky-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Peluang (O)</span>
-                                            <div id="out-swoc-o" class="text-sky-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
+                                            <span class="inline-block bg-sky-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Peluang (O)</span>
+                                            <div id="out-swoc-o" class="text-sky-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
                                         </div>
                                         <!-- Ancaman/Cabaran (Threats) -->
                                         <div class="bg-rose-50/90 border border-rose-300 rounded-lg p-1.5">
-                                            <span id="theme-swoc-badge" class="inline-block bg-rose-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Cabaran (T)</span>
-                                            <div id="out-swoc-t" class="text-rose-950 font-medium leading-normal text-[9px] space-y-0.5"></div>
+                                            <span id="theme-swoc-badge" class="inline-block bg-rose-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Cabaran (T)</span>
+                                            <div id="out-swoc-t" class="text-rose-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -513,7 +534,7 @@
                             <div id="a4-right-col" class="col-span-5 flex flex-col justify-between h-full min-h-0">
                                 <div id="theme-sec-4" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
                                     <i class="fa-solid fa-camera text-indigo-600 theme-icon text-xs"></i>
-                                    <h3 class="text-[9.5px] font-black tracking-wide uppercase text-slate-900">4. GALERI</h3>
+                                    <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">4. GALERI</h3>
                                 </div>
                                 
                                 <!-- Bekas Kontena Gambar Berpembolehubah -->
@@ -527,15 +548,15 @@
 
                     <!-- Ruangan Tandatangan Pengesahan (Sauh Bawah A4) -->
                     <div id="a4-signature-block" class="pt-3 border-t-2 border-slate-300 mt-2 shrink-0">
-                        <div class="grid grid-cols-2 gap-4 text-[9px]">
+                        <div class="grid grid-cols-2 gap-4 text-[length:var(--opr-fs-2)]">
                             <!-- Kolum 1: Disediakan Oleh -->
                             <div class="bg-slate-50/80 p-3 rounded-lg border border-slate-300 flex flex-col justify-between">
                                 <div>
-                                    <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[8.5px] mb-0.5 flex items-center gap-1">
+                                    <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[length:var(--opr-fs-2)] mb-0.5 flex items-center gap-1">
                                         <i class="fa-solid fa-pen-nib text-indigo-600"></i> Disediakan Oleh:
                                     </p>
                                     <div class="h-8"></div>
-                                    <p class="font-black text-slate-900 border-b border-slate-400 pb-0.5 text-[9.5px]" id="out-p-nama">( Nama: ________________________ )</p>
+                                    <p class="font-black text-slate-900 border-b border-slate-400 pb-0.5 text-[length:var(--opr-fs-3)]" id="out-p-nama">( Nama: ________________________ )</p>
                                 </div>
                                 <div class="mt-1.5">
                                     <p id="out-p-jawatan" class="text-slate-700 font-semibold">Jawatan: ________________________</p>
@@ -546,11 +567,11 @@
                             <!-- Kolum 2: Disahkan Oleh -->
                             <div class="bg-slate-50/80 p-3 rounded-lg border border-slate-300 flex flex-col justify-between">
                                 <div>
-                                    <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[8.5px] mb-0.5 flex items-center gap-1">
+                                    <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[length:var(--opr-fs-2)] mb-0.5 flex items-center gap-1">
                                         <i class="fa-solid fa-user-check text-indigo-600"></i> Disahkan / Diterima Oleh:
                                     </p>
                                     <div class="h-8"></div>
-                                    <p class="font-black text-slate-900 border-b border-slate-400 pb-0.5 text-[9.5px]" id="out-k-nama">( Nama: ________________________ )</p>
+                                    <p class="font-black text-slate-900 border-b border-slate-400 pb-0.5 text-[length:var(--opr-fs-3)]" id="out-k-nama">( Nama: ________________________ )</p>
                                 </div>
                                 <div class="mt-1.5">
                                     <p id="out-k-jawatan" class="text-slate-700 font-semibold">Jawatan: ________________________</p>
@@ -789,7 +810,7 @@
             if (accentBar) accentBar.className = `h-2.5 w-full bg-gradient-to-r ${t.accent}`;
 
             const badge = document.getElementById('theme-badge');
-            if (badge) badge.className = `inline-block ${t.badge} text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm`;
+            if (badge) badge.className = `inline-block ${t.badge} text-[length:var(--opr-fs-4)] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm`;
 
             const mainCard = document.getElementById('theme-main-card');
             if (mainCard) mainCard.className = `col-span-2 ${t.mainCard} text-white p-2.5 rounded-lg flex items-center justify-start gap-2 shadow-xs border border-slate-800`;
@@ -798,7 +819,7 @@
                 el.className = el.className.replace(/text-(indigo|emerald|sky|rose)-\d+/, t.icon);
             });
             document.querySelectorAll('.theme-highlight').forEach(el => {
-                el.className = `font-extrabold ${t.highlight} text-[10px] text-left truncate flex-1 ml-0.5`;
+                el.className = `font-extrabold ${t.highlight} text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5`;
             });
 
             ['theme-sec-1', 'theme-sec-2', 'theme-sec-3', 'theme-sec-4'].forEach(id => {
@@ -807,11 +828,11 @@
             });
 
             document.querySelectorAll('.theme-num').forEach(el => {
-                el.className = `theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[8.5px] shrink-0 mt-0.5`;
+                el.className = `theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[length:var(--opr-fs-2)] shrink-0 mt-0.5`;
             });
 
             const swocBadge = document.getElementById('theme-swoc-badge');
-            if (swocBadge) swocBadge.className = `inline-block ${t.swocBadge} text-white font-black text-[8px] px-2 py-0.5 rounded uppercase mb-1 shadow-2xs`;
+            if (swocBadge) swocBadge.className = `inline-block ${t.swocBadge} text-white font-black text-[length:var(--opr-fs-1)] px-2 py-0.5 rounded uppercase mb-1 shadow-2xs`;
         }
 
         // Fungsi Mampatan Imej — resize + JPEG compress di sisi klien sebelum disimpan.
@@ -954,10 +975,10 @@
             container.innerHTML = imgs.map((img, i) => `
                 <div class="bg-white border border-slate-300 p-1 rounded-lg shadow-xs flex flex-row items-center gap-1.5 h-full min-h-0">
                     <div class="h-full ${showCaption ? 'aspect-[4/3] shrink-0' : 'flex-1 w-full'} min-h-0 bg-slate-100 rounded overflow-hidden relative border border-slate-200">
-                        <span class="absolute top-0.5 left-0.5 bg-slate-900/80 text-white text-[7.5px] px-1 py-0.5 rounded font-black z-10">#${i + 1}</span>
+                        <span class="absolute top-0.5 left-0.5 bg-slate-900/80 text-white text-[length:var(--opr-fs-1)] px-1 py-0.5 rounded font-black z-10">#${i + 1}</span>
                         <img src="${img}" class="w-full h-full ${fitClass} absolute inset-0" alt="Gambar ${i + 1}">
                     </div>
-                    ${showCaption ? `<p class="text-[8.5px] font-bold text-slate-800 text-left leading-tight flex-1 min-w-0 line-clamp-3">${caps[i]}</p>` : ''}
+                    ${showCaption ? `<p class="text-[length:var(--opr-fs-2)] font-bold text-slate-800 text-left leading-tight flex-1 min-w-0 line-clamp-3">${caps[i]}</p>` : ''}
                 </div>
             `).join('');
         }
@@ -965,7 +986,7 @@
         // Fungsi Auto-Fit Sebenar — ukur ketinggian kandungan sebenar berbanding
         // ruang sebenar yang ada pada halaman A4, dan susutkan sehingga muat betul-betul.
         // Ini menggantikan heuristik lama yang cuma meneka ikut kiraan aksara.
-        const FIT_MIN_ZOOM = 78;   // had bawah supaya teks tidak jadi terlalu kecil untuk dibaca/dicetak
+        const FIT_MIN_ZOOM = 90;   // had bawah dinaikkan supaya saiz tulisan minimum (10-11px) kekal mudah dibaca/dicetak
         const FIT_STEP = 2;
 
         function autoFitToPage() {
@@ -1006,6 +1027,39 @@
             });
         }
 
+        // Toggle Saiz Tulisan Laporan — membesarkan semua tahap hierarki teks
+        // pada komponen A4 sekali gus (bukan sekadar zoom auto-fit), dan
+        // menyimpan pilihan pengguna supaya kekal selepas muat semula halaman.
+        const FONT_BOOST_KEY = 'oprFontBoost';
+
+        function applyFontBoostUI(isBoosted) {
+            const btn = document.getElementById('btn-font-boost');
+            const label = document.getElementById('btn-font-boost-label');
+            const icon = btn ? btn.querySelector('i') : null;
+            if (icon) icon.className = isBoosted ? 'fa-solid fa-text-height text-emerald-400' : 'fa-solid fa-text-height text-sky-400';
+            if (label) label.textContent = isBoosted ? 'Tulisan Besar (Aktif)' : 'Besarkan Tulisan';
+            if (btn) btn.classList.toggle('border-emerald-500', isBoosted);
+        }
+
+        function setFontBoost(isBoosted) {
+            document.documentElement.classList.toggle('opr-text-boost', isBoosted);
+            applyFontBoostUI(isBoosted);
+            try { localStorage.setItem(FONT_BOOST_KEY, isBoosted ? '1' : '0'); } catch (e) {}
+            autoFitToPage();
+        }
+
+        function toggleFontBoost() {
+            const isBoosted = !document.documentElement.classList.contains('opr-text-boost');
+            setFontBoost(isBoosted);
+        }
+
+        function restoreFontBoostPreference() {
+            let isBoosted = false;
+            try { isBoosted = localStorage.getItem(FONT_BOOST_KEY) === '1'; } catch (e) {}
+            document.documentElement.classList.toggle('opr-text-boost', isBoosted);
+            applyFontBoostUI(isBoosted);
+        }
+
         // Fungsi Kemaskini Pratonton A4
         function updatePreview() {
             // Header & Maklumat Asas
@@ -1036,7 +1090,7 @@
             const t = themes[activeThemeKey] || themes.indigo;
 
             if (objInputs.length === 0) {
-                objContainer.innerHTML = '<p class="text-slate-400 italic text-[9px]">- Tiada Objektif Dinyatakan -</p>';
+                objContainer.innerHTML = '<p class="text-slate-400 italic text-[length:var(--opr-fs-2)]">- Tiada Objektif Dinyatakan -</p>';
             } else {
                 objInputs.forEach((inp, idx) => {
                     const text = inp.value.trim();
@@ -1044,8 +1098,8 @@
                         const div = document.createElement('div');
                         div.className = 'flex items-start gap-1.5';
                         div.innerHTML = `
-                            <span class="theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[8.5px] shrink-0 mt-0.5">${idx + 1}</span>
-                            <p class="text-slate-800 leading-snug font-medium text-[9.5px]">${text || '-'}</p>
+                            <span class="theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[length:var(--opr-fs-2)] shrink-0 mt-0.5">${idx + 1}</span>
+                            <p class="text-slate-800 leading-snug font-medium text-[length:var(--opr-fs-3)]">${text || '-'}</p>
                         `;
                         objContainer.appendChild(div);
                     }
@@ -1058,13 +1112,13 @@
             impContainer.innerHTML = '';
 
             if (impInputs.length === 0) {
-                impContainer.innerHTML = '<p class="text-slate-400 italic text-[9px]">- Tiada Ringkasan Aktiviti Dinyatakan -</p>';
+                impContainer.innerHTML = '<p class="text-slate-400 italic text-[length:var(--opr-fs-2)]">- Tiada Ringkasan Aktiviti Dinyatakan -</p>';
             } else {
                 impInputs.forEach((inp) => {
                     const text = inp.value.trim();
                     if (text || impInputs.length === 1) {
                         const p = document.createElement('p');
-                        p.className = 'text-slate-800 font-medium leading-snug text-[9.5px] flex items-start gap-1.5';
+                        p.className = 'text-slate-800 font-medium leading-snug text-[length:var(--opr-fs-3)] flex items-start gap-1.5';
                         p.innerHTML = `<span class="${t.icon} font-bold theme-icon">•</span> <span>${text || '-'}</span>`;
                         impContainer.appendChild(p);
                     }
@@ -1079,13 +1133,13 @@
                 outBox.innerHTML = '';
 
                 if (inputs.length === 0) {
-                    outBox.innerHTML = '<p class="text-slate-400 italic text-[8.5px]">-</p>';
+                    outBox.innerHTML = '<p class="text-slate-400 italic text-[length:var(--opr-fs-2)]">-</p>';
                 } else {
                     inputs.forEach(inp => {
                         const val = inp.value.trim();
                         if (val || inputs.length === 1) {
                             const p = document.createElement('p');
-                            p.className = 'flex items-start gap-1 leading-snug text-[8.5px]';
+                            p.className = 'flex items-start gap-1 leading-snug text-[length:var(--opr-fs-2)]';
                             p.innerHTML = `<span class="opacity-60">•</span> <span>${val || '-'}</span>`;
                             outBox.appendChild(p);
                         }
@@ -1401,6 +1455,7 @@
         }
 
         window.onload = function() {
+            restoreFontBoostPreference();
             const restored = restoreDraftFromStorage();
             if (!restored) {
                 loadSampleData();
