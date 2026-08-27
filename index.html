@@ -31,6 +31,12 @@
             --opr-fs-2: 10.5px;
             --opr-fs-3: 11px;
             --opr-fs-4: 11.5px;
+            /* Fon TETAP untuk Header & Maklumat Program — TIDAK PERNAH dikecilkan
+               oleh autoFitToPage(); bahagian ini kekal "almost fit-to-content". */
+            --opr-fs-fixed-1: 10px;
+            --opr-fs-fixed-2: 10.5px;
+            --opr-fs-fixed-3: 11px;
+            --opr-fs-fixed-4: 11.5px;
         }
 
         #a4-scale-inner {
@@ -376,17 +382,17 @@
                                 </div>
                             </div>
                             <div class="text-right shrink-0">
-                                <span id="theme-badge" class="inline-block bg-slate-900 text-white text-[length:var(--opr-fs-4)] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                                <span id="theme-badge" class="inline-block bg-slate-900 text-white text-[length:var(--opr-fs-fixed-4)] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
                                     ONE PAGE REPORT (OPR)
                                 </span>
                             </div>
                         </div>
 
                         <!-- Grid Kad Maklumat Program -->
-                        <div class="grid grid-cols-2 gap-1.5 text-[length:var(--opr-fs-3)] shrink-0">
+                        <div class="grid grid-cols-2 gap-1.5 text-[length:var(--opr-fs-fixed-3)] shrink-0">
                             <!-- Nama Program -->
                             <div id="theme-main-card" class="col-span-2 bg-slate-900 text-white p-2.5 rounded-lg flex items-center justify-start gap-2 shadow-xs border border-slate-800">
-                                <span class="text-[length:var(--opr-fs-2)] font-extrabold text-slate-300 uppercase tracking-wider shrink-0 bg-white/10 px-2 py-0.5 rounded">NAMA PROGRAM</span>
+                                <span class="text-[length:var(--opr-fs-fixed-2)] font-extrabold text-slate-300 uppercase tracking-wider shrink-0 bg-white/10 px-2 py-0.5 rounded">NAMA PROGRAM</span>
                                 <h3 id="out-nama-program" class="font-bold text-xs uppercase tracking-wide text-white text-left flex-1 leading-snug">
                                     LAPORAN PROGRAM / AKTIVITI
                                 </h3>
@@ -394,61 +400,65 @@
 
                             <!-- Tarikh -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-regular fa-calendar-days text-indigo-600 theme-icon mr-1.5"></i>TARIKH
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
-                                <span id="out-tarikh" class="font-bold text-slate-900 text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
+                                <span id="out-tarikh" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Masa -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-regular fa-clock text-indigo-600 theme-icon mr-1.5"></i>MASA
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
-                                <span id="out-masa" class="font-bold text-slate-900 text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
+                                <span id="out-masa" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Tempat -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-solid fa-location-dot text-indigo-600 theme-icon mr-1.5"></i>TEMPAT
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
-                                <span id="out-tempat" class="font-bold text-slate-900 text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
+                                <span id="out-tempat" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Anjuran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-solid fa-building text-indigo-600 theme-icon mr-1.5"></i>ANJURAN
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
-                                <span id="out-anjuran" class="font-bold text-slate-900 text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
+                                <span id="out-anjuran" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Sasaran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-solid fa-users text-indigo-600 theme-icon mr-1.5"></i>SASARAN
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
-                                <span id="out-sasaran" class="font-bold text-slate-900 text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
+                                <span id="out-sasaran" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
                             <!-- Kehadiran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
                                     <i class="fa-solid fa-user-check text-indigo-600 theme-icon mr-1.5"></i>KEHADIRAN
                                 </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-2)] shrink-0">:</span>
-                                <span id="out-kehadiran" class="font-extrabold text-indigo-700 theme-highlight text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5">-</span>
+                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
+                                <span id="out-kehadiran" class="font-extrabold text-indigo-700 theme-highlight text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
                         </div>
 
+                        <!-- Kontena KUNCI (Lock) — had ruang tegas untuk kandungan boleh-kecil sahaja.
+                             Header & Maklumat Program di ATAS kontena ni KEKAL saiz asal (fit-to-content),
+                             tidak pernah disentuh oleh autoFitToPage(). -->
+                        <div id="a4-main-grid-lock" class="flex-1 min-h-0 flex flex-col overflow-hidden">
                         <!-- Layout Pembahagi: Teks Kiri vs Gambar Kanan - Dynamic Grid Resize Ratio -->
-                        <div id="a4-main-grid" class="grid grid-cols-12 gap-2.5 flex-1 items-stretch min-h-0">
+                        <div id="a4-main-grid" class="grid grid-cols-12 gap-2.5 items-stretch min-h-0 flex-1">
                             
                             <!-- LAJUR KIRI: Teks Kandungan Laporan (Dinamik col-span) -->
                             <div id="a4-left-col" class="col-span-7 flex flex-col justify-between space-y-1.5 h-full min-h-0">
@@ -530,6 +540,7 @@
                                 </div>
                             </div>
 
+                        </div>
                         </div>
                     </div>
                     </div>
@@ -763,7 +774,7 @@
             if (accentBar) accentBar.className = `h-2.5 w-full bg-gradient-to-r ${t.accent}`;
 
             const badge = document.getElementById('theme-badge');
-            if (badge) badge.className = `inline-block ${t.badge} text-[length:var(--opr-fs-4)] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm`;
+            if (badge) badge.className = `inline-block ${t.badge} text-[length:var(--opr-fs-fixed-4)] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm`;
 
             const mainCard = document.getElementById('theme-main-card');
             if (mainCard) mainCard.className = `col-span-2 ${t.mainCard} text-white p-2.5 rounded-lg flex items-center justify-start gap-2 shadow-xs border border-slate-800`;
@@ -772,7 +783,7 @@
                 el.className = el.className.replace(/text-(indigo|emerald|sky|rose)-\d+/, t.icon);
             });
             document.querySelectorAll('.theme-highlight').forEach(el => {
-                el.className = `font-extrabold ${t.highlight} text-[length:var(--opr-fs-3)] text-left truncate flex-1 ml-0.5`;
+                el.className = `font-extrabold ${t.highlight} text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5`;
             });
 
             ['theme-sec-1', 'theme-sec-2', 'theme-sec-3', 'theme-sec-4'].forEach(id => {
@@ -936,22 +947,30 @@
             `).join('');
         }
 
-        // Fungsi Auto Saiz Tulisan — DUA LAPIS:
+        // Fungsi Auto Saiz Tulisan — SISTEM BERLAPIS BARU:
         //
-        // LAPIS 1 (Fon Sebenar): --opr-fs-* dikecilkan secara BENAR (bukan
-        // transform) langkah demi langkah dari saiz reka bentuk penuh sehingga
-        // had minimum 9px (tahap 1), sambil ukur semula susun atur sebenar pada
-        // setiap langkah (kerana tukar font-size sebenar boleh ubah cara teks
-        // balut baris — lebih tepat berbanding transform semata-mata).
+        // Header & grid "Maklumat Program" (tarikh/masa/tempat/anjuran/sasaran/
+        // kehadiran) KINI KEKAL SAIZ ASAL (fit-to-content) — TIDAK PERNAH
+        // disentuh oleh fungsi ini (guna --opr-fs-fixed-* yang statik).
         //
-        // LAPIS 2 (Ruang/Kontena — jaring keselamatan): jika kandungan MASIH
-        // tak muat walaupun fon sudah pada had minimum 9px (kandungan terlalu
-        // banyak), barulah keseluruhan blok #a4-scale-inner (ruang, jidar,
-        // gambar, DAN fon serentak) dikecilkan lagi melalui transform:scale,
-        // supaya tiada apa-apa terpotong.
+        // Hanya kandungan di dalam #a4-main-grid (Objektif, Ringkasan, SWOT,
+        // Galeri, Tandatangan) — dibalut dalam kontena KUNCI #a4-main-grid-lock
+        // — yang diselaraskan, ikut LAPISAN:
+        //
+        // LAPIS 1 (Fon Sebenar, --opr-fs-*): dikecilkan BENAR (bukan transform)
+        // langkah demi langkah dari 100% sehingga had minimum 9px (tahap 1),
+        // sambil ukur semula susun atur sebenar #a4-main-grid pada setiap langkah.
+        //
+        // LAPIS 2 (Ruang — jaring keselamatan + KUNCI): jika #a4-main-grid masih
+        // tak muat dalam ruang yang diperuntukkan (selepas tolak tinggi Header +
+        // Maklumat Program) walaupun fon dah pada 9px, blok #a4-main-grid
+        // dikecilkan lagi melalui transform:scale. Kontena #a4-main-grid-lock
+        // sentiasa overflow:hidden pada tinggi yang diperuntukkan — jadi
+        // TIDAK MUNGKIN melebihi (over) atau terpotong secara tidak terkawal;
+        // had bawah paling teruk ialah teks jadi kecil, bukan hilang.
         const FONT_SCALE_MIN = 0.9;   // 0.9 x 10px tahap-1 = 9px (had minimum bacaan)
         const FONT_SCALE_STEP = 0.02;
-        const FIT_MIN_ZOOM = 55;      // had bawah lapis 2 (jaring keselamatan sahaja)
+        const FIT_MIN_ZOOM = 45;      // had bawah lapis 2 (jaring keselamatan sahaja)
         const FIT_MAX_ZOOM = 130;     // had atas — elak paparan jadi keterlaluan besar bila kandungan sedikit
 
         function setFontScale(scale) {
@@ -963,64 +982,85 @@
         }
 
         function autoFitToPage() {
-            const inner = document.getElementById('a4-scale-inner');
+            const scaleInner = document.getElementById('a4-scale-inner');
+            const lockWrapper = document.getElementById('a4-main-grid-lock');
+            const mainGrid = document.getElementById('a4-main-grid');
             const innerContent = document.getElementById('a4-inner-content-el');
             const statusCard = document.getElementById('fit-status-card');
             const statusText = document.getElementById('fit-status-text');
-            if (!inner || !innerContent) return;
+            if (!scaleInner || !lockWrapper || !mainGrid || !innerContent) return;
 
-            // Reset dahulu supaya ukuran sebenar (100%) diukur dari kandungan asal
-            inner.style.transform = 'none';
-            inner.style.width = '100%';
+            // Reset dahulu supaya ukuran sebenar (100%) diukur dari kandungan asal —
+            // header & maklumat program TIDAK PERNAH direset/diubah di sini.
+            mainGrid.style.transform = 'none';
+            mainGrid.style.width = '100%';
+            lockWrapper.style.height = 'auto';
+            lockWrapper.style.maxHeight = 'none';
             setFontScale(1);
 
             requestAnimationFrame(() => {
-                const availableHeight = innerContent.clientHeight * 0.98;
+                const totalAvailable = innerContent.clientHeight * 0.98;
 
-                // LAPIS 1: cuba kecilkan fon SEBENAR langkah demi langkah sehingga muat,
-                // atau sehingga had minimum 9px (tahap 1) tercapai.
+                // Tinggi sebenar Header + Maklumat Program (KEKAL, tak dikecilkan) +
+                // jurang (space-y-2 = 0.5rem/8px) antara header/info-grid/kontena kunci.
+                const fixedSections = Array.from(scaleInner.children).filter(
+                    el => el !== lockWrapper
+                );
+                const fixedHeight = fixedSections.reduce((sum, el) => sum + el.offsetHeight, 0);
+                const gapPx = 8 * fixedSections.length; // ~1 jurang selepas setiap seksyen tetap
+
+                const availableForMainGrid = Math.max(40, totalAvailable - fixedHeight - gapPx);
+
+                // LAPIS 1: cuba kecilkan fon SEBENAR (kandungan utama sahaja) langkah
+                // demi langkah sehingga muat dalam ruang yang diperuntukkan, atau
+                // sehingga had minimum 9px (tahap 1) tercapai.
                 let fontScale = 1;
-                let naturalHeight = inner.scrollHeight;
+                let naturalHeight = mainGrid.scrollHeight;
 
-                while (naturalHeight > availableHeight && fontScale > FONT_SCALE_MIN) {
+                while (naturalHeight > availableForMainGrid && fontScale > FONT_SCALE_MIN) {
                     fontScale = Math.max(FONT_SCALE_MIN, fontScale - FONT_SCALE_STEP);
                     setFontScale(fontScale);
-                    naturalHeight = inner.scrollHeight;
+                    naturalHeight = mainGrid.scrollHeight;
                 }
 
                 // LAPIS 2 (jaring keselamatan): kalau pada fon 9px pun masih tak muat,
-                // kecilkan keseluruhan blok (ruang + gambar + fon serentak) sikit lagi.
-                const rawZoomScale = naturalHeight > 0 ? availableHeight / naturalHeight : 1;
-                const needsSafetyNet = rawZoomScale < 0.995;
+                // kecilkan #a4-main-grid (ruang + gambar + fon serentak) sikit lagi.
+                const rawZoomScale = naturalHeight > 0 ? availableForMainGrid / naturalHeight : 1;
                 let zoomScale = 1;
 
-                if (needsSafetyNet) {
-                    zoomScale = Math.min(FIT_MAX_ZOOM / 100, Math.max(FIT_MIN_ZOOM / 100, rawZoomScale));
-                    inner.style.transform = `scale(${zoomScale})`;
-                    inner.style.width = `${100 / zoomScale}%`;
+                if (rawZoomScale < 0.995) {
+                    zoomScale = Math.max(FIT_MIN_ZOOM / 100, rawZoomScale);
+                    mainGrid.style.transform = `scale(${zoomScale})`;
+                    mainGrid.style.width = `${100 / zoomScale}%`;
                 } else if (rawZoomScale > 1.02 && fontScale >= FONT_SCALE_MIN) {
-                    // Kandungan sikit & fon dah pada saiz penuh — besarkan seluruh blok
-                    // sedikit untuk isi ruang lebihan, ikut had atas.
+                    // Kandungan sikit & fon dah pada saiz penuh — besarkan sedikit
+                    // untuk isi ruang lebihan, ikut had atas.
                     zoomScale = Math.min(FIT_MAX_ZOOM / 100, rawZoomScale);
-                    inner.style.transform = `scale(${zoomScale})`;
-                    inner.style.width = `${100 / zoomScale}%`;
+                    mainGrid.style.transform = `scale(${zoomScale})`;
+                    mainGrid.style.width = `${100 / zoomScale}%`;
                 } else {
-                    inner.style.transform = 'none';
-                    inner.style.width = '100%';
+                    mainGrid.style.transform = 'none';
+                    mainGrid.style.width = '100%';
                 }
 
-                const trulyFits = (inner.scrollHeight * zoomScale) <= (availableHeight + 2);
+                // KUNCI kontena: tetapkan tinggi TEPAT pada ruang yang diperuntukkan
+                // (overflow-hidden sedia ada pada lockWrapper) — supaya TIDAK PERNAH
+                // melebihi (over) mahupun terpotong secara tidak terkawal.
+                lockWrapper.style.height = `${availableForMainGrid}px`;
+                lockWrapper.style.maxHeight = `${availableForMainGrid}px`;
+
+                const trulyFits = (mainGrid.scrollHeight * zoomScale) <= (availableForMainGrid + 2);
 
                 if (statusCard && statusText) {
                     if (trulyFits) {
                         statusCard.className = 'bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
                         statusText.parentElement.querySelector('i').className = 'fa-solid fa-circle-check text-emerald-600';
                         if (fontScale < 0.999 && zoomScale < 0.999) {
-                            statusText.textContent = `Fon dikecilkan kepada ${Math.round(fontScale * 100)}% (min 9px) dan ruang dikecilkan lagi kepada ${Math.round(zoomScale * 100)}% supaya muat 1 muka surat.`;
+                            statusText.textContent = `Header & Maklumat Program kekal saiz asal. Fon kandungan lain dikecilkan kepada ${Math.round(fontScale * 100)}% (min 9px) dan ruang dikecilkan lagi kepada ${Math.round(zoomScale * 100)}% supaya muat 1 muka surat.`;
                         } else if (fontScale < 0.999) {
-                            statusText.textContent = `Fon dikecilkan automatik kepada ${Math.round(fontScale * 100)}% (min 9px) supaya muat dalam 1 muka surat.`;
+                            statusText.textContent = `Header & Maklumat Program kekal saiz asal. Fon kandungan lain dikecilkan automatik kepada ${Math.round(fontScale * 100)}% (min 9px) supaya muat.`;
                         } else if (zoomScale > 1.02) {
-                            statusText.textContent = `Paparan dibesarkan automatik kepada ${Math.round(zoomScale * 100)}% untuk mengisi ruang muka surat.`;
+                            statusText.textContent = `Kandungan dibesarkan automatik kepada ${Math.round(zoomScale * 100)}% untuk mengisi ruang lebihan.`;
                         } else {
                             statusText.textContent = 'Kandungan muat penuh dalam 1 muka surat A4.';
                         }
