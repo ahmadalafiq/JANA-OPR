@@ -43,6 +43,18 @@
             transform-origin: top left;
         }
 
+        /* #a4-main-grid is the element actually scaled by autoFitToPage() (LAPIS 2
+           jaring keselamatan / pembesaran). Its width is temporarily changed to
+           100/zoomScale% and then counter-scaled back to 100% — this only lines
+           up correctly if the scale anchors at the top-left corner. Without this,
+           the browser defaults to scaling from the CENTER, which pushes content
+           outward/inward symmetrically on BOTH left and right edges — causing
+           text to be clipped at the start of lines and elements on the right
+           (e.g. gallery badges) to spill outside their boxes. */
+        #a4-main-grid {
+            transform-origin: top left;
+        }
+
         /* Dimensions A4 Standard - Perfect Fit 1-Page Layout */
         .a4-paper {
             width: 210mm;
