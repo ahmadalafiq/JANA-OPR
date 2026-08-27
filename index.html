@@ -355,7 +355,7 @@
                 <div id="a4-inner-content-el" class="a4-inner-content">
                     <!-- Pembungkus Kandungan Utama Mengembang Penuh (flex-1) -->
                     <div id="a4-scalable-wrapper" class="flex-1 flex flex-col min-h-0 overflow-hidden transition-all duration-200">
-                    <div id="a4-scale-inner" class="flex flex-col justify-between space-y-2.5">
+                    <div id="a4-scale-inner" class="flex flex-col justify-between space-y-2">
                         
                         <!-- Pengepala Utama (Logo & Header Besarkan Saiz) -->
                         <div class="flex items-center justify-between border-b-2 pb-1.5 border-slate-900 shrink-0">
@@ -364,10 +364,10 @@
                                     <img id="out-logo" src="" alt="Logo Organisasi" class="max-h-full max-w-full object-contain block">
                                 </div>
                                 <div class="flex-1">
-                                    <h2 id="out-org" class="text-xs sm:text-sm md:text-base font-black tracking-wider text-slate-900 uppercase leading-tight">
+                                    <h2 id="out-org" class="text-sm font-black tracking-wider text-slate-900 uppercase leading-tight">
                                         SEKTOR PEMBANGUNAN MURID
                                     </h2>
-                                    <p id="out-sub-org" class="text-[10px] sm:text-xs text-slate-700 uppercase tracking-wide font-black mt-0.5">
+                                    <p id="out-sub-org" class="text-[10px] text-slate-700 uppercase tracking-wide font-black mt-0.5">
                                         PEJABAT PENDIDIKAN DAERAH SUBIS
                                     </p>
                                 </div>
@@ -445,36 +445,36 @@
                         </div>
 
                         <!-- Layout Pembahagi: Teks Kiri vs Gambar Kanan - Dynamic Grid Resize Ratio -->
-                        <div id="a4-main-grid" class="grid grid-cols-12 gap-3 flex-1 items-stretch min-h-0">
+                        <div id="a4-main-grid" class="grid grid-cols-12 gap-2.5 flex-1 items-stretch min-h-0">
                             
                             <!-- LAJUR KIRI: Teks Kandungan Laporan (Dinamik col-span) -->
-                            <div id="a4-left-col" class="col-span-7 flex flex-col justify-between space-y-2 h-full min-h-0">
+                            <div id="a4-left-col" class="col-span-7 flex flex-col justify-between space-y-1.5 h-full min-h-0">
                                 
                                 <!-- 1. Objektif Program -->
                                 <div class="flex flex-col flex-1">
-                                    <div id="theme-sec-1" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
+                                    <div id="theme-sec-1" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1 shrink-0">
                                         <i class="fa-solid fa-bullseye text-indigo-600 theme-icon text-xs"></i>
                                         <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">1. OBJEKTIF PROGRAM</h3>
                                     </div>
-                                    <div id="out-obj-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[length:var(--opr-fs-3)] space-y-1.5 flex-1 leading-relaxed">
+                                    <div id="out-obj-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2 text-[length:var(--opr-fs-3)] space-y-1 flex-1 leading-relaxed">
                                         <!-- Penjana Objektif Dynamik -->
                                     </div>
                                 </div>
 
                                 <!-- 2. Ringkasan Implementasi -->
                                 <div class="flex flex-col flex-1">
-                                    <div id="theme-sec-2" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
+                                    <div id="theme-sec-2" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1 shrink-0">
                                         <i class="fa-solid fa-list-check text-indigo-600 theme-icon text-xs"></i>
                                         <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">2. RINGKASAN IMPLEMENTASI</h3>
                                     </div>
-                                    <div id="out-imp-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2.5 text-[length:var(--opr-fs-3)] space-y-1.5 flex-1 leading-relaxed">
+                                    <div id="out-imp-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2 text-[length:var(--opr-fs-3)] space-y-1 flex-1 leading-relaxed">
                                         <!-- Penjana Implementasi Dynamik -->
                                     </div>
                                 </div>
 
                                 <!-- 3. Impak & Analisis SWOT -->
                                 <div class="shrink-0">
-                                    <div id="theme-sec-3" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5">
+                                    <div id="theme-sec-3" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1">
                                         <i class="fa-solid fa-chart-pie text-indigo-600 theme-icon text-xs"></i>
                                         <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">3. IMPAK & ANALISIS SWOT</h3>
                                     </div>
@@ -506,18 +506,18 @@
 
                             <!-- LAJUR KANAN: Galeri Gambar Dinamik (Dinamik col-span) -->
                             <div id="a4-right-col" class="col-span-5 flex flex-col justify-between h-full min-h-0">
-                                <div id="theme-sec-4" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2.5 py-1 rounded-r-md mb-1.5 shrink-0">
+                                <div id="theme-sec-4" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1 shrink-0">
                                     <i class="fa-solid fa-camera text-indigo-600 theme-icon text-xs"></i>
                                     <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">4. GALERI</h3>
                                 </div>
                                 
                                 <!-- Bekas Kontena Gambar Berpembolehubah -->
-                                <div id="out-img-gallery-container" class="flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-2 min-h-0 h-full">
+                                <div id="out-img-gallery-container" class="flex-1 grid grid-cols-1 grid-rows-4 auto-rows-fr gap-1.5 min-h-0 h-full">
                                     <!-- Terjana Secara Dinamik Melalui updatePreview() -->
                                 </div>
 
                                 <!-- Ruangan Tandatangan Pengesahan (Bawah Galeri, Lajur Kanan Sahaja) -->
-                                <div id="a4-signature-block" class="pt-2 mt-2 border-t-2 border-slate-300 shrink-0">
+                                <div id="a4-signature-block" class="pt-1.5 mt-1.5 border-t-2 border-slate-300 shrink-0">
                                     <div class="bg-slate-50/80 p-2 rounded-lg border border-slate-300 text-[length:var(--opr-fs-2)]">
                                         <p class="font-extrabold text-slate-600 uppercase tracking-wider text-[length:var(--opr-fs-2)] mb-1 flex items-center gap-1">
                                             <i class="fa-solid fa-pen-nib text-indigo-600"></i> Disediakan Oleh:
@@ -946,7 +946,7 @@
         // kandungan (cth: kotak SWOT) terpotong akibat ruang tetap (padding/gap)
         // yang tidak ikut mengecil bersama fon. Satu ukuran sudah cukup kerana
         // hubungan antara scale dan ketinggian adalah linear (scale 2x = tinggi 2x).
-        const FIT_MIN_ZOOM = 50;   // had bawah — jaring keselamatan tambahan jika butiran sangat panjang
+        const FIT_MIN_ZOOM = 32;   // had bawah — jaring keselamatan tambahan jika butiran sangat panjang
         const FIT_MAX_ZOOM = 130;  // had atas — elak paparan jadi keterlaluan besar bila kandungan sedikit
 
         function autoFitToPage() {
