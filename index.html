@@ -1037,22 +1037,64 @@
 
                 // LAPIS 2 (jaring keselamatan): kalau pada fon 9px pun masih tak muat,
                 // kecilkan #a4-main-grid (ruang + gambar + fon serentak) sikit lagi.
+                //
+                // PENTING: naturalHeight di atas diukur pada LEBAR 100%. Teknik
+                // scale+width di sini SENGAJA mengubah lebar sebenar #a4-main-grid
+                // (menyempit bila besarkan, melebar bila kecilkan) supaya selepas
+                // di-scale semula ia kembali litup 100% lebar induk. Tetapi
+                // menyempitkan lebar menyebabkan teks membalut lebih banyak baris
+                // (jadi LEBIH TINGGI) — jadi anggaran satu-langkah berasaskan
+                // naturalHeight (lebar 100%) BOLEH SILAP selepas lebar berubah,
+                // dan silap itulah punca kandungan "hilang" di BAWAH (dipotong oleh
+                // overflow-hidden lockWrapper walaupun dalam pratonton biasa, bukan
+                // sahaja semasa cetak). Jadi di sini kita UKUR SEBENAR
+                // (getBoundingClientRect, yang mengambil kira transform) selepas
+                // setiap langkah dan undur balik jika ia melampaui ruang.
                 const rawZoomScale = naturalHeight > 0 ? availableForMainGrid / naturalHeight : 1;
-                let zoomScale = 1;
 
-                if (rawZoomScale < 0.995) {
-                    zoomScale = Math.max(FIT_MIN_ZOOM / 100, rawZoomScale);
-                    mainGrid.style.transform = `scale(${zoomScale})`;
-                    mainGrid.style.width = `${100 / zoomScale}%`;
+                function applyZoom(scale) {
+                    if (Math.abs(scale - 1) < 0.001) {
+                        mainGrid.style.transform = 'none';
+                        mainGrid.style.width = '100%';
+                    } else {
+                        mainGrid.style.transform = `scale(${scale})`;
+                        mainGrid.style.width = `${100 / scale}%`;
+                    }
+                }
+
+                let zoomScale = 1;
+                applyZoom(1);
+                let renderedHeight = mainGrid.getBoundingClientRect().height;
+
+                if (renderedHeight > availableForMainGrid + 2) {
+                    // Kecilkan langkah demi langkah, ukur SEBENAR setiap kali,
+                    // sehingga benar-benar muat atau had bawah tercapai.
+                    let guard = 0;
+                    while (renderedHeight > availableForMainGrid + 2 && zoomScale > FIT_MIN_ZOOM / 100 && guard < 40) {
+                        zoomScale = Math.max(FIT_MIN_ZOOM / 100, zoomScale - 0.02);
+                        applyZoom(zoomScale);
+                        renderedHeight = mainGrid.getBoundingClientRect().height;
+                        guard++;
+                    }
                 } else if (rawZoomScale > 1.02 && fontScale >= FONT_SCALE_MIN) {
-                    // Kandungan sikit & fon dah pada saiz penuh — besarkan sedikit
-                    // untuk isi ruang lebihan, ikut had atas.
-                    zoomScale = Math.min(FIT_MAX_ZOOM / 100, rawZoomScale);
-                    mainGrid.style.transform = `scale(${zoomScale})`;
-                    mainGrid.style.width = `${100 / zoomScale}%`;
-                } else {
-                    mainGrid.style.transform = 'none';
-                    mainGrid.style.width = '100%';
+                    // Kandungan sikit & fon dah pada saiz penuh — besarkan langkah
+                    // demi langkah, TAPI ukur SEBENAR selepas setiap langkah dan
+                    // BERHENTI + UNDUR sebaik sahaja ia akan melebihi ruang —
+                    // supaya tidak sekali-kali terlebih tinggi lalu terpotong di bawah.
+                    let guard = 0;
+                    while (renderedHeight < availableForMainGrid * 0.98 && zoomScale < FIT_MAX_ZOOM / 100 && guard < 40) {
+                        const nextZoom = Math.min(FIT_MAX_ZOOM / 100, zoomScale + 0.02);
+                        applyZoom(nextZoom);
+                        const nextHeight = mainGrid.getBoundingClientRect().height;
+                        if (nextHeight > availableForMainGrid + 2) {
+                            applyZoom(zoomScale); // undur ke langkah selamat terakhir
+                            renderedHeight = mainGrid.getBoundingClientRect().height;
+                            break;
+                        }
+                        zoomScale = nextZoom;
+                        renderedHeight = nextHeight;
+                        guard++;
+                    }
                 }
 
                 // KUNCI kontena: tetapkan tinggi TEPAT pada ruang yang diperuntukkan
@@ -1061,7 +1103,7 @@
                 lockWrapper.style.height = `${availableForMainGrid}px`;
                 lockWrapper.style.maxHeight = `${availableForMainGrid}px`;
 
-                const trulyFits = (mainGrid.scrollHeight * zoomScale) <= (availableForMainGrid + 2);
+                const trulyFits = renderedHeight <= (availableForMainGrid + 2);
 
                 if (statusCard && statusText) {
                     if (trulyFits) {
