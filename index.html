@@ -16,13 +16,16 @@
             background-color: #0b1329;
         }
 
-        /* Hierarki Saiz Tulisan Laporan OPR — semua tahap bermula minimum 10px
-           supaya kekal mudah dibaca, dengan hierarki visual dikekalkan.
-           Tahap 1 (label/badge kecil) < 2 (label/keterangan) < 3 (teks isi) < 4 (penekanan).
-           Saiz efektif pada halaman dikawal oleh autoFitToPage() melalui
-           transform:scale pada #a4-scale-inner (lihat skrip di bawah) — ini
-           membesarkan/mengecilkan TEKS BERSAMA ruang/jidar/gambar secara
-           berkadar supaya kandungan tidak pernah terpotong walau sepadat mana pun. */
+        /* Hierarki Saiz Tulisan Laporan OPR — saiz reka bentuk penuh (100%)
+           bermula 10-11.5px, dengan had minimum SEBENAR 9px (tahap 1) apabila
+           dikecilkan oleh autoFitToPage(). Tahap 1 (label/badge kecil) < 2
+           (label/keterangan) < 3 (teks isi) < 4 (penekanan).
+           Saiz sebenar pada halaman dikawal oleh autoFitToPage(): LAPIS 1
+           kecilkan --opr-fs-* (font-size BENAR, bukan transform) sehingga
+           muat atau sehingga had 9px; LAPIS 2 (jaring keselamatan) barulah
+           transform:scale pada #a4-scale-inner mengecilkan ruang+gambar+fon
+           serentak jika 9px pun masih tak cukup — supaya kandungan tidak
+           pernah terpotong walau sepadat mana pun. */
         html {
             --opr-fs-1: 10px;
             --opr-fs-2: 10.5px;
@@ -933,21 +936,31 @@
             `).join('');
         }
 
-        // Fungsi Auto Saiz Tulisan — ukur ketinggian kandungan sebenar berbanding
-        // ruang sebenar yang ada pada halaman A4, kemudian BESARKAN paparan secara
-        // automatik apabila ruang berlebihan, atau KECILKAN apabila kandungan
-        // terlalu panjang, supaya laporan sentiasa muat kemas dalam 1 muka surat —
-        // tanpa perlu sebarang butang tetapan manual.
+        // Fungsi Auto Saiz Tulisan — DUA LAPIS:
         //
-        // PENTING: penskalaan guna transform:scale ke atas keseluruhan blok
-        // (#a4-scale-inner), BUKAN sekadar saiz fon (CSS var). Ini sengaja dipilih
-        // supaya teks, jidar/ruang, jarak antara seksyen dan gambar semuanya
-        // membesar/mengecil SERENTAK secara berkadar — mengelakkan sebarang
-        // kandungan (cth: kotak SWOT) terpotong akibat ruang tetap (padding/gap)
-        // yang tidak ikut mengecil bersama fon. Satu ukuran sudah cukup kerana
-        // hubungan antara scale dan ketinggian adalah linear (scale 2x = tinggi 2x).
-        const FIT_MIN_ZOOM = 32;   // had bawah — jaring keselamatan tambahan jika butiran sangat panjang
-        const FIT_MAX_ZOOM = 130;  // had atas — elak paparan jadi keterlaluan besar bila kandungan sedikit
+        // LAPIS 1 (Fon Sebenar): --opr-fs-* dikecilkan secara BENAR (bukan
+        // transform) langkah demi langkah dari saiz reka bentuk penuh sehingga
+        // had minimum 9px (tahap 1), sambil ukur semula susun atur sebenar pada
+        // setiap langkah (kerana tukar font-size sebenar boleh ubah cara teks
+        // balut baris — lebih tepat berbanding transform semata-mata).
+        //
+        // LAPIS 2 (Ruang/Kontena — jaring keselamatan): jika kandungan MASIH
+        // tak muat walaupun fon sudah pada had minimum 9px (kandungan terlalu
+        // banyak), barulah keseluruhan blok #a4-scale-inner (ruang, jidar,
+        // gambar, DAN fon serentak) dikecilkan lagi melalui transform:scale,
+        // supaya tiada apa-apa terpotong.
+        const FONT_SCALE_MIN = 0.9;   // 0.9 x 10px tahap-1 = 9px (had minimum bacaan)
+        const FONT_SCALE_STEP = 0.02;
+        const FIT_MIN_ZOOM = 55;      // had bawah lapis 2 (jaring keselamatan sahaja)
+        const FIT_MAX_ZOOM = 130;     // had atas — elak paparan jadi keterlaluan besar bila kandungan sedikit
+
+        function setFontScale(scale) {
+            const root = document.documentElement;
+            root.style.setProperty('--opr-fs-1', (10 * scale).toFixed(2) + 'px');
+            root.style.setProperty('--opr-fs-2', (10.5 * scale).toFixed(2) + 'px');
+            root.style.setProperty('--opr-fs-3', (11 * scale).toFixed(2) + 'px');
+            root.style.setProperty('--opr-fs-4', (11.5 * scale).toFixed(2) + 'px');
+        }
 
         function autoFitToPage() {
             const inner = document.getElementById('a4-scale-inner');
@@ -959,44 +972,62 @@
             // Reset dahulu supaya ukuran sebenar (100%) diukur dari kandungan asal
             inner.style.transform = 'none';
             inner.style.width = '100%';
+            setFontScale(1);
 
             requestAnimationFrame(() => {
-                const naturalHeight = inner.scrollHeight;
-                // "Disediakan Oleh" kini sebahagian daripada #a4-scale-inner (dalam lajur
-                // kanan, bawah galeri), jadi ia sudah termasuk dalam naturalHeight —
-                // tiada lagi tolak berasingan seperti dahulu.
-                // Jidar keselamatan kecil (2%) untuk elak overflow disebabkan pembundaran
-                // sub-piksel semasa teks dibalut pada saiz skala berbeza.
                 const availableHeight = innerContent.clientHeight * 0.98;
 
-                const rawScale = naturalHeight > 0 ? availableHeight / naturalHeight : 1;
-                const scale = Math.min(FIT_MAX_ZOOM / 100, Math.max(FIT_MIN_ZOOM / 100, rawScale));
-                const zoom = Math.round(scale * 100);
-                const fits = rawScale >= (FIT_MIN_ZOOM / 100);
+                // LAPIS 1: cuba kecilkan fon SEBENAR langkah demi langkah sehingga muat,
+                // atau sehingga had minimum 9px (tahap 1) tercapai.
+                let fontScale = 1;
+                let naturalHeight = inner.scrollHeight;
 
-                if (Math.abs(scale - 1) > 0.005) {
-                    inner.style.transform = `scale(${scale})`;
-                    inner.style.width = `${100 / scale}%`;
+                while (naturalHeight > availableHeight && fontScale > FONT_SCALE_MIN) {
+                    fontScale = Math.max(FONT_SCALE_MIN, fontScale - FONT_SCALE_STEP);
+                    setFontScale(fontScale);
+                    naturalHeight = inner.scrollHeight;
+                }
+
+                // LAPIS 2 (jaring keselamatan): kalau pada fon 9px pun masih tak muat,
+                // kecilkan keseluruhan blok (ruang + gambar + fon serentak) sikit lagi.
+                const rawZoomScale = naturalHeight > 0 ? availableHeight / naturalHeight : 1;
+                const needsSafetyNet = rawZoomScale < 0.995;
+                let zoomScale = 1;
+
+                if (needsSafetyNet) {
+                    zoomScale = Math.min(FIT_MAX_ZOOM / 100, Math.max(FIT_MIN_ZOOM / 100, rawZoomScale));
+                    inner.style.transform = `scale(${zoomScale})`;
+                    inner.style.width = `${100 / zoomScale}%`;
+                } else if (rawZoomScale > 1.02 && fontScale >= FONT_SCALE_MIN) {
+                    // Kandungan sikit & fon dah pada saiz penuh — besarkan seluruh blok
+                    // sedikit untuk isi ruang lebihan, ikut had atas.
+                    zoomScale = Math.min(FIT_MAX_ZOOM / 100, rawZoomScale);
+                    inner.style.transform = `scale(${zoomScale})`;
+                    inner.style.width = `${100 / zoomScale}%`;
                 } else {
                     inner.style.transform = 'none';
                     inner.style.width = '100%';
                 }
 
+                const trulyFits = (inner.scrollHeight * zoomScale) <= (availableHeight + 2);
+
                 if (statusCard && statusText) {
-                    if (fits) {
+                    if (trulyFits) {
                         statusCard.className = 'bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
                         statusText.parentElement.querySelector('i').className = 'fa-solid fa-circle-check text-emerald-600';
-                        if (zoom > 102) {
-                            statusText.textContent = `Paparan dibesarkan automatik kepada ${zoom}% untuk mengisi ruang muka surat.`;
-                        } else if (zoom < 98) {
-                            statusText.textContent = `Paparan dikecilkan automatik kepada ${zoom}% supaya muat dalam 1 muka surat.`;
+                        if (fontScale < 0.999 && zoomScale < 0.999) {
+                            statusText.textContent = `Fon dikecilkan kepada ${Math.round(fontScale * 100)}% (min 9px) dan ruang dikecilkan lagi kepada ${Math.round(zoomScale * 100)}% supaya muat 1 muka surat.`;
+                        } else if (fontScale < 0.999) {
+                            statusText.textContent = `Fon dikecilkan automatik kepada ${Math.round(fontScale * 100)}% (min 9px) supaya muat dalam 1 muka surat.`;
+                        } else if (zoomScale > 1.02) {
+                            statusText.textContent = `Paparan dibesarkan automatik kepada ${Math.round(zoomScale * 100)}% untuk mengisi ruang muka surat.`;
                         } else {
                             statusText.textContent = 'Kandungan muat penuh dalam 1 muka surat A4.';
                         }
                     } else {
                         statusCard.className = 'bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
                         statusText.parentElement.querySelector('i').className = 'fa-solid fa-triangle-exclamation text-rose-600';
-                        statusText.textContent = `Kandungan terlalu panjang walaupun pada ${FIT_MIN_ZOOM}% — sila kurangkan bilangan/panjang butiran (Objektif, Implementasi atau SWOT).`;
+                        statusText.textContent = `Kandungan terlalu panjang walaupun fon pada had minimum 9px — sila kurangkan bilangan/panjang butiran (Objektif, Implementasi, SWOT atau Galeri).`;
                     }
                 }
             });
