@@ -649,6 +649,16 @@
                 anjuran: document.getElementById('inp-anjuran')?.value.trim() || '',
                 sasaran: document.getElementById('inp-sasaran')?.value.trim() || '',
                 kehadiran: document.getElementById('inp-kehadiran')?.value.trim() || '',
+                // PENTING: ini hanya PETUNJUK gaya dihantar ke /api/generate — ia
+                // TIDAK menguatkuasakan apa-apa dengan sendirinya. Prompt SEBENAR
+                // yang dihantar kepada model AI (Gemini) berada di dalam fail
+                // pelayan /api/generate.js (bukan sebahagian fail HTML ini), jadi
+                // fail itu MESTI dikemaskini untuk benar-benar membaca medan ini
+                // dan menyisipkannya ke dalam arahan sistem/prompt Gemini —
+                // contohnya: "Setiap ayat Objektif/Implementasi/SWOT MESTI ringkas
+                // (maksimum ± 15-18 patah perkataan sahaja), padat dan terus ke
+                // isi penting — elak ayat berjela atau berulang."
+                gayaFormat: 'ringkas-bermakna',
             };
 
             if (!context.namaProgram) {
@@ -1009,6 +1019,21 @@
             lockWrapper.style.height = 'auto';
             lockWrapper.style.maxHeight = 'none';
             setFontScale(1);
+
+            // PENTING: #a4-main-grid guna kelas Tailwind "flex-1" (flex:1 1 0%).
+            // Ini bermaksud SEBAIK SAHAJA #a4-main-grid-lock diberi tinggi TETAP
+            // (langkah "KUNCI kontena" di bawah), flexbox akan CUBA REGANGKAN
+            // #a4-main-grid semula untuk memenuhi tinggi tetap itu — MENIMPA
+            // skala/lebar yang kita dah kira dengan teliti, menyebabkan skala
+            // terpakai DUA KALI (sekali oleh kita, sekali oleh flex-grow) →
+            // kandungan jadi terlebih kecil dengan ruang putih kosong di bawah
+            // (kes kecilkan) ATAU melimpah terpotong semula di bawah (kes
+            // besarkan). Jadi kita nyahaktifkan regangan flex di sini supaya
+            // saiz #a4-main-grid selepas ini HANYA ditentukan oleh transform
+            // yang kita tetapkan sendiri, bukan oleh flexbox.
+            mainGrid.style.flexGrow = '0';
+            mainGrid.style.flexShrink = '0';
+            mainGrid.style.flexBasis = 'auto';
 
             requestAnimationFrame(() => {
                 const totalAvailable = innerContent.clientHeight * 0.98;
