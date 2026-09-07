@@ -47,14 +47,21 @@ export default async function handler(req, res) {
         `Kehadiran: ${context.kehadiran || '-'}`,
     ].join('\n');
 
+    // NOTA PENJAJARAN DENGAN index.html: medan Objektif & Implementasi di
+    // borang (inp-obj-item / inp-imp-item) kini ada maxlength="160", dan
+    // medan SWOT (inp-swoc-*-item) ada maxlength="100" — ini untuk elak
+    // autoFitToPage() terpaksa kecilkan fon melampau bila teks terlalu
+    // panjang. Had aksara di bawah (150 / 90) sengaja diberi jidar (buffer)
+    // di bawah had sebenar borang supaya output AI tidak "tersekat" separuh
+    // ayat bila tiba di medan input.
     const prompt = `Anda seorang pegawai Pejabat Pendidikan Daerah (PPD) di Malaysia yang menyediakan One Page Report (OPR) rasmi.
 Berdasarkan maklumat program di bawah (terutamanya "Keterangan Ringkas" yang diberikan oleh pegawai), jana KETIGA-TIGA kandungan berikut sekaligus dalam Bahasa Melayu formal, ringkas dan padat:
 
-1. "objektif" — 3 hingga 4 objektif program. Setiap objektif mesti bermula dengan kata kerja transitif seperti "Meningkatkan", "Memantapkan", "Memberi", "Melahirkan", "Mewujudkan". Tidak lebih 25 patah perkataan setiap satu.
+1. "objektif" — 3 hingga 4 objektif program. Setiap objektif mesti bermula dengan kata kerja transitif seperti "Meningkatkan", "Memantapkan", "Memberi", "Melahirkan", "Mewujudkan". WAJIB tidak melebihi 150 aksara (termasuk ruang) setiap satu — kira aksara, bukan hanya perkataan, dan pendekkan ayat jika perlu supaya muat.
 
-2. "implementasi" — 3 hingga 4 butiran ringkasan perjalanan/implementasi program secara kronologi (dari permulaan hingga penutup). Tidak lebih 25 patah perkataan setiap satu.
+2. "implementasi" — 3 hingga 4 butiran ringkasan perjalanan/implementasi program secara kronologi (dari permulaan hingga penutup). WAJIB tidak melebihi 150 aksara (termasuk ruang) setiap satu.
 
-3. "impak" — analisis SWOC (Kekuatan, Kelemahan, Peluang, Cabaran) untuk pelaksanaan program ini, dengan 2 hingga 3 butiran bagi setiap kategori (kekuatan, kelemahan, peluang, cabaran). Tidak lebih 20 patah perkataan setiap satu.
+3. "impak" — analisis SWOC (Kekuatan, Kelemahan, Peluang, Cabaran) untuk pelaksanaan program ini, dengan 2 hingga 3 butiran bagi setiap kategori (kekuatan, kelemahan, peluang, cabaran). WAJIB tidak melebihi 90 aksara (termasuk ruang) setiap satu — ayat mesti pendek dan padat.
 
 Maklumat Program:
 ${konteksTeks}`;
@@ -107,11 +114,41 @@ ${konteksTeks}`;
             return res.status(502).json({ error: 'Format respons daripada Gemini tidak sah.' });
         }
 
+        // Jaring keselamatan: pangkas paksa ke had aksara borang index.html
+        // (obj/imp maxlength="160", swot maxlength="100") sekiranya Gemini
+        // tidak patuh sepenuhnya kepada arahan panjang dalam prompt di atas.
+        parsed.objektif = clampList(parsed.objektif, 155);
+        parsed.implementasi = clampList(parsed.implementasi, 155);
+        if (parsed.impak) {
+            parsed.impak.kekuatan = clampList(parsed.impak.kekuatan, 95);
+            parsed.impak.kelemahan = clampList(parsed.impak.kelemahan, 95);
+            parsed.impak.peluang = clampList(parsed.impak.peluang, 95);
+            parsed.impak.cabaran = clampList(parsed.impak.cabaran, 95);
+        }
+
         return res.status(200).json(parsed);
     } catch (err) {
         console.error('Ralat pelayan:', err);
         return res.status(500).json({ error: 'Ralat pelayan semasa menjana kandungan. Sila cuba lagi.' });
     }
+}
+
+// Pangkas satu ayat ke had aksara maksimum tanpa memotong di tengah perkataan.
+// Dipadankan dengan atribut maxlength di index.html supaya kandungan AI tidak
+// pernah melebihi ruang medan input borang.
+function clampText(str, maxLen) {
+    if (typeof str !== 'string') return str;
+    const trimmed = str.trim();
+    if (trimmed.length <= maxLen) return trimmed;
+    const cut = trimmed.slice(0, maxLen);
+    const lastSpace = cut.lastIndexOf(' ');
+    const safe = lastSpace > maxLen * 0.6 ? cut.slice(0, lastSpace) : cut;
+    return safe.replace(/[.,;:\s]+$/, '');
+}
+
+function clampList(list, maxLen) {
+    if (!Array.isArray(list)) return list;
+    return list.map(item => clampText(item, maxLen));
 }
 
 // Panggil Gemini dengan cuba-semula automatik untuk ralat sementara (429 / 503).
