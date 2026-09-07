@@ -177,7 +177,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Nama Program / Aktiviti</label>
-                        <textarea id="inp-nama-program" oninput="updatePreview()" rows="2" placeholder="Contoh: KURSUS PEMANTAPAN INTEGRITI DAN KECERDASAN EMOSI PEGAWAI 2026" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
+                        <textarea id="inp-nama-program" oninput="updatePreview()" rows="2" maxlength="140" placeholder="Contoh: KURSUS PEMANTAPAN INTEGRITI DAN KECERDASAN EMOSI PEGAWAI 2026" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"></textarea>
                     </div>
                     <div class="bg-purple-50 p-2.5 rounded-lg border border-purple-200">
                         <label class="block text-xs font-semibold text-purple-800 mb-1 flex items-center gap-1.5">
@@ -196,27 +196,27 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Masa</label>
-                            <input type="text" id="inp-masa" oninput="updatePreview()" placeholder="8.30 Pagi - 4.30 Petang" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <input type="text" id="inp-masa" oninput="updatePreview()" maxlength="40" placeholder="8.30 Pagi - 4.30 Petang" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Tempat</label>
-                            <input type="text" id="inp-tempat" oninput="updatePreview()" placeholder="Dewan Perdana, Hotel Utama" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <input type="text" id="inp-tempat" oninput="updatePreview()" maxlength="45" placeholder="Dewan Perdana, Hotel Utama" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Anjuran</label>
-                            <input type="text" id="inp-anjuran" oninput="updatePreview()" placeholder="Unit Latihan & Pembangunan SDM" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <input type="text" id="inp-anjuran" oninput="updatePreview()" maxlength="45" placeholder="Unit Latihan & Pembangunan SDM" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Kumpulan Sasaran</label>
-                            <input type="text" id="inp-sasaran" oninput="updatePreview()" placeholder="Semua Pegawai & Staf Sokongan" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <input type="text" id="inp-sasaran" oninput="updatePreview()" maxlength="90" placeholder="Semua Pegawai & Staf Sokongan" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 mb-1">Kehadiran (Hadir / Sasaran)</label>
-                            <input type="text" id="inp-kehadiran" oninput="updatePreview()" placeholder="45 / 50 Orang (90%)" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <input type="text" id="inp-kehadiran" oninput="updatePreview()" maxlength="40" placeholder="45 / 50 Orang (90%)" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                         </div>
                     </div>
                 </div>
@@ -412,7 +412,7 @@
 
                             <!-- Tarikh -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[72px] whitespace-nowrap">
                                     <i class="fa-regular fa-calendar-days text-indigo-600 theme-icon mr-1.5"></i>TARIKH
                                 </span>
                                 <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
@@ -421,7 +421,7 @@
 
                             <!-- Masa -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[72px] whitespace-nowrap">
                                     <i class="fa-regular fa-clock text-indigo-600 theme-icon mr-1.5"></i>MASA
                                 </span>
                                 <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
@@ -430,7 +430,7 @@
 
                             <!-- Tempat -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[72px] whitespace-nowrap">
                                     <i class="fa-solid fa-location-dot text-indigo-600 theme-icon mr-1.5"></i>TEMPAT
                                 </span>
                                 <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
@@ -439,29 +439,31 @@
 
                             <!-- Anjuran -->
                             <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
+                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[72px] whitespace-nowrap">
                                     <i class="fa-solid fa-building text-indigo-600 theme-icon mr-1.5"></i>ANJURAN
                                 </span>
                                 <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
                                 <span id="out-anjuran" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
                             </div>
 
-                            <!-- Sasaran -->
-                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
-                                    <i class="fa-solid fa-users text-indigo-600 theme-icon mr-1.5"></i>SASARAN
-                                </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
-                                <span id="out-sasaran" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
-                            </div>
-
-                            <!-- Kehadiran -->
-                            <div class="bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-center justify-start gap-1.5 min-w-0 shadow-2xs">
-                                <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[65px] whitespace-nowrap">
-                                    <i class="fa-solid fa-user-check text-indigo-600 theme-icon mr-1.5"></i>KEHADIRAN
-                                </span>
-                                <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0">:</span>
-                                <span id="out-kehadiran" class="font-extrabold text-indigo-700 theme-highlight text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5">-</span>
+                            <!-- Sasaran & Kehadiran — digabung 1 baris lebar penuh (col-span-2) supaya
+                                 SASARAN yang selalu panjang dapat lebih ruang (nisbah ~65:35) dan
+                                 dibenarkan wrap 2 baris (line-clamp-2) dan bukan dipotong 1-baris (truncate). -->
+                            <div class="col-span-2 flex gap-1.5">
+                                <div class="flex-[65] bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-start justify-start gap-1.5 min-w-0 shadow-2xs">
+                                    <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[72px] whitespace-nowrap mt-px">
+                                        <i class="fa-solid fa-users text-indigo-600 theme-icon mr-1.5"></i>SASARAN
+                                    </span>
+                                    <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0 mt-px">:</span>
+                                    <span id="out-sasaran" class="font-bold text-slate-900 text-[length:var(--opr-fs-fixed-3)] text-left line-clamp-2 flex-1 ml-0.5">-</span>
+                                </div>
+                                <div class="flex-[35] bg-slate-50 border border-slate-200 p-1.5 rounded-lg flex items-start justify-start gap-1.5 min-w-0 shadow-2xs">
+                                    <span class="font-bold text-slate-600 text-[length:var(--opr-fs-fixed-2)] flex items-center shrink-0 min-w-[72px] whitespace-nowrap mt-px">
+                                        <i class="fa-solid fa-user-check text-indigo-600 theme-icon mr-1.5"></i>KEHADIRAN
+                                    </span>
+                                    <span class="text-slate-400 font-bold text-[length:var(--opr-fs-fixed-2)] shrink-0 mt-px">:</span>
+                                    <span id="out-kehadiran" class="font-extrabold text-indigo-700 theme-highlight text-[length:var(--opr-fs-fixed-3)] text-left line-clamp-2 flex-1 ml-0.5">-</span>
+                                </div>
                             </div>
                         </div>
 
@@ -477,9 +479,9 @@
                                 
                                 <!-- 1. Objektif Program -->
                                 <div class="flex flex-col flex-1">
-                                    <div id="theme-sec-1" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1 shrink-0">
-                                        <i class="fa-solid fa-bullseye text-indigo-600 theme-icon text-xs"></i>
-                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">1. OBJEKTIF PROGRAM</h3>
+                                    <div id="theme-sec-1" class="flex items-center gap-1.5 bg-slate-100 border-l-[5px] border-indigo-600 px-2.5 py-1.5 rounded-r-md mb-1.5 shadow-sm shrink-0">
+                                        <i class="fa-solid fa-bullseye text-indigo-600 theme-icon text-sm"></i>
+                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950">1. OBJEKTIF PROGRAM</h3>
                                     </div>
                                     <div id="out-obj-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2 text-[length:var(--opr-fs-3)] space-y-1 flex-1 leading-relaxed">
                                         <!-- Penjana Objektif Dynamik -->
@@ -488,9 +490,9 @@
 
                                 <!-- 2. Ringkasan Implementasi -->
                                 <div class="flex flex-col flex-1">
-                                    <div id="theme-sec-2" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1 shrink-0">
-                                        <i class="fa-solid fa-list-check text-indigo-600 theme-icon text-xs"></i>
-                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">2. RINGKASAN IMPLEMENTASI</h3>
+                                    <div id="theme-sec-2" class="flex items-center gap-1.5 bg-slate-100 border-l-[5px] border-indigo-600 px-2.5 py-1.5 rounded-r-md mb-1.5 shadow-sm shrink-0">
+                                        <i class="fa-solid fa-list-check text-indigo-600 theme-icon text-sm"></i>
+                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950">2. RINGKASAN IMPLEMENTASI</h3>
                                     </div>
                                     <div id="out-imp-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2 text-[length:var(--opr-fs-3)] space-y-1 flex-1 leading-relaxed">
                                         <!-- Penjana Implementasi Dynamik -->
@@ -499,30 +501,30 @@
 
                                 <!-- 3. Impak & Analisis SWOT -->
                                 <div class="shrink-0">
-                                    <div id="theme-sec-3" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1">
-                                        <i class="fa-solid fa-chart-pie text-indigo-600 theme-icon text-xs"></i>
-                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">3. IMPAK & ANALISIS SWOT</h3>
+                                    <div id="theme-sec-3" class="flex items-center gap-1.5 bg-slate-100 border-l-[5px] border-indigo-600 px-2.5 py-1.5 rounded-r-md mb-1.5 shadow-sm">
+                                        <i class="fa-solid fa-chart-pie text-indigo-600 theme-icon text-sm"></i>
+                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950">3. IMPAK & ANALISIS SWOT</h3>
                                     </div>
                                     <div class="grid grid-cols-2 gap-1.5 text-[length:var(--opr-fs-2)]">
                                         <!-- Kekuatan (Strengths) -->
-                                        <div class="bg-emerald-50/90 border border-emerald-300 rounded-lg p-1.5">
+                                        <div class="bg-emerald-50/90 border border-emerald-300 rounded-lg p-2">
                                             <span class="inline-block bg-emerald-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kekuatan (S)</span>
-                                            <div id="out-swoc-s" class="text-emerald-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
+                                            <div id="out-swoc-s" class="text-emerald-950 font-medium leading-relaxed text-[length:var(--opr-fs-2)] space-y-1"></div>
                                         </div>
                                         <!-- Kelemahan (Weaknesses) -->
-                                        <div class="bg-amber-50/90 border border-amber-300 rounded-lg p-1.5">
+                                        <div class="bg-amber-50/90 border border-amber-300 rounded-lg p-2">
                                             <span class="inline-block bg-amber-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Kelemahan (W)</span>
-                                            <div id="out-swoc-w" class="text-amber-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
+                                            <div id="out-swoc-w" class="text-amber-950 font-medium leading-relaxed text-[length:var(--opr-fs-2)] space-y-1"></div>
                                         </div>
                                         <!-- Peluang (Opportunities) -->
-                                        <div class="bg-sky-50/90 border border-sky-300 rounded-lg p-1.5">
+                                        <div class="bg-sky-50/90 border border-sky-300 rounded-lg p-2">
                                             <span class="inline-block bg-sky-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Peluang (O)</span>
-                                            <div id="out-swoc-o" class="text-sky-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
+                                            <div id="out-swoc-o" class="text-sky-950 font-medium leading-relaxed text-[length:var(--opr-fs-2)] space-y-1"></div>
                                         </div>
                                         <!-- Ancaman/Cabaran (Threats) -->
-                                        <div class="bg-rose-50/90 border border-rose-300 rounded-lg p-1.5">
+                                        <div class="bg-rose-50/90 border border-rose-300 rounded-lg p-2">
                                             <span id="theme-swoc-badge" class="inline-block bg-rose-700 text-white font-black text-[length:var(--opr-fs-1)] px-1.5 py-0.5 rounded uppercase mb-1 shadow-2xs">Cabaran (T)</span>
-                                            <div id="out-swoc-t" class="text-rose-950 font-medium leading-normal text-[length:var(--opr-fs-2)] space-y-0.5"></div>
+                                            <div id="out-swoc-t" class="text-rose-950 font-medium leading-relaxed text-[length:var(--opr-fs-2)] space-y-1"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -531,9 +533,9 @@
 
                             <!-- LAJUR KANAN: Galeri Gambar Dinamik (Dinamik col-span) -->
                             <div id="a4-right-col" class="col-span-5 flex flex-col h-full min-h-0">
-                                <div id="theme-sec-4" class="flex items-center gap-1.5 bg-slate-100 border-l-4 border-indigo-600 px-2 py-0.5 rounded-r-md mb-1 shrink-0">
-                                    <i class="fa-solid fa-camera text-indigo-600 theme-icon text-xs"></i>
-                                    <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wide uppercase text-slate-900">4. GALERI</h3>
+                                <div id="theme-sec-4" class="flex items-center gap-1.5 bg-slate-100 border-l-[5px] border-indigo-600 px-2.5 py-1.5 rounded-r-md mb-1.5 shadow-sm shrink-0">
+                                    <i class="fa-solid fa-camera text-indigo-600 theme-icon text-sm"></i>
+                                    <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950">4. GALERI</h3>
                                 </div>
 
                                 <!-- Bekas Kontena Gambar Berpembolehubah — 4 baris bertindan (1 lajur).
@@ -553,6 +555,7 @@
                                             <i class="fa-solid fa-pen-nib text-indigo-600"></i> Disediakan Oleh:
                                         </p>
                                         <p class="font-black text-slate-900 text-[length:var(--opr-fs-4)]" id="out-disediakan-unit">Unit / Bahagian Penyedia</p>
+                                        <p class="text-slate-500 font-semibold text-[length:var(--opr-fs-1)] mt-0.5" id="out-disediakan-tarikh">-</p>
                                     </div>
                                 </div>
                             </div>
@@ -810,7 +813,7 @@
                 el.className = el.className.replace(/text-(indigo|emerald|sky|rose)-\d+/, t.icon);
             });
             document.querySelectorAll('.theme-highlight').forEach(el => {
-                el.className = `font-extrabold ${t.highlight} text-[length:var(--opr-fs-fixed-3)] text-left truncate flex-1 ml-0.5`;
+                el.className = `font-extrabold ${t.highlight} text-[length:var(--opr-fs-fixed-3)] text-left line-clamp-2 flex-1 ml-0.5`;
             });
 
             ['theme-sec-1', 'theme-sec-2', 'theme-sec-3', 'theme-sec-4'].forEach(id => {
@@ -888,7 +891,7 @@
             const div = document.createElement('div');
             div.className = 'flex items-center gap-1.5 obj-item';
             div.innerHTML = `
-                <input type="text" value="${val}" oninput="updatePreview()" placeholder="Masukkan Objektif..." class="inp-obj-item w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input type="text" value="${val}" oninput="updatePreview()" maxlength="160" placeholder="Masukkan Objektif..." class="inp-obj-item w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                 <button type="button" onclick="removeField(this)" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition" title="Padam">
                     <i class="fa-solid fa-trash-can text-xs"></i>
                 </button>
@@ -903,7 +906,7 @@
             const div = document.createElement('div');
             div.className = 'flex items-center gap-1.5 imp-item';
             div.innerHTML = `
-                <input type="text" value="${val}" oninput="updatePreview()" placeholder="Masukkan Ringkasan Aktiviti..." class="inp-imp-item w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input type="text" value="${val}" oninput="updatePreview()" maxlength="160" placeholder="Masukkan Ringkasan Aktiviti..." class="inp-imp-item w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                 <button type="button" onclick="removeField(this)" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition" title="Padam">
                     <i class="fa-solid fa-trash-can text-xs"></i>
                 </button>
@@ -918,7 +921,7 @@
             const div = document.createElement('div');
             div.className = `flex items-center gap-1.5 swoc-${type}-item`;
             div.innerHTML = `
-                <input type="text" value="${val}" oninput="updatePreview()" placeholder="Tambah butiran SWOT..." class="inp-swoc-${type}-item w-full text-xs p-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input type="text" value="${val}" oninput="updatePreview()" maxlength="100" placeholder="Tambah butiran SWOT..." class="inp-swoc-${type}-item w-full text-xs p-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                 <button type="button" onclick="removeField(this)" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition" title="Padam">
                     <i class="fa-solid fa-xmark text-xs"></i>
                 </button>
@@ -1224,7 +1227,7 @@
                         div.className = 'flex items-start gap-1.5';
                         div.innerHTML = `
                             <span class="theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[length:var(--opr-fs-2)] shrink-0 mt-0.5">${idx + 1}</span>
-                            <p class="text-slate-800 leading-snug font-medium text-[length:var(--opr-fs-3)]">${text || '-'}</p>
+                            <p class="text-slate-800 leading-relaxed font-medium text-[length:var(--opr-fs-3)]">${text || '-'}</p>
                         `;
                         objContainer.appendChild(div);
                     }
@@ -1243,7 +1246,7 @@
                     const text = inp.value.trim();
                     if (text || impInputs.length === 1) {
                         const p = document.createElement('p');
-                        p.className = 'text-slate-800 font-medium leading-snug text-[length:var(--opr-fs-3)] flex items-start gap-1.5';
+                        p.className = 'text-slate-800 font-medium leading-relaxed text-[length:var(--opr-fs-3)] flex items-start gap-1.5';
                         p.innerHTML = `<span class="${t.icon} font-bold theme-icon">•</span> <span>${text || '-'}</span>`;
                         impContainer.appendChild(p);
                     }
@@ -1264,7 +1267,7 @@
                         const val = inp.value.trim();
                         if (val || inputs.length === 1) {
                             const p = document.createElement('p');
-                            p.className = 'flex items-start gap-1 leading-snug text-[length:var(--opr-fs-2)]';
+                            p.className = 'flex items-start gap-1 leading-relaxed text-[length:var(--opr-fs-2)]';
                             p.innerHTML = `<span class="opacity-60">•</span> <span>${val || '-'}</span>`;
                             outBox.appendChild(p);
                         }
@@ -1275,10 +1278,16 @@
             // 4. Penjana Galeri Gambar
             renderGalleryHTML();
 
-            // Disediakan Oleh (Unit/Bahagian)
+            // Disediakan Oleh (Unit/Bahagian) + Tarikh
             const disediakanUnit = (document.getElementById('inp-disediakan-unit')?.value || '').trim();
             const outDisediakanUnit = document.getElementById('out-disediakan-unit');
             if (outDisediakanUnit) outDisediakanUnit.textContent = disediakanUnit || 'Unit / Bahagian Penyedia';
+
+            const outDisediakanTarikh = document.getElementById('out-disediakan-tarikh');
+            if (outDisediakanTarikh) {
+                const tarikhFormatted = formatTarikhMalay(document.getElementById('inp-tarikh')?.value || '');
+                outDisediakanTarikh.textContent = tarikhFormatted ? `Tarikh: ${tarikhFormatted}` : '-';
+            }
 
             saveDraftToStorage();
             autoFitToPage();
