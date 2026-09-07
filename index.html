@@ -999,7 +999,13 @@
         const FONT_SCALE_MIN = 0.9;   // 0.9 x 10px tahap-1 = 9px (had minimum bacaan)
         const FONT_SCALE_STEP = 0.02;
         const FIT_MIN_ZOOM = 45;      // had bawah lapis 2 (jaring keselamatan sahaja)
-        const FIT_MAX_ZOOM = 130;     // had atas — elak paparan jadi keterlaluan besar bila kandungan sedikit
+        const FIT_MAX_ZOOM = 400;     // had atas — dinaikkan drastik (dulu 130%) supaya kandungan ringkas
+                                       // (sikit objektif/implementasi/SWOT) BOLEH dibesarkan secukupnya untuk
+                                       // benar-benar penuhi 1 muka A4, bukan berhenti awal & tinggalkan ruang
+                                       // kosong besar di bahagian bawah. Gelung di bawah tetap SENTIASA
+                                       // menyemak ketinggian sebenar (getBoundingClientRect) pada setiap langkah
+                                       // dan undur automatik sebaik sahaja ia akan melimpah — jadi had setinggi
+                                       // mana sekalipun di sini tidak akan menyebabkan overflow/potong.
 
         function setFontScale(scale) {
             const root = document.documentElement;
@@ -1042,7 +1048,14 @@
             mainGrid.style.flexBasis = 'auto';
 
             requestAnimationFrame(() => {
-                const totalAvailable = innerContent.clientHeight * 0.98;
+                // PENTING: innerContent.clientHeight TERMASUK padding elemen ini sendiri
+                // (6.5mm atas+bawah, kelas .a4-inner-content). Kalau tak ditolak, ruang
+                // sebenar yang ada untuk kandungan (a4-scale-inner) terlebih-anggar —
+                // punca overflow kecil (~beberapa px) melepasi tepi bawah kertas A4
+                // sebenar walaupun lockWrapper sendiri kelihatan "muat".
+                const innerStyles = getComputedStyle(innerContent);
+                const innerPadY = (parseFloat(innerStyles.paddingTop) || 0) + (parseFloat(innerStyles.paddingBottom) || 0);
+                const totalAvailable = (innerContent.clientHeight - innerPadY) * 0.98;
 
                 // Tinggi sebenar Header + Maklumat Program (KEKAL, tak dikecilkan) +
                 // jurang (space-y-2 = 0.5rem/8px) antara header/info-grid/kontena kunci.
@@ -1113,8 +1126,8 @@
                     // BERHENTI + UNDUR sebaik sahaja ia akan melebihi ruang —
                     // supaya tidak sekali-kali terlebih tinggi lalu terpotong di bawah.
                     let guard = 0;
-                    while (renderedHeight < availableForMainGrid * 0.98 && zoomScale < FIT_MAX_ZOOM / 100 && guard < 40) {
-                        const nextZoom = Math.min(FIT_MAX_ZOOM / 100, zoomScale + 0.02);
+                    while (renderedHeight < availableForMainGrid * 0.98 && zoomScale < FIT_MAX_ZOOM / 100 && guard < 150) {
+                        const nextZoom = Math.min(FIT_MAX_ZOOM / 100, zoomScale + 0.04);
                         applyZoom(nextZoom);
                         const nextHeight = mainGrid.getBoundingClientRect().height;
                         if (nextHeight > availableForMainGrid + 2) {
@@ -1131,6 +1144,19 @@
                 // KUNCI kontena: tetapkan tinggi TEPAT pada ruang yang diperuntukkan
                 // (overflow-hidden sedia ada pada lockWrapper) — supaya TIDAK PERNAH
                 // melebihi (over) mahupun terpotong secara tidak terkawal.
+                //
+                // PENTING (punca bug "O/T & bahagian bawah hilang"): lockWrapper guna
+                // kelas Tailwind "flex-1" (flex: 1 1 0%). Dalam flex column, flex-basis:0%
+                // MENGATASI height eksplisit yang kita set di sini semasa flexbox kira
+                // saiz sebenar — jadi height/maxHeight di atas SENANTIASA diabaikan oleh
+                // enjin flex, dan lockWrapper kembali bersaiz ikut kandungan SEBELUM
+                // discale (sebab transform:scale() TIDAK mengubah saiz "layout box" —
+                // ia cuma besarkan paparan visual, bukan ruang yang direkodkan flexbox).
+                // Akibatnya kandungan yang dibesarkan visual (cth. SWOT Peluang/Ancaman)
+                // terpotong oleh overflow-hidden pada saiz lama yang lebih kecil.
+                // PEMBETULAN: paksa lockWrapper keluar dari "flex-grow" (flex:0 0 auto)
+                // supaya height/maxHeight eksplisit di atas SAH terpakai sepenuhnya.
+                lockWrapper.style.flex = '0 0 auto';
                 lockWrapper.style.height = `${availableForMainGrid}px`;
                 lockWrapper.style.maxHeight = `${availableForMainGrid}px`;
 
