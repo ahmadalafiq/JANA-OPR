@@ -107,28 +107,92 @@ module.exports = async function handler(req, res) {
 
   const prompt = buildPrompt(context);
 
-  try {
-    const geminiRes = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.6,
-          responseMimeType: 'application/json',
-          responseSchema: RESPONSE_SCHEMA,
-        },
-      }),
-    });
+  // Gemini kadang memulangkan 503 (UNAVAILABLE) apabila permintaan padat —
+  // ini SEMENTARA, jadi cuba semula beberapa kali dengan backoff eksponen
+  // sebelum menyerah, supaya lonjakan sekejap tidak terus gagalkan pengguna.
+  const MAX_ATTEMPTS = 3;
+  let lastErrorStatus = null;
+  let lastErrorBody = '';
 
-    if (!geminiRes.ok) {
-      const errBody = await geminiRes.text().catch(() => '');
-      console.error('Gemini API error:', geminiRes.status, errBody);
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    let geminiRes;
+    try {
+      geminiRes = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.6,
+            responseMimeType: 'application/json',
+            responseSchema: RESPONSE_SCHEMA,
+          },
+        }),
+      });
+    } catch (networkErr) {
+      // Ralat rangkaian (bukan respons HTTP) — layan sama seperti ralat
+      // boleh-cuba-semula pada percubaan bukan terakhir.
+      lastErrorStatus = 'network';
+      lastErrorBody = String(networkErr);
+      if (attempt < MAX_ATTEMPTS) {
+        await sleep(backoffDelayMs(attempt));
+        continue;
+      }
+      console.error('Ralat rangkaian semasa memanggil Gemini API:', networkErr);
       return res.status(502).json({
-        error: `Gemini API memulangkan ralat (${geminiRes.status}). Sila semak GEMINI_API_KEY dan GEMINI_MODEL.`,
+        error: 'Tidak dapat menghubungi Gemini API (ralat rangkaian). Sila cuba lagi sebentar.',
       });
     }
 
+    if (geminiRes.ok) {
+      return await handleGeminiSuccess(geminiRes, res);
+    }
+
+    const isRetryable = geminiRes.status === 503 || geminiRes.status === 429;
+    const errBody = await geminiRes.text().catch(() => '');
+    lastErrorStatus = geminiRes.status;
+    lastErrorBody = errBody;
+
+    if (isRetryable && attempt < MAX_ATTEMPTS) {
+      console.warn(`Gemini API ${geminiRes.status} (percubaan ${attempt}/${MAX_ATTEMPTS}) — cuba semula...`, errBody);
+      await sleep(backoffDelayMs(attempt));
+      continue;
+    }
+
+    console.error('Gemini API error:', geminiRes.status, errBody);
+
+    if (geminiRes.status === 503) {
+      return res.status(503).json({
+        error: 'Gemini sedang menerima permintaan yang sangat padat buat masa ini. Sila cuba lagi dalam seketika (biasanya beberapa saat hingga beberapa minit).',
+      });
+    }
+    if (geminiRes.status === 429) {
+      return res.status(429).json({
+        error: 'Terlalu banyak permintaan dihantar ke Gemini dalam masa singkat (kuota/rate limit). Sila cuba lagi sebentar.',
+      });
+    }
+
+    return res.status(502).json({
+      error: `Gemini API memulangkan ralat (${geminiRes.status}). Sila semak GEMINI_API_KEY dan GEMINI_MODEL.`,
+    });
+  }
+
+  // Tidak sepatutnya sampai sini, tapi jaring keselamatan jika ia berlaku.
+  console.error('Gemini API gagal selepas semua percubaan:', lastErrorStatus, lastErrorBody);
+  return res.status(502).json({ error: 'Gemini API gagal selepas beberapa kali percubaan. Sila cuba lagi kemudian.' });
+};
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function backoffDelayMs(attempt) {
+  // 1hb percubaan gagal -> tunggu ~800ms, 2hb -> ~1600ms, + sedikit jitter.
+  return attempt * 800 + Math.floor(Math.random() * 300);
+}
+
+async function handleGeminiSuccess(geminiRes, res) {
+  try {
     const data = await geminiRes.json();
     const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
@@ -156,7 +220,7 @@ module.exports = async function handler(req, res) {
       },
     });
   } catch (err) {
-    console.error('Ralat semasa memanggil Gemini API:', err);
-    return res.status(500).json({ error: 'Ralat pelayan dalaman semasa menjana kandungan AI.' });
+    console.error('Ralat semasa memproses respons Gemini:', err);
+    return res.status(500).json({ error: 'Ralat pelayan dalaman semasa memproses respons AI.' });
   }
-};
+}
