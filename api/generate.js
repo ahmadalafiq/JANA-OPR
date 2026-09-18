@@ -10,9 +10,11 @@
 // 2. (Pilihan) GEMINI_MODEL — nama model Gemini yang hendak digunakan.
 //    Default: "gemini-3.6-flash". Semak senarai model terkini di
 //    https://ai.google.dev/gemini-api/docs/models sebelum deploy, kerana
-//    nama/versi model boleh berubah dari semasa ke semasa.
+//    nama/versi model boleh berubah dari semasa ke semasa (model lama
+//    seperti gemini-2.0-flash telah dinyahtauliahkan/dipersarakan oleh
+//    Google pada masa penulisan ini).
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // Bentuk (shape) JSON yang MESTI dipulangkan oleh model — dipadankan terus
