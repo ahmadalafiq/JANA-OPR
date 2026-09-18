@@ -8,7 +8,7 @@
 //    (Project Settings -> Environment Variables). Dapatkan kunci di
 //    https://aistudio.google.com/apikey
 // 2. (Pilihan) GEMINI_MODEL — nama model Gemini yang hendak digunakan.
-//    Default: "gemini-2.0-flash". Semak senarai model terkini di
+//    Default: "gemini-3.6-flash". Semak senarai model terkini di
 //    https://ai.google.dev/gemini-api/docs/models sebelum deploy, kerana
 //    nama/versi model boleh berubah dari semasa ke semasa.
 
