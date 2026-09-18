@@ -78,16 +78,36 @@
             justify-content: space-between;
         }
 
-        /* Gaya Khusus Cetakan Browser Native (Print) */
+        /* Gaya Khusus Cetakan Browser Native (Print)
+           ------------------------------------------------------------------
+           PUNCA BUG "skrin putih bila pilih printer" (bukan Save as PDF):
+           Versi lama meletakkan page-break-inside: avoid + height: 297mm TETAP
+           pada .a4-paper. Bila Save as PDF dipilih, Chrome guna kotak halaman
+           A4 penuh (297mm) jadi blok itu muat. Bila PRINTER SEBENAR dipilih,
+           kotak halaman jadi LEBIH KECIL daripada 297mm (kawasan tak boleh
+           cetak / hardware margin printer, atau kertas default printer =
+           Letter 279mm). Blok 297mm yang ditanda "jangan pecah" tidak muat
+           dalam halaman, jadi pelayar TOLAK keseluruhan blok ke halaman
+           berikutnya — halaman 1 tinggal KOSONG PUTIH.
+
+           PEMBETULAN:
+           1. Buang page-break-inside/after: avoid (biar auto).
+           2. Kunci html/body kepada saiz satu halaman + overflow:hidden,
+              dan letak .a4-paper secara absolute di (0,0) — jadi HANYA SATU
+              halaman wujud dan tiada halaman kosong di depan/belakang.
+           3. Neutralkan grid/flex/sticky induk semasa cetak. */
         @media print {
             @page {
                 size: A4 portrait;
                 margin: 0;
             }
-            body {
-                background: white !important;
+            html, body {
+                background: #ffffff !important;
+                width: 210mm !important;
+                height: 297mm !important;
                 padding: 0 !important;
                 margin: 0 !important;
+                overflow: hidden !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
@@ -95,19 +115,43 @@
                 display: none !important;
             }
             .print-container {
+                display: block !important;
                 padding: 0 !important;
                 margin: 0 !important;
-                width: 100% !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                max-width: none !important;
+                gap: 0 !important;
+            }
+            /* Seksyen pembungkus preview: buang sticky/flex/centering supaya
+               tiada offset atau ruang kosong terbawa masuk ke halaman cetak. */
+            .print-container > section {
+                display: block !important;
+                position: static !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                top: auto !important;
             }
             .a4-paper {
+                position: absolute !important;
+                top: 0 !important;
+                left: 0 !important;
                 width: 210mm !important;
                 height: 297mm !important;
                 max-height: 297mm !important;
                 box-shadow: none !important;
-                margin: 0 auto !important;
-                page-break-after: avoid !important;
-                page-break-inside: avoid !important;
+                border: none !important;
+                margin: 0 !important;
                 overflow: hidden !important;
+                /* Biar auto — JANGAN guna avoid (lihat nota punca bug di atas) */
+                page-break-before: auto !important;
+                page-break-after: auto !important;
+                page-break-inside: auto !important;
+                break-before: auto !important;
+                break-after: auto !important;
+                break-inside: auto !important;
             }
         }
     </style>
@@ -1473,10 +1517,50 @@
             return true;
         }
 
+        // ------------------------------------------------------------------
+        // NAMA FAIL CETAKAN / SAVE AS PDF
+        // Chrome, Edge, Firefox & Safari mengambil nama fail cadangan untuk
+        // "Save as PDF" daripada document.title. Jadi kita tukar tajuk
+        // dokumen kepada "NAMA_PROGRAM_DD-MM-YYYY" sebelum window.print(),
+        // dan pulihkan semula selepas dialog cetak ditutup.
+        // ------------------------------------------------------------------
+        const TAJUK_ASAL = document.title;
+
+        function buildPrintFileName() {
+            const prog = (document.getElementById('inp-nama-program')?.value || '').trim();
+            const rawTarikh = document.getElementById('inp-tarikh')?.value || '';
+
+            let tarikh;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(rawTarikh)) {
+                const [y, m, d] = rawTarikh.split('-');
+                tarikh = `${d}-${m}-${y}`;
+            } else {
+                const n = new Date();
+                tarikh = `${String(n.getDate()).padStart(2, '0')}-${String(n.getMonth() + 1).padStart(2, '0')}-${n.getFullYear()}`;
+            }
+
+            // Buang aksara yang tidak sah untuk nama fail (Windows/macOS/Linux)
+            const namaBersih = (prog || 'Laporan Program')
+                .replace(/[\\/:*?"<>|#%{}$!'`~+]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .replace(/ /g, '_')
+                .toUpperCase();
+
+            return `${namaBersih}_${tarikh}`.substring(0, 120);
+        }
+
         function triggerPrint() {
             autoFitToPage();
-            setTimeout(() => window.print(), 150);
+            document.title = buildPrintFileName();
+            // 300ms: autoFitToPage() guna requestAnimationFrame + beberapa
+            // pusingan ukur-semula, jadi beri masa cukup sebelum snapshot cetak.
+            setTimeout(() => window.print(), 300);
         }
+
+        window.addEventListener('afterprint', () => {
+            document.title = TAJUK_ASAL;
+        });
 
         function openPdfVisualModal() {
             const source = document.getElementById('a4-paper-element');
