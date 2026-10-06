@@ -22,6 +22,7 @@ const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/
 const RESPONSE_SCHEMA = {
   type: 'object',
   properties: {
+    isu: { type: 'string' },
     objektif: { type: 'array', items: { type: 'string' } },
     implementasi: { type: 'array', items: { type: 'string' } },
     impak: {
@@ -34,8 +35,10 @@ const RESPONSE_SCHEMA = {
       },
       required: ['kekuatan', 'kelemahan', 'peluang', 'cabaran'],
     },
+    refleksi: { type: 'string' },
+    tindakanSusulan: { type: 'array', items: { type: 'string' } },
   },
-  required: ['objektif', 'implementasi', 'impak'],
+  required: ['isu', 'objektif', 'implementasi', 'impak', 'refleksi', 'tindakanSusulan'],
 };
 
 function buildPrompt(context) {
@@ -47,7 +50,15 @@ function buildPrompt(context) {
     anjuran = '',
     sasaran = '',
     kehadiran = '',
+    isi = '',
+    sasaranUkur = '',
+    pemantauan = '',
+    dataImpak = {},
   } = context || {};
+  const di = dataImpak || {};
+  const dataTxt = (di.sebelum && di.selepas)
+    ? `${di.petunjuk || 'Petunjuk'}: sebelum ${di.sebelum}${di.unit || ''} -> selepas ${di.selepas}${di.unit || ''}`
+    : '(tiada)';
 
   return `Anda membantu seorang pegawai Pejabat Pendidikan Daerah (PPD) di Malaysia
 menyediakan Laporan Satu Muka Surat (One Page Report / OPR) rasmi bagi sesuatu
@@ -62,6 +73,10 @@ Maklumat Program:
 - Anjuran: ${anjuran || '(tiada)'}
 - Kumpulan Sasaran: ${sasaran || '(tiada)'}
 - Kehadiran: ${kehadiran || '(tiada)'}
+- Isu/Justifikasi (diberi pegawai): ${isi || '(tiada)'}
+- Sasaran Boleh Ukur (diberi pegawai): ${sasaranUkur || '(tiada)'}
+- Pemantauan (diberi pegawai): ${pemantauan || '(tiada)'}
+- Data Impak Sebenar (diberi pegawai): ${dataTxt}
 
 Jana kandungan berikut berdasarkan maklumat di atas:
 1. "objektif": 3-4 objektif program, setiap satu SATU ayat penuh, ringkas dan
@@ -75,6 +90,22 @@ Jana kandungan berikut berdasarkan maklumat di atas:
    - "kelemahan": kelemahan/weaknesses yang dikenal pasti
    - "peluang": peluang/opportunities untuk penambahbaikan atau kesinambungan
    - "cabaran": cabaran/ancaman (threats) yang dihadapi
+
+4. "isu": 1-2 ayat justifikasi mengapa program diperlukan (isu/keperluan yang
+   hendak ditangani). Jika pegawai telah memberi Isu, olah semula secara ringkas
+   tanpa mengubah maksud.
+5. "refleksi": 1-2 ayat refleksi pelaksanaan (apa yang berkesan dan apa yang
+   perlu diperbaiki).
+6. "tindakanSusulan": 2-3 tindakan susulan yang konkrit dan boleh dilaksana.
+
+PERATURAN KETAT KEJUJURAN DATA:
+- JANGAN mereka sebarang angka, peratus, markah, nama, tarikh atau fakta yang
+  TIDAK diberikan dalam Maklumat Program di atas.
+- Jika Data Impak Sebenar diberikan, rujuk angka itu sahaja dalam analisis
+  (cth. dalam "kekuatan"). Jika tiada data, nyatakan impak secara kualitatif
+  dan umum, tanpa angka.
+- Jika Isu/Sasaran/Pemantauan tiada, tulis cadangan umum yang berhati-hati
+  dan relevan dengan nama program.
 
 Elakkan ayat berjela, berulang, atau generik tanpa kaitan konteks program
 yang diberikan. Jangan sertakan sebarang teks, penjelasan, markdown atau
@@ -210,6 +241,9 @@ async function handleGeminiSuccess(geminiRes, res) {
     }
 
     return res.status(200).json({
+      isu: typeof parsed.isu === 'string' ? parsed.isu : '',
+      refleksi: typeof parsed.refleksi === 'string' ? parsed.refleksi : '',
+      tindakanSusulan: Array.isArray(parsed.tindakanSusulan) ? parsed.tindakanSusulan : [],
       objektif: Array.isArray(parsed.objektif) ? parsed.objektif : [],
       implementasi: Array.isArray(parsed.implementasi) ? parsed.implementasi : [],
       impak: {
