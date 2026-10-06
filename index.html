@@ -266,6 +266,39 @@
                 </div>
             </div>
 
+            <!-- Kad 1B: Kerangka OPR (Isu -> Tindakan Susulan) -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide mb-1 flex items-center gap-2 border-b pb-2">
+                    <i class="fa-solid fa-route text-indigo-600"></i> Kerangka OPR: Isu → Impak → Tindakan
+                </h2>
+                <label class="flex items-center gap-2 mb-2 text-xs font-bold text-indigo-800 cursor-pointer">
+                    <input type="checkbox" id="chk-mod-skpm" checked onchange="updatePreview()" class="w-3.5 h-3.5 accent-indigo-600">
+                    Mod SKPM (lengkap). Nyahtanda untuk OPR Ringkas.
+                </label>
+                <p class="text-[11px] text-gray-500 mb-3">Medan kosong tidak dipaparkan dalam A4. Biarkan kosong untuk OPR ringkas; lengkapkan untuk OPR evidens SKPM.</p>
+                <div id="fw-body" class="space-y-3">
+                    <div><label class="block text-xs font-semibold text-gray-700 mb-1">Isu / Justifikasi (mengapa program ini dibuat?)</label>
+                        <textarea id="inp-isu" oninput="updatePreview()" rows="2" maxlength="260" placeholder="Cth: Pencapaian murid dalam ujian diagnostik literasi hanya 60%; 12 orang murid belum menguasai kemahiran asas." class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"></textarea></div>
+                    <div><label class="block text-xs font-semibold text-gray-700 mb-1">Sasaran Boleh Ukur</label>
+                        <input type="text" id="inp-sasaran-ukur" oninput="updatePreview()" maxlength="120" placeholder="Cth: Meningkatkan penguasaan dari 60% kepada 80%" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"></div>
+                    <div><label class="block text-xs font-semibold text-gray-700 mb-1">Pemantauan (siapa, bila, bagaimana)</label>
+                        <input type="text" id="inp-pemantauan" oninput="updatePreview()" maxlength="150" placeholder="Cth: Guru Besar memantau mingguan; ujian pos selepas 8 minggu" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"></div>
+                    <div class="bg-indigo-50/60 border border-indigo-200 rounded-lg p-2.5 space-y-2">
+                        <label class="block text-xs font-bold text-indigo-800">Data Impak (Sebelum → Selepas)</label>
+                        <input type="text" id="inp-data-label" oninput="updatePreview()" maxlength="60" placeholder="Petunjuk, cth: Pencapaian murid" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <div class="grid grid-cols-3 gap-2">
+                            <input type="text" inputmode="decimal" id="inp-data-sebelum" oninput="updatePreview()" maxlength="10" placeholder="Sebelum: 60" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <input type="text" inputmode="decimal" id="inp-data-selepas" oninput="updatePreview()" maxlength="10" placeholder="Selepas: 86.7" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <input type="text" id="inp-data-unit" oninput="updatePreview()" maxlength="12" placeholder="Unit: %" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                        </div>
+                    </div>
+                    <div><label class="block text-xs font-semibold text-gray-700 mb-1">Refleksi</label>
+                        <textarea id="inp-refleksi" oninput="updatePreview()" rows="2" maxlength="260" placeholder="Apa yang berkesan, apa yang perlu diperbaiki?" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"></textarea></div>
+                    <div><label class="block text-xs font-semibold text-gray-700 mb-1">Tindakan Susulan (satu baris satu tindakan)</label>
+                        <textarea id="inp-tindakan" oninput="updatePreview()" rows="3" maxlength="400" placeholder="Cth:&#10;Ulang intervensi untuk 5 murid kategori rendah (Feb 2027)&#10;Kongsi amalan terbaik dalam mesyuarat panitia" class="w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none"></textarea></div>
+                </div>
+            </div>
+
             <!-- Kad 2: Objektif Program -->
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                 <div class="flex items-center justify-between border-b pb-2 mb-3">
@@ -345,6 +378,13 @@
             <div id="fit-status-card" class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2">
                 <i class="fa-solid fa-circle-check text-emerald-600"></i>
                 <span id="fit-status-text">Kandungan muat penuh dalam 1 muka surat A4.</span>
+            </div>
+
+            <!-- Kad Semakan Kualiti OPR -->
+            <div id="quality-card" class="bg-indigo-50 border border-indigo-200 text-indigo-900 p-3 rounded-xl text-xs">
+                <div class="font-bold flex items-center gap-2"><i class="fa-solid fa-clipboard-check text-indigo-600"></i>
+                    Semakan Kualiti OPR: <span id="quality-score">0/8</span></div>
+                <div id="quality-missing" class="mt-1 text-[11px] leading-relaxed"></div>
             </div>
 
             <!-- Kad 6: Gambar Aktiviti -->
@@ -521,11 +561,20 @@
                             <!-- LAJUR KIRI: Teks Kandungan Laporan (Dinamik col-span) -->
                             <div id="a4-left-col" class="col-span-7 flex flex-col justify-between space-y-1.5 h-full min-h-0">
                                 
+                                <!-- 0. Isu & Justifikasi -->
+                                <div id="out-isu-wrap" class="shrink-0 hidden">
+                                    <div id="theme-sec-0" class="flex items-center gap-1.5 bg-slate-100 border-l-[5px] border-indigo-600 px-2.5 py-1.5 rounded-r-md mb-1.5 shadow-sm shrink-0">
+                                        <i class="fa-solid fa-circle-exclamation text-indigo-600 theme-icon text-sm"></i>
+                                        <h3 class="sec-h text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950" data-t="ISU & JUSTIFIKASI">ISU & JUSTIFIKASI</h3>
+                                    </div>
+                                    <div id="out-isu" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2 text-[length:var(--opr-fs-3)] leading-relaxed font-medium text-slate-800"></div>
+                                </div>
+
                                 <!-- 1. Objektif Program -->
                                 <div class="flex flex-col flex-1">
                                     <div id="theme-sec-1" class="flex items-center gap-1.5 bg-slate-100 border-l-[5px] border-indigo-600 px-2.5 py-1.5 rounded-r-md mb-1.5 shadow-sm shrink-0">
                                         <i class="fa-solid fa-bullseye text-indigo-600 theme-icon text-sm"></i>
-                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950">1. OBJEKTIF PROGRAM</h3>
+                                        <h3 class="sec-h text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950" data-t="OBJEKTIF & SASARAN">1. OBJEKTIF PROGRAM</h3>
                                     </div>
                                     <div id="out-obj-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2 text-[length:var(--opr-fs-3)] space-y-1 flex-1 leading-relaxed">
                                         <!-- Penjana Objektif Dynamik -->
@@ -536,7 +585,7 @@
                                 <div class="flex flex-col flex-1">
                                     <div id="theme-sec-2" class="flex items-center gap-1.5 bg-slate-100 border-l-[5px] border-indigo-600 px-2.5 py-1.5 rounded-r-md mb-1.5 shadow-sm shrink-0">
                                         <i class="fa-solid fa-list-check text-indigo-600 theme-icon text-sm"></i>
-                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950">2. RINGKASAN IMPLEMENTASI</h3>
+                                        <h3 class="sec-h text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950" data-t="PELAKSANAAN & PEMANTAUAN">2. RINGKASAN IMPLEMENTASI</h3>
                                     </div>
                                     <div id="out-imp-list" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2 text-[length:var(--opr-fs-3)] space-y-1 flex-1 leading-relaxed">
                                         <!-- Penjana Implementasi Dynamik -->
@@ -547,8 +596,9 @@
                                 <div class="shrink-0">
                                     <div id="theme-sec-3" class="flex items-center gap-1.5 bg-slate-100 border-l-[5px] border-indigo-600 px-2.5 py-1.5 rounded-r-md mb-1.5 shadow-sm">
                                         <i class="fa-solid fa-chart-pie text-indigo-600 theme-icon text-sm"></i>
-                                        <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950">3. IMPAK & ANALISIS SWOT</h3>
+                                        <h3 class="sec-h text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950" data-t="DAPATAN / IMPAK & SWOT">3. IMPAK & ANALISIS SWOT</h3>
                                     </div>
+                                    <div id="out-data-wrap" class="hidden mb-1.5 bg-white border border-slate-300 rounded-lg p-2 text-[length:var(--opr-fs-2)]"></div>
                                     <div class="grid grid-cols-2 gap-1.5 text-[length:var(--opr-fs-2)]">
                                         <!-- Kekuatan (Strengths) -->
                                         <div class="bg-emerald-50/90 border border-emerald-300 rounded-lg p-2">
@@ -573,13 +623,25 @@
                                     </div>
                                 </div>
 
+                            
+                                <!-- 5. Refleksi & Tindakan Susulan -->
+                                <div id="out-ref-wrap" class="shrink-0 hidden">
+                                    <div id="theme-sec-5" class="flex items-center gap-1.5 bg-slate-100 border-l-[5px] border-indigo-600 px-2.5 py-1.5 rounded-r-md mb-1.5 shadow-sm shrink-0">
+                                        <i class="fa-solid fa-arrow-trend-up text-indigo-600 theme-icon text-sm"></i>
+                                        <h3 class="sec-h text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950" data-t="REFLEKSI & TINDAKAN SUSULAN">REFLEKSI & TINDAKAN SUSULAN</h3>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-1.5 text-[length:var(--opr-fs-2)]">
+                                        <div id="out-ref-box" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2"><span class="font-black uppercase text-slate-600">Refleksi</span><div id="out-refleksi" class="font-medium leading-relaxed text-slate-800 mt-0.5"></div></div>
+                                        <div id="out-tin-box" class="bg-slate-50/80 border border-slate-200 rounded-lg p-2"><span class="font-black uppercase text-slate-600">Tindakan Susulan</span><div id="out-tindakan" class="font-medium leading-relaxed text-slate-800 mt-0.5 space-y-0.5"></div></div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- LAJUR KANAN: Galeri Gambar Dinamik (Dinamik col-span) -->
                             <div id="a4-right-col" class="col-span-5 flex flex-col h-full min-h-0">
                                 <div id="theme-sec-4" class="flex items-center gap-1.5 bg-slate-100 border-l-[5px] border-indigo-600 px-2.5 py-1.5 rounded-r-md mb-1.5 shadow-sm shrink-0">
                                     <i class="fa-solid fa-camera text-indigo-600 theme-icon text-sm"></i>
-                                    <h3 class="text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950">4. GALERI</h3>
+                                    <h3 class="sec-h text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950" data-t="GALERI / EVIDENS">4. GALERI</h3>
                                 </div>
 
                                 <!-- Bekas Kontena Gambar Berpembolehubah — 4 baris bertindan (1 lajur).
@@ -710,6 +772,10 @@
                 // contohnya: "Setiap ayat Objektif/Implementasi/SWOT MESTI ringkas
                 // (maksimum ± 15-18 patah perkataan sahaja), padat dan terus ke
                 // isi penting — elak ayat berjela atau berulang."
+                isi: frmVal('inp-isu'),
+                sasaranUkur: frmVal('inp-sasaran-ukur'),
+                pemantauan: frmVal('inp-pemantauan'),
+                dataImpak: { petunjuk: frmVal('inp-data-label'), sebelum: frmVal('inp-data-sebelum'), selepas: frmVal('inp-data-selepas'), unit: frmVal('inp-data-unit') },
                 gayaFormat: 'ringkas-bermakna',
             };
 
@@ -756,6 +822,12 @@
                     (data.impak.peluang || []).forEach(v => addSwotField('o', v));
                     (data.impak.cabaran || []).forEach(v => addSwotField('t', v));
                 }
+
+                // Isu / Refleksi / Tindakan: hanya diisi jika pengguna belum menulisnya sendiri
+                const fillIfEmpty = (id, v) => { const el = document.getElementById(id); if (el && !el.value.trim() && v) el.value = v; };
+                fillIfEmpty('inp-isu', data.isu);
+                fillIfEmpty('inp-refleksi', data.refleksi);
+                if (Array.isArray(data.tindakanSusulan) && data.tindakanSusulan.length) fillIfEmpty('inp-tindakan', data.tindakanSusulan.join('\n'));
 
                 updatePreview();
             } catch (err) {
@@ -1233,6 +1305,87 @@
 
 
         // Fungsi Kemaskini Pratonton A4
+        // ===== KERANGKA OPR: Isu -> Sasaran -> Pemantauan -> Impak -> Refleksi -> Tindakan =====
+        function escHtml(x) { return String(x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        function frmVal(id) { if (document.getElementById('chk-mod-skpm') && !document.getElementById('chk-mod-skpm').checked) return ''; return (document.getElementById(id)?.value || '').trim(); }
+        function frmShow(id, on) { document.getElementById(id)?.classList.toggle('hidden', !on); }
+
+        function renderFramework() {
+            const t = themes[activeThemeKey] || themes.indigo;
+            const modSkpm = document.getElementById('chk-mod-skpm')?.checked !== false;
+            document.getElementById('fw-body')?.classList.toggle('hidden', !modSkpm);
+            frmShow('quality-card', modSkpm);
+
+            const isu = frmVal('inp-isu');
+            const isuEl = document.getElementById('out-isu');
+            if (isuEl) isuEl.textContent = isu;
+            frmShow('out-isu-wrap', !!isu);
+
+            const sas = frmVal('inp-sasaran-ukur');
+            const objBox = document.getElementById('out-obj-list');
+            if (sas && objBox) objBox.insertAdjacentHTML('beforeend', `<p class="mt-1 pt-1 border-t border-slate-200 font-bold ${t.highlight} text-[length:var(--opr-fs-2)]">Sasaran: <span class="text-slate-800 font-semibold">${escHtml(sas)}</span></p>`);
+
+            const pem = frmVal('inp-pemantauan');
+            const impBox = document.getElementById('out-imp-list');
+            if (pem && impBox) impBox.insertAdjacentHTML('beforeend', `<p class="mt-1 pt-1 border-t border-slate-200 font-bold ${t.highlight} text-[length:var(--opr-fs-2)]">Pemantauan: <span class="text-slate-800 font-semibold">${escHtml(pem)}</span></p>`);
+
+            const sb = parseFloat(frmVal('inp-data-sebelum').replace(',', '.'));
+            const sa = parseFloat(frmVal('inp-data-selepas').replace(',', '.'));
+            const dataWrap = document.getElementById('out-data-wrap');
+            const hasData = !isNaN(sb) && !isNaN(sa);
+            if (dataWrap) {
+                if (hasData) {
+                    const unit = frmVal('inp-data-unit');
+                    const label = frmVal('inp-data-label') || 'Petunjuk Pencapaian';
+                    const mx = Math.max(Math.abs(sb), Math.abs(sa), 0.0001);
+                    const d = Math.round((sa - sb) * 100) / 100;
+                    const dTxt = (d > 0 ? '+' : '') + d + (unit ? ' ' + unit : '');
+                    const bar = (n, cls, lab) => `<div class="flex items-center gap-1.5"><span class="w-12 shrink-0 font-semibold text-slate-600">${lab}</span><div class="flex-1 bg-slate-100 rounded h-3.5 overflow-hidden"><div class="${cls} h-full" style="width:${Math.max(4, Math.abs(n) / mx * 100)}%"></div></div><span class="w-14 shrink-0 text-right font-extrabold text-slate-900">${n}${escHtml(unit)}</span></div>`;
+                    dataWrap.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="font-black uppercase text-slate-700">${escHtml(label)}</span><span class="font-extrabold ${d >= 0 ? 'text-emerald-700' : 'text-rose-700'}">${escHtml(dTxt)}</span></div><div class="space-y-1">${bar(sb, 'bg-slate-400', 'Sebelum')}${bar(sa, 'bg-emerald-600', 'Selepas')}</div>`;
+                }
+                frmShow('out-data-wrap', hasData);
+            }
+
+            const ref = frmVal('inp-refleksi');
+            const tin = frmVal('inp-tindakan').split('\n').map(x => x.trim()).filter(Boolean);
+            const refOut = document.getElementById('out-refleksi');
+            if (refOut) refOut.textContent = ref;
+            const tinOut = document.getElementById('out-tindakan');
+            if (tinOut) tinOut.innerHTML = tin.map(x => `<p class="flex items-start gap-1"><span class="opacity-60">&#8227;</span><span>${escHtml(x)}</span></p>`).join('');
+            frmShow('out-ref-box', !!ref);
+            frmShow('out-tin-box', tin.length > 0);
+            frmShow('out-ref-wrap', !!ref || tin.length > 0);
+            const refWrap = document.getElementById('out-ref-wrap');
+            const grid = refWrap?.querySelector('.grid');
+            if (grid) grid.className = `grid ${(ref && tin.length) ? 'grid-cols-2' : 'grid-cols-1'} gap-1.5 text-[length:var(--opr-fs-2)]`;
+
+            // Nombor seksyen dinamik (ikut seksyen yang kelihatan sahaja)
+            let n = 0;
+            document.querySelectorAll('#a4-paper-element .sec-h').forEach(h => {
+                if (h.closest('.hidden')) return;
+                n++;
+                h.textContent = `${n}. ${h.dataset.t}`;
+            });
+
+            // Semakan kualiti: 8 elemen artikel SKPM
+            const filled = (sel) => Array.from(document.querySelectorAll(sel)).some(i => i.value.trim());
+            const checks = [
+                ['Isu / Justifikasi', !!isu],
+                ['Objektif & Sasaran Boleh Ukur', filled('.inp-obj-item') && !!sas],
+                ['Pelaksanaan', filled('.inp-imp-item')],
+                ['Pemantauan', !!pem],
+                ['Data Impak (Sebelum/Selepas)', hasData],
+                ['Refleksi', !!ref],
+                ['Tindakan Susulan', tin.length > 0],
+                ['Evidens (min. 2 gambar)', Object.values(loadedImages || {}).filter(Boolean).length >= 2],
+            ];
+            const ok = checks.filter(c => c[1]).length;
+            const sc = document.getElementById('quality-score');
+            if (sc) sc.textContent = `${ok}/8`;
+            const ms = document.getElementById('quality-missing');
+            if (ms) ms.innerHTML = ok === 8 ? '<span class="text-emerald-700 font-bold">Lengkap! OPR ini boleh dijadikan evidens SKPM.</span>' : 'Belum lengkap: ' + checks.filter(c => !c[1]).map(c => escHtml(c[0])).join(', ') + '.';
+        }
+
         function updatePreview() {
             // Header & Maklumat Asas
             const orgVal = document.getElementById('inp-org').value.trim();
@@ -1319,6 +1472,9 @@
                 }
             });
 
+            // 3B. Kerangka OPR (isu, sasaran, pemantauan, data impak, refleksi, tindakan)
+            renderFramework();
+
             // 4. Penjana Galeri Gambar
             renderGalleryHTML();
 
@@ -1358,6 +1514,9 @@
             if (oContainer) oContainer.innerHTML = '';
             const tContainer = document.getElementById('swoc-t-inputs');
             if (tContainer) tContainer.innerHTML = '';
+
+            const fwSample = {'inp-isu':'Kes salah laku integriti dan tekanan kerja dalam kalangan staf meningkat; tahap kesedaran etika perlu diperkukuh.','inp-sasaran-ukur':'Skor kefahaman integriti meningkat dari 60% kepada 85%','inp-pemantauan':'Ujian pra/pasca peserta; Ketua Sektor memantau pelan tindakan selepas 3 bulan','inp-data-label':'Skor kefahaman integriti','inp-data-sebelum':'60','inp-data-selepas':'86.7','inp-data-unit':'%','inp-refleksi':'LDK paling berkesan, tetapi masa perbincangan perlu dilanjutkan.','inp-tindakan':'Laksana sesi susulan 2 jam untuk peserta berskor rendah (Nov 2026)\nKongsi pelan tindakan bersama semua unit'};
+            Object.entries(fwSample).forEach(([k, v]) => { const el = document.getElementById(k); if (el) el.value = v; });
 
             addObjField('Meningkatkan kesedaran integriti dan budaya kerja cemerlang dalam organisasi.');
             addObjField('Memantapkan semangat kerjasama pasukan dan komunikasi efektif antara sektor.');
@@ -1424,6 +1583,7 @@
         // Supaya kerja pegawai tidak hilang jika tab tertutup / peranti restart secara
         // tidak sengaja sebelum sempat dicetak.
         const DRAFT_KEY = 'opr_subis_draft_v1';
+        const FW_IDS = ['inp-isu','inp-sasaran-ukur','inp-pemantauan','inp-data-label','inp-data-sebelum','inp-data-selepas','inp-data-unit','inp-refleksi','inp-tindakan'];
         let saveDraftTimer = null;
 
         function collectDraftData() {
@@ -1440,6 +1600,8 @@
                 anjuran: getVal('inp-anjuran'),
                 sasaran: getVal('inp-sasaran'),
                 kehadiran: getVal('inp-kehadiran'),
+                modSkpm: document.getElementById('chk-mod-skpm')?.checked ?? true,
+                fw: Object.fromEntries(FW_IDS.map(id => [id, getVal(id)])),
                 objectives: listVals('inp-obj-item'),
                 implementation: listVals('inp-imp-item'),
                 swotS: listVals('inp-swoc-s-item'),
@@ -1488,6 +1650,8 @@
             setVal('inp-anjuran', data.anjuran);
             setVal('inp-sasaran', data.sasaran);
             setVal('inp-kehadiran', data.kehadiran);
+            FW_IDS.forEach(id => setVal(id, data.fw?.[id]));
+            const chkMod = document.getElementById('chk-mod-skpm'); if (chkMod) chkMod.checked = data.modSkpm !== false;
             setVal('sel-img-fit', data.imgFit || 'cover');
             const chkCap = document.getElementById('chk-show-caption');
             if (chkCap) chkCap.checked = data.showCaption !== false;
