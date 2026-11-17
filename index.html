@@ -160,6 +160,7 @@
            Hanya mengubah chrome penyunting (.no-print) & modal. Laporan A4 tidak disentuh. */
         :root{--red:#b3261e;--red-d:#8f1d17;--ink:#1c2230;--mute:#667085;--line:#e2e5ea;--g:#14683c;--gb:#e2f3e9;--b:#27479a;--bb:#e6ecfb;--nb:#eceef1}
         .a4-paper{font-family:'Inter',sans-serif}
+        .tl-origin{transform-origin:top left}
         :focus-visible{outline:3px solid #f0a8a3;outline-offset:2px}
         @media screen{
         html body{background:#f3f4f6!important;color:var(--ink)}
@@ -541,7 +542,7 @@
                 <div id="a4-inner-content-el" class="a4-inner-content">
                     <!-- Pembungkus Kandungan Utama Mengembang Penuh (flex-1) -->
                     <div id="a4-scalable-wrapper" class="flex-1 flex flex-col min-h-0 overflow-hidden transition-all duration-200">
-                    <div id="a4-scale-inner" class="flex flex-col justify-between space-y-2">
+                    <div id="a4-scale-inner" class="tl-origin flex flex-col justify-between space-y-2">
                         
                         <!-- Pengepala Utama (Logo & Header Besarkan Saiz) -->
                         <div class="flex items-center justify-between border-b-2 pb-1.5 border-slate-900 shrink-0">
@@ -637,7 +638,7 @@
                              tidak pernah disentuh oleh autoFitToPage(). -->
                         <div id="a4-main-grid-lock" class="flex-1 min-h-0 flex flex-col overflow-hidden">
                         <!-- Layout Pembahagi: Teks Kiri vs Gambar Kanan - Dynamic Grid Resize Ratio -->
-                        <div id="a4-main-grid" class="grid grid-cols-12 gap-2.5 items-stretch min-h-0 flex-1">
+                        <div id="a4-main-grid" class="tl-origin grid grid-cols-12 gap-2.5 items-stretch min-h-0 flex-1">
                             
                             <!-- LAJUR KIRI: Teks Kandungan Laporan (Dinamik col-span) -->
                             <div id="a4-left-col" class="col-span-7 flex flex-col justify-between space-y-1.5 h-full min-h-0">
@@ -1272,7 +1273,7 @@
         const FONT_SCALE_MIN = 0.9;   // 0.9 x 10px tahap-1 = 9px (had minimum bacaan)
         const FONT_SCALE_STEP = 0.02;
         const FIT_MIN_ZOOM = 45;      // had bawah lapis 2 (jaring keselamatan sahaja)
-        const FIT_MAX_ZOOM = 400;     // had atas — dinaikkan drastik (dulu 130%) supaya kandungan ringkas
+        const FIT_MAX_ZOOM = 130;     // had atas — dinaikkan drastik (dulu 130%) supaya kandungan ringkas
                                        // (sikit objektif/implementasi/SWOT) BOLEH dibesarkan secukupnya untuk
                                        // benar-benar penuhi 1 muka A4, bukan berhenti awal & tinggalkan ruang
                                        // kosong besar di bahagian bawah. Gelung di bawah tetap SENTIASA
@@ -1286,6 +1287,14 @@
             root.style.setProperty('--opr-fs-2', (10.5 * scale).toFixed(2) + 'px');
             root.style.setProperty('--opr-fs-3', (11 * scale).toFixed(2) + 'px');
             root.style.setProperty('--opr-fs-4', (11.5 * scale).toFixed(2) + 'px');
+        }
+
+        // Borang kosong → saiz lalai (100%), tidak dibesarkan.
+        function formIsEmpty() {
+            const ids = ['inp-nama-program','inp-tarikh','inp-masa','inp-tempat','inp-anjuran','inp-sasaran','inp-kehadiran','inp-isu','inp-sasaran-ukur','inp-pemantauan','inp-refleksi','inp-tindakan'];
+            if (ids.some(id => (document.getElementById(id)?.value || '').trim())) return false;
+            if (Array.from(document.querySelectorAll('.inp-obj-item,.inp-imp-item,[class*="inp-swoc-"]')).some(i => i.value.trim())) return false;
+            return !Object.values(loadedImages).some(Boolean);
         }
 
         let fitTimer = null;
@@ -1346,7 +1355,8 @@
                 // LAPIS 1: cuba kecilkan fon SEBENAR (kandungan utama sahaja) langkah
                 // demi langkah sehingga muat dalam ruang yang diperuntukkan, atau
                 // sehingga had minimum 9px (tahap 1) tercapai.
-                let fontScale = 1;
+                const maxZoom = formIsEmpty() ? 1 : FIT_MAX_ZOOM / 100;
+            let fontScale = 1;
                 let naturalHeight = mainGrid.scrollHeight;
 
                 while (naturalHeight > availableForMainGrid && fontScale > FONT_SCALE_MIN) {
@@ -1402,8 +1412,8 @@
                     // BERHENTI + UNDUR sebaik sahaja ia akan melebihi ruang —
                     // supaya tidak sekali-kali terlebih tinggi lalu terpotong di bawah.
                     let guard = 0;
-                    while (renderedHeight < availableForMainGrid * 0.98 && zoomScale < FIT_MAX_ZOOM / 100 && guard < 150) {
-                        const nextZoom = Math.min(FIT_MAX_ZOOM / 100, zoomScale + 0.04);
+                    while (renderedHeight < availableForMainGrid * 0.98 && zoomScale < maxZoom && guard < 150) {
+                        const nextZoom = Math.min(maxZoom, zoomScale + 0.04);
                         applyZoom(nextZoom);
                         const nextHeight = mainGrid.getBoundingClientRect().height;
                         if (nextHeight > availableForMainGrid + 2) {
@@ -1969,18 +1979,21 @@
         function openPdfVisualModal() {
             const source = document.getElementById('a4-paper-element');
             const container = document.getElementById('pdf-visual-container');
-            
-            container.innerHTML = '';
-            const clone = source.cloneNode(true);
-            clone.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
-            clone.id = 'a4-paper-modal-clone';
-            clone.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.3)';
-            clone.style.margin = '0 auto';
-            clone.style.transform = 'scale(0.85)';
-            clone.style.transformOrigin = 'top center';
-            
-            container.appendChild(clone);
             document.getElementById('pdfVisualModal').classList.remove('hidden');
+            autoFitToPage();
+            // Tunggu autoFitToPage() selesai (rAF) sebelum salin, supaya klon sepadan dengan paparan semasa.
+            setTimeout(() => {
+                container.innerHTML = '';
+                const clone = source.cloneNode(true);
+                clone.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+                const w = source.offsetWidth, h = source.offsetHeight;
+                const sc = Math.min(1, ((container.clientWidth || w) - 8) / w);
+                const wrap = document.createElement('div');
+                wrap.style.cssText = `position:relative;flex:none;width:${w * sc}px;height:${h * sc}px;`;
+                clone.style.cssText += `;position:absolute;top:0;left:0;margin:0;flex:none;width:${w}px;height:${h}px;transform:scale(${sc});transform-origin:top left;box-shadow:0 10px 25px -5px rgba(0,0,0,.3);`;
+                wrap.appendChild(clone);
+                container.appendChild(wrap);
+            }, 200);
         }
 
         function closePdfVisualModal() {
