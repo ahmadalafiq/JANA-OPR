@@ -925,7 +925,7 @@
                 updatePreview();
             } catch (err) {
                 console.error(err);
-                uiToast(`Gagal menjana kandungan dengan AI: ${err.name === 'AbortError' ? 'Permintaan melebihi 60 saat.' : (err.message || 'Sila cuba lagi.')}\n\n(Pastikan app sudah dideploy ke Vercel dengan fail /api/generate.js dan GEMINI_API_KEY ditetapkan.)`);
+                uiToast(`Gagal menjana kandungan dengan AI: ${err.name === 'AbortError' ? 'Permintaan melebihi 60 saat.' : (err.message || 'Sila cuba lagi.')}${/404|Failed to fetch|NetworkError|Unexpected token|JSON/i.test(err.message || '') ? '\n\n(Pastikan app sudah dideploy ke Vercel dengan fail /api/generate.js dan GEMINI_API_KEY ditetapkan.)' : ''}`);
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('opacity-60', 'cursor-not-allowed');
