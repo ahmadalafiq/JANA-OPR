@@ -5,6 +5,7 @@
 //
 // Environment Variable:
 //   GEMINI_API_KEY  (wajib)
+//   GEMINI_FALLBACKS (pilihan) — model sandaran dipisah koma jika model utama sibuk
 //   GEMINI_MODEL    (pilihan) — semak nama model semasa di https://ai.google.dev/gemini-api/docs/models
 //   ALLOWED_ORIGIN  (pilihan) — cth. https://nama-app.vercel.app ; jika ditetapkan, permintaan
 //                    dari origin lain ditolak.
@@ -13,7 +14,12 @@
 //   { "functions": { "api/generate.js": { "maxDuration": 30 } } }
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+// Model sandaran: jika model utama sibuk (503/429) atau tiada (404), cuba model seterusnya.
+// Boleh diubah melalui GEMINI_FALLBACKS (senarai dipisah koma).
+const FALLBACKS = (process.env.GEMINI_FALLBACKS || 'gemini-3.8-flash,gemini-3.5-flash,gemini-3.1-flash-lite')
+  .split(',').map((x) => x.trim()).filter(Boolean);
+const MODELS = [...new Set([GEMINI_MODEL, ...FALLBACKS])];
+const modelUrl = (m) => `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`;
 
 // ---------- Had panjang (selaras ruang A4 & maxlength borang) ----------
 const LIMITS = {
@@ -205,50 +211,62 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const backoff = (n) => n * 800 + Math.floor(Math.random() * 300);
 
 async function callGemini(userPrompt, apiKey) {
-  const MAX_ATTEMPTS = 3;
-  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    let r;
-    try {
-      r = await fetch(GEMINI_API_URL, {
-        method: 'POST',
-        // Kunci dalam header, bukan URL, supaya tidak masuk log.
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-        signal: AbortSignal.timeout(20000),
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-          contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-          generationConfig: { temperature: 0.8, topP: 0.95, responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA },
-        }),
-      });
-    } catch (e) {
-      if (attempt < MAX_ATTEMPTS) { await sleep(backoff(attempt)); continue; }
-      console.error('Ralat rangkaian/masa tamat ke Gemini:', e);
-      throw new HttpError(502, 'Tidak dapat menghubungi Gemini (rangkaian atau masa tamat). Sila cuba lagi.');
-    }
+  const deadline = Date.now() + 26000; // muat dalam maxDuration 30s
+  const payload = JSON.stringify({
+    systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+    generationConfig: { temperature: 0.8, topP: 0.95, responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA },
+  });
+  let lastStatus = 0;
 
-    if (r.ok) {
-      const data = await r.json().catch(() => null);
-      const cand = data?.candidates?.[0];
-      const text = cand?.content?.parts?.map((p) => p.text || '').join('');
-      if (!text) {
-        console.error('Gemini tanpa teks:', cand?.finishReason, JSON.stringify(data)?.slice(0, 500));
-        throw new HttpError(502, 'Gemini tidak memulangkan kandungan yang boleh digunakan. Cuba ubah keterangan program.');
+  for (const model of MODELS) {
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const left = deadline - Date.now();
+      if (left < 3000) break;
+      let r;
+      try {
+        r = await fetch(modelUrl(model), {
+          method: 'POST',
+          // Kunci dalam header, bukan URL, supaya tidak masuk log.
+          headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+          signal: AbortSignal.timeout(Math.min(15000, left)),
+          body: payload,
+        });
+      } catch (e) {
+        lastStatus = 0;
+        console.warn(`Rangkaian/masa tamat (${model}, cubaan ${attempt}):`, e.message);
+        if (attempt < 2) await sleep(backoff(attempt));
+        continue;
       }
-      try { return JSON.parse(text); }
-      catch { throw new HttpError(502, 'Respons AI tidak lengkap atau tidak sah. Sila cuba lagi.'); }
-    }
 
-    const body = await r.text().catch(() => '');
-    if ((r.status === 503 || r.status === 429) && attempt < MAX_ATTEMPTS) {
-      console.warn(`Gemini ${r.status} (percubaan ${attempt}/${MAX_ATTEMPTS})`, body.slice(0, 300));
-      await sleep(backoff(attempt));
-      continue;
+      if (r.ok) {
+        const data = await r.json().catch(() => null);
+        const text = data?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('');
+        if (text) {
+          try { return JSON.parse(text); } catch { /* JSON tidak lengkap: cuba model lain */ }
+        }
+        console.warn(`Respons tidak boleh digunakan (${model}):`, data?.candidates?.[0]?.finishReason);
+        lastStatus = 502;
+        break;
+      }
+
+      lastStatus = r.status;
+      const body = await r.text().catch(() => '');
+      console.warn(`Gemini ${r.status} (${model}, cubaan ${attempt}):`, body.slice(0, 300));
+      if (r.status === 401 || r.status === 403) {
+        throw new HttpError(502, 'GEMINI_API_KEY tidak sah atau tidak dibenarkan. Semak kunci di Vercel.');
+      }
+      if ((r.status === 503 || r.status === 429 || r.status >= 500) && attempt < 2) {
+        await sleep(backoff(attempt));
+        continue;
+      }
+      break; // 404/400/dll atau percubaan habis: cuba model seterusnya
     }
-    console.error('Gemini API error:', r.status, body.slice(0, 500));
-    if (r.status === 503) throw new HttpError(503, 'Gemini sedang sibuk. Sila cuba lagi dalam beberapa saat.');
-    if (r.status === 429) throw new HttpError(429, 'Had permintaan Gemini dicapai. Sila cuba lagi sebentar.');
-    throw new HttpError(502, `Gemini memulangkan ralat (${r.status}). Semak GEMINI_API_KEY dan GEMINI_MODEL.`);
   }
+
+  if (lastStatus === 503) throw new HttpError(503, 'Semua model Gemini sedang sibuk. Sila cuba lagi dalam seminit.');
+  if (lastStatus === 429) throw new HttpError(429, 'Had permintaan Gemini dicapai. Sila cuba lagi sebentar.');
+  throw new HttpError(502, 'Gemini gagal memberi respons. Sila cuba lagi atau semak GEMINI_MODEL.');
 }
 
 // ---------- Had kadar ringkas (best-effort; setiap instans serverless berasingan) ----------
@@ -299,11 +317,12 @@ module.exports = async function handler(req, res) {
   try {
     const inputText = Object.values(ctx).filter((x) => typeof x === 'string').join(' ') + ' ' + Object.values(ctx.dataImpak).join(' ');
 
+    const t0 = Date.now();
     let result = shape(await callGemini(buildUserPrompt(ctx), apiKey));
     const bad = findForeign(allTexts(result), inputText);
 
     // Jika ada perkataan asing, minta janaan semula sekali sahaja dengan teguran khusus.
-    if (bad.length) {
+    if (bad.length && Date.now() - t0 < 12000) {
       try {
         const retry = shape(await callGemini(
           buildUserPrompt(ctx, `Janaan sebelum ini mengandungi perkataan yang tidak dibenarkan: ${bad.join(', ')}. Tulis semula tanpa perkataan itu, guna padanan Melayu Malaysia.`),
