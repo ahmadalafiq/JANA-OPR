@@ -178,16 +178,23 @@
                 <!-- Pemilih Tema -->
                 <div class="flex items-center bg-slate-800 p-1 rounded-lg border border-slate-700 mr-2 text-xs">
                     <span class="text-slate-400 text-[11px] px-2 font-medium">Tema:</span>
-                    <button onclick="setPdfTheme('indigo')" class="w-5 h-5 rounded-full bg-indigo-600 hover:scale-110 transition border border-white/40" title="Indigo Executive"></button>
-                    <button onclick="setPdfTheme('emerald')" class="w-5 h-5 rounded-full bg-emerald-600 hover:scale-110 transition border border-white/40 ml-1" title="Emerald Green"></button>
-                    <button onclick="setPdfTheme('navy')" class="w-5 h-5 rounded-full bg-sky-700 hover:scale-110 transition border border-white/40 ml-1" title="Royal Navy"></button>
-                    <button onclick="setPdfTheme('crimson')" class="w-5 h-5 rounded-full bg-rose-700 hover:scale-110 transition border border-white/40 ml-1" title="Crimson Red"></button>
+                    <button onclick="setPdfTheme('indigo')" class="w-5 h-5 rounded-full bg-indigo-600 hover:scale-110 transition border border-white/40" title="Indigo Executive" aria-label="Tema Indigo Executive"></button>
+                    <button onclick="setPdfTheme('emerald')" class="w-5 h-5 rounded-full bg-emerald-600 hover:scale-110 transition border border-white/40 ml-1" title="Emerald Green" aria-label="Tema Emerald Green"></button>
+                    <button onclick="setPdfTheme('navy')" class="w-5 h-5 rounded-full bg-sky-700 hover:scale-110 transition border border-white/40 ml-1" title="Royal Navy" aria-label="Tema Royal Navy"></button>
+                    <button onclick="setPdfTheme('crimson')" class="w-5 h-5 rounded-full bg-rose-700 hover:scale-110 transition border border-white/40 ml-1" title="Crimson Red" aria-label="Tema Crimson Red"></button>
                 </div>
 
                 <button onclick="loadSampleData()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700">
                     <i class="fa-solid fa-database text-amber-400"></i> Data Contoh
                 </button>
-                <button onclick="clearForm()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700">
+                <button onclick="exportDraft()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700" title="Simpan draf sebagai fail JSON">
+                    <i class="fa-solid fa-download"></i> Simpan
+                </button>
+                <label class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700 cursor-pointer" title="Buka draf daripada fail JSON">
+                    <i class="fa-solid fa-folder-open"></i> Buka
+                    <input type="file" accept=".json,application/json" class="hidden" onchange="importDraft(event)">
+                </label>
+                <button onclick="if (confirm('Padam semua data borang dan gambar?')) clearForm()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition flex items-center gap-1.5 border border-slate-700">
                     <i class="fa-solid fa-rotate-left"></i> Reset
                 </button>
                 <button onclick="openPdfVisualModal()" class="px-3 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-teal-600/20 transition flex items-center gap-1.5">
@@ -393,7 +400,17 @@
                     <i class="fa-regular fa-images text-indigo-600"></i> Tetapan Gambar (Lanskap / Potret)
                 </h2>
                 
-                <div class="space-y-3 mb-4">
+                <div class="mb-3">
+                    <label class="block text-xs font-semibold text-gray-700 mb-1">Bilangan Gambar dalam Laporan</label>
+                    <div class="flex gap-1.5" role="group" aria-label="Bilangan gambar">
+                        <button type="button" class="btn-img-count" data-n="0" onclick="setImageCount(0)">0</button>
+                        <button type="button" class="btn-img-count" data-n="1" onclick="setImageCount(1)">1</button>
+                        <button type="button" class="btn-img-count" data-n="2" onclick="setImageCount(2)">2</button>
+                        <button type="button" class="btn-img-count" data-n="3" onclick="setImageCount(3)">3</button>
+                    </div>
+                    <p id="img-count-hint" class="text-[10.5px] text-slate-500 leading-snug mt-1"></p>
+                </div>
+                <div id="img-options" class="space-y-3 mb-4">
                     <!-- Pemilih Mod Fits -->
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 mb-1">Mod Padanan Gambar (Fit Mode):</label>
@@ -409,31 +426,34 @@
                     <p class="text-[10.5px] text-slate-500 leading-snug">Gambar dimampatkan secara automatik semasa dimuat naik untuk memastikan draf kekal ringan dan pantas dimuat semula.</p>
                 </div>
 
-                <!-- Input Muat Naik Gambar 1-4 -->
-                <div class="grid grid-cols-2 gap-3">
-                    <!-- Gambar 1 -->
-                    <div class="bg-slate-50 p-2 rounded border border-gray-200">
+                <!-- Input Muat Naik Gambar (mengikut bilangan dipilih) -->
+                <div id="img-slots-grid" class="grid grid-cols-2 gap-3">
+                    <div id="img-slot-1" class="bg-slate-50 p-2 rounded border border-gray-200">
                         <label class="block text-xs font-bold mb-1">Gambar 1 (Utama)</label>
-                        <input type="file" accept="image/*" onchange="handleImageUpload(event, 1)" class="w-full text-[10px] text-gray-500 mb-1">
+                        <input type="file" id="file-img-1" accept="image/*" onchange="handleImageUpload(event, 1)" class="w-full text-[10px] text-gray-500 mb-1">
                         <input type="text" id="inp-cap-1" oninput="updatePreview()" placeholder="Keterangan Gambar 1" class="w-full text-[11px] p-1 border rounded">
+                        <div class="flex justify-between items-center mt-1">
+                            <span id="img-status-1" class="text-[10px] text-slate-500"></span>
+                            <button type="button" onclick="removeImage(1)" class="text-[10px] text-rose-600 hover:underline">Buang</button>
+                        </div>
                     </div>
-                    <!-- Gambar 2 -->
-                    <div class="bg-slate-50 p-2 rounded border border-gray-200">
+                    <div id="img-slot-2" class="bg-slate-50 p-2 rounded border border-gray-200">
                         <label class="block text-xs font-bold mb-1">Gambar 2</label>
-                        <input type="file" accept="image/*" onchange="handleImageUpload(event, 2)" class="w-full text-[10px] text-gray-500 mb-1">
+                        <input type="file" id="file-img-2" accept="image/*" onchange="handleImageUpload(event, 2)" class="w-full text-[10px] text-gray-500 mb-1">
                         <input type="text" id="inp-cap-2" oninput="updatePreview()" placeholder="Keterangan Gambar 2" class="w-full text-[11px] p-1 border rounded">
+                        <div class="flex justify-between items-center mt-1">
+                            <span id="img-status-2" class="text-[10px] text-slate-500"></span>
+                            <button type="button" onclick="removeImage(2)" class="text-[10px] text-rose-600 hover:underline">Buang</button>
+                        </div>
                     </div>
-                    <!-- Gambar 3 -->
-                    <div class="bg-slate-50 p-2 rounded border border-gray-200">
+                    <div id="img-slot-3" class="bg-slate-50 p-2 rounded border border-gray-200">
                         <label class="block text-xs font-bold mb-1">Gambar 3</label>
-                        <input type="file" accept="image/*" onchange="handleImageUpload(event, 3)" class="w-full text-[10px] text-gray-500 mb-1">
+                        <input type="file" id="file-img-3" accept="image/*" onchange="handleImageUpload(event, 3)" class="w-full text-[10px] text-gray-500 mb-1">
                         <input type="text" id="inp-cap-3" oninput="updatePreview()" placeholder="Keterangan Gambar 3" class="w-full text-[11px] p-1 border rounded">
-                    </div>
-                    <!-- Gambar 4 -->
-                    <div class="bg-slate-50 p-2 rounded border border-gray-200">
-                        <label class="block text-xs font-bold mb-1">Gambar 4</label>
-                        <input type="file" accept="image/*" onchange="handleImageUpload(event, 4)" class="w-full text-[10px] text-gray-500 mb-1">
-                        <input type="text" id="inp-cap-4" oninput="updatePreview()" placeholder="Keterangan Gambar 4" class="w-full text-[11px] p-1 border rounded">
+                        <div class="flex justify-between items-center mt-1">
+                            <span id="img-status-3" class="text-[10px] text-slate-500"></span>
+                            <button type="button" onclick="removeImage(3)" class="text-[10px] text-rose-600 hover:underline">Buang</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -644,13 +664,13 @@
                                     <h3 class="sec-h text-[length:var(--opr-fs-3)] font-black tracking-wider uppercase text-slate-950" data-t="GALERI / EVIDENS">4. GALERI</h3>
                                 </div>
 
-                                <!-- Bekas Kontena Gambar Berpembolehubah — 4 baris bertindan (1 lajur).
+                                <!-- Bekas Kontena Gambar Berpembolehubah — 1 hingga 3 baris bertindan (1 lajur); 0 gambar = lajur ini disembunyikan.
                                      style="flex:5 1 0%" MEMBERI galeri ~5/6 ruang lajur kanan; blok
                                      tandatangan di bawah dijamin ~1/6 baki — supaya tandatangan TIDAK
                                      PERNAH hilang/ditolak keluar walau ruang menegak ketat sekalipun
                                      (dahulu galeri "flex-1" ambil SEMUA ruang dahulu, tandatangan
                                      "shrink-0" cuma harap baki — kadang tiada baki langsung). -->
-                                <div id="out-img-gallery-container" class="grid grid-cols-1 grid-rows-4 gap-1.5 min-h-0" style="flex: 5 1 0%;">
+                                <div id="out-img-gallery-container" class="grid grid-cols-1 gap-1.5 min-h-0" style="flex: 5 1 0%;">
                                     <!-- Terjana Secara Dinamik Melalui updatePreview() -->
                                 </div>
 
@@ -729,7 +749,9 @@
 
     <script>
         let activeThemeKey = 'indigo';
-        let loadedImages = { 1: '', 2: '', 3: '', 4: '' };
+        const MAX_IMAGES = 3;
+        let imageCount = 3;   // bilangan gambar dalam laporan: 0 - 3
+        let loadedImages = { 1: '', 2: '', 3: '' };
 
         // Penukar format tarikh: input date (YYYY-MM-DD) -> format Bahasa Melayu (18 Ogos 2026)
         const BULAN_MS = ['Januari','Februari','Mac','April','Mei','Jun','Julai','Ogos','September','Oktober','November','Disember'];
@@ -753,6 +775,8 @@
         async function generateWithAI() {
             const btn = document.getElementById('btn-ai-generate-all');
             if (!btn) return;
+            if (Date.now() - (window._aiLast || 0) < 5000) return; // elak klik berulang
+            window._aiLast = Date.now();
             const originalHTML = btn.innerHTML;
 
             const context = {
@@ -779,6 +803,9 @@
                 gayaFormat: 'ringkas-bermakna',
             };
 
+            context.keterangan = context.keterangan.slice(0, 800);
+            context.namaProgram = context.namaProgram.slice(0, 140);
+
             if (!context.namaProgram) {
                 alert('Sila isi "Nama Program / Aktiviti" terlebih dahulu sebelum menjana kandungan dengan AI.');
                 return;
@@ -789,11 +816,15 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> Menjana Objektif, Ringkasan & Impak...';
 
             try {
+                const ctrl = new AbortController();
+                const to = setTimeout(() => ctrl.abort(), 60000);
                 const res = await fetch('/api/generate', {
+                    signal: ctrl.signal,
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ context }),
                 });
+                clearTimeout(to);
 
                 if (!res.ok) {
                     const errData = await res.json().catch(() => ({}));
@@ -832,7 +863,7 @@
                 updatePreview();
             } catch (err) {
                 console.error(err);
-                alert(`Gagal menjana kandungan dengan AI: ${err.message || 'Sila cuba lagi.'}\n\n(Pastikan app sudah dideploy ke Vercel dengan fail /api/generate.js dan GEMINI_API_KEY ditetapkan.)`);
+                alert(`Gagal menjana kandungan dengan AI: ${err.name === 'AbortError' ? 'Permintaan melebihi 60 saat.' : (err.message || 'Sila cuba lagi.')}\n\n(Pastikan app sudah dideploy ke Vercel dengan fail /api/generate.js dan GEMINI_API_KEY ditetapkan.)`);
             } finally {
                 btn.disabled = false;
                 btn.classList.remove('opacity-60', 'cursor-not-allowed');
@@ -893,7 +924,7 @@
                     <circle cx="200" cy="120" r="45" fill="${colorHex}" opacity="0.15"/>
                     <text x="200" y="130" font-family="sans-serif" font-size="36" text-anchor="middle" fill="${colorHex}">📷</text>
                     <text x="200" y="210" font-family="sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="#334155">${title}</text>
-                    <text x="200" y="235" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#64748b">Visual OPR Tempatan</text>
+                    <text x="200" y="235" font-family="sans-serif" font-size="12" text-anchor="middle" fill="#64748b">Belum dimuat naik</text>
                 </svg>
             `;
             return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
@@ -1007,11 +1038,12 @@
             const div = document.createElement('div');
             div.className = 'flex items-center gap-1.5 obj-item';
             div.innerHTML = `
-                <input type="text" value="${val}" oninput="updatePreview()" maxlength="160" placeholder="Masukkan Objektif..." class="inp-obj-item w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input type="text" oninput="updatePreview()" maxlength="160" placeholder="Masukkan Objektif..." class="inp-obj-item w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                 <button type="button" onclick="removeField(this)" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition" title="Padam">
                     <i class="fa-solid fa-trash-can text-xs"></i>
                 </button>
             `;
+            div.querySelector('input').value = val;
             container.appendChild(div);
             updatePreview();
         }
@@ -1022,11 +1054,12 @@
             const div = document.createElement('div');
             div.className = 'flex items-center gap-1.5 imp-item';
             div.innerHTML = `
-                <input type="text" value="${val}" oninput="updatePreview()" maxlength="160" placeholder="Masukkan Ringkasan Aktiviti..." class="inp-imp-item w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input type="text" oninput="updatePreview()" maxlength="160" placeholder="Masukkan Ringkasan Aktiviti..." class="inp-imp-item w-full text-xs p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                 <button type="button" onclick="removeField(this)" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition" title="Padam">
                     <i class="fa-solid fa-trash-can text-xs"></i>
                 </button>
             `;
+            div.querySelector('input').value = val;
             container.appendChild(div);
             updatePreview();
         }
@@ -1037,11 +1070,12 @@
             const div = document.createElement('div');
             div.className = `flex items-center gap-1.5 swoc-${type}-item`;
             div.innerHTML = `
-                <input type="text" value="${val}" oninput="updatePreview()" maxlength="100" placeholder="Tambah butiran SWOT..." class="inp-swoc-${type}-item w-full text-xs p-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
+                <input type="text" oninput="updatePreview()" maxlength="100" placeholder="Tambah butiran SWOT..." class="inp-swoc-${type}-item w-full text-xs p-1.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 outline-none">
                 <button type="button" onclick="removeField(this)" class="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-md transition" title="Padam">
                     <i class="fa-solid fa-xmark text-xs"></i>
                 </button>
             `;
+            div.querySelector('input').value = val;
             container.appendChild(div);
             updatePreview();
         }
@@ -1056,42 +1090,101 @@
             updatePreview();
         }
 
-        // Fungsi Penjana HTML Galeri Gambar — SATU susun atur grid 1 lajur x 4 baris yang kukuh.
-        // Guna CSS Grid dengan auto-rows-fr supaya keempat-empat baris SENTIASA sama tinggi
-        // dan mengisi penuh ruang lajur kanan, tidak kira berapa panjang kapsyen setiap gambar.
+        // ---- Bilangan gambar (0 - 3) ----
+        const IMG_HINTS = [
+            'Tiada galeri. Teks dan tandatangan menggunakan lebar penuh A4.',
+            '1 gambar besar. Gambar potret atau mod Contain memberi hasil terbaik.',
+            '2 gambar bertindan dalam lajur kanan.',
+            '3 gambar bertindan dalam lajur kanan.'
+        ];
+
+        function applyImageCountUI(n) {
+            n = Math.max(0, Math.min(MAX_IMAGES, parseInt(n, 10) || 0));
+            imageCount = n;
+            document.querySelectorAll('.btn-img-count').forEach(b => {
+                const active = Number(b.dataset.n) === n;
+                b.className = 'btn-img-count flex-1 py-2 rounded-md text-xs font-bold border transition ' +
+                    (active ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-white text-slate-600 border-gray-300 hover:bg-indigo-50');
+                b.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+            for (let i = 1; i <= MAX_IMAGES; i++) document.getElementById('img-slot-' + i)?.classList.toggle('hidden', i > n);
+            document.getElementById('img-slots-grid')?.classList.toggle('hidden', n === 0);
+            document.getElementById('img-options')?.classList.toggle('hidden', n === 0);
+            const hint = document.getElementById('img-count-hint');
+            if (hint) hint.textContent = IMG_HINTS[n];
+        }
+
+        function setImageCount(n) {
+            applyImageCountUI(n);
+            updatePreview();
+        }
+
+        function removeImage(i) {
+            loadedImages[i] = '';
+            const f = document.getElementById('file-img-' + i);
+            if (f) f.value = '';
+            updatePreview();
+        }
+
+        function refreshImageStatus() {
+            for (let i = 1; i <= MAX_IMAGES; i++) {
+                const el = document.getElementById('img-status-' + i);
+                if (el) el.textContent = loadedImages[i] ? 'Gambar sedia' : 'Belum dimuat naik';
+            }
+        }
+
+        // Galeri: 1 lajur, bilangan baris = imageCount. Kad menegak (gambar di atas, kapsyen di bawah)
+        // supaya gambar kekal besar. Jika 0, lajur kanan disembunyikan, lajur kiri jadi lebar penuh
+        // dan blok tandatangan dipindahkan ke bawah lajur kiri.
         function renderGalleryHTML() {
+            const n = imageCount;
+            const leftCol = document.getElementById('a4-left-col');
+            const rightCol = document.getElementById('a4-right-col');
+            const sig = document.getElementById('a4-signature-block');
+            const container = document.getElementById('out-img-gallery-container');
+            if (!leftCol || !rightCol || !sig || !container) return;
+
+            if (n === 0) {
+                rightCol.classList.add('hidden');
+                leftCol.classList.remove('col-span-7');
+                leftCol.classList.add('col-span-12');
+                if (sig.parentElement !== leftCol) leftCol.appendChild(sig);
+                sig.style.flex = '0 0 auto';
+                sig.classList.add('shrink-0');
+                container.innerHTML = '';
+                return;
+            }
+
+            rightCol.classList.remove('hidden');
+            leftCol.classList.remove('col-span-12');
+            leftCol.classList.add('col-span-7');
+            if (sig.parentElement !== rightCol) rightCol.appendChild(sig);
+            sig.style.flex = '1 1 0%';
+            sig.classList.remove('shrink-0');
+
             const fitMode = document.getElementById('sel-img-fit')?.value || 'cover';
             const fitClass = fitMode === 'contain' ? 'object-contain bg-slate-900/10' : 'object-cover';
             const showCaption = document.getElementById('chk-show-caption')?.checked ?? true;
+            const colors = ['#4f46e5', '#0284c7', '#059669'];
 
-            const caps = [
-                (document.getElementById('inp-cap-1')?.value || 'Gambar 1').trim(),
-                (document.getElementById('inp-cap-2')?.value || 'Gambar 2').trim(),
-                (document.getElementById('inp-cap-3')?.value || 'Gambar 3').trim(),
-                (document.getElementById('inp-cap-4')?.value || 'Gambar 4').trim(),
-            ];
-
-            const imgs = [
-                loadedImages[1] || generateLocalSvgDataUrl('Gambar 1: Perasmian', '#4f46e5'),
-                loadedImages[2] || generateLocalSvgDataUrl('Gambar 2: Ceramah', '#0284c7'),
-                loadedImages[3] || generateLocalSvgDataUrl('Gambar 3: Aktiviti LDK', '#059669'),
-                loadedImages[4] || generateLocalSvgDataUrl('Gambar 4: Sijil', '#d97706'),
-            ];
-
-            const container = document.getElementById('out-img-gallery-container');
-            if (!container) return;
-
-            container.className = 'grid grid-cols-1 grid-rows-4 gap-1.5 min-h-0';
-            container.style.flex = '5 1 0%';
-            container.innerHTML = imgs.map((img, i) => `
-                <div class="bg-white border border-slate-300 p-1 rounded-lg shadow-xs flex flex-row items-center gap-1.5 h-full min-h-0">
-                    <div class="${showCaption ? 'h-full w-20 shrink-0' : 'h-full w-full shrink-0'} min-h-0 bg-slate-100 rounded overflow-hidden relative border border-slate-200">
-                        <span class="absolute top-0.5 left-0.5 bg-slate-900/80 text-white text-[length:var(--opr-fs-1)] px-1 py-0.5 rounded font-black z-10">#${i + 1}</span>
-                        <img src="${img}" class="w-full h-full ${fitClass} absolute inset-0" alt="Gambar ${i + 1}">
+            let html = '';
+            for (let i = 1; i <= n; i++) {
+                const raw = loadedImages[i];
+                const img = (typeof raw === 'string' && raw.startsWith('data:image/') && !/["<>]/.test(raw)) ? raw : generateLocalSvgDataUrl('Gambar ' + i, colors[i - 1]);
+                const cap = escHtml((document.getElementById('inp-cap-' + i)?.value || 'Gambar ' + i).trim());
+                html += `
+                <div class="bg-white border border-slate-300 p-1 rounded-lg shadow-xs flex flex-col gap-1 h-full min-h-0">
+                    <div class="flex-1 min-h-0 bg-slate-100 rounded overflow-hidden relative border border-slate-200">
+                        <span class="absolute top-0.5 left-0.5 bg-slate-900/80 text-white text-[length:var(--opr-fs-1)] px-1 py-0.5 rounded font-black z-10">#${i}</span>
+                        <img src="${img}" class="w-full h-full ${fitClass} absolute inset-0" alt="Gambar ${i}">
                     </div>
-                    ${showCaption ? `<p class="text-[length:var(--opr-fs-2)] font-bold text-slate-800 text-left leading-tight flex-1 min-w-0 line-clamp-3">${caps[i]}</p>` : ''}
-                </div>
-            `).join('');
+                    ${showCaption ? `<p class="shrink-0 text-[length:var(--opr-fs-2)] font-bold text-slate-800 text-left leading-tight line-clamp-2">${cap}</p>` : ''}
+                </div>`;
+            }
+            container.className = 'grid grid-cols-1 gap-1.5 min-h-0';
+            container.style.flex = '5 1 0%';
+            container.style.gridTemplateRows = `repeat(${n}, minmax(0, 1fr))`;
+            container.innerHTML = html;
         }
 
         // Fungsi Auto Saiz Tulisan — SISTEM BERLAPIS BARU:
@@ -1133,6 +1226,9 @@
             root.style.setProperty('--opr-fs-3', (11 * scale).toFixed(2) + 'px');
             root.style.setProperty('--opr-fs-4', (11.5 * scale).toFixed(2) + 'px');
         }
+
+        let fitTimer = null;
+        function scheduleFit() { clearTimeout(fitTimer); fitTimer = setTimeout(autoFitToPage, 150); }
 
         function autoFitToPage() {
             const scaleInner = document.getElementById('a4-scale-inner');
@@ -1294,6 +1390,10 @@
                         } else {
                             statusText.textContent = 'Kandungan muat penuh dalam 1 muka surat A4.';
                         }
+                        if (zoomScale < 0.8) {
+                            statusCard.className = 'bg-amber-50 border border-amber-300 text-amber-900 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
+                            statusText.textContent += ` Amaran: ruang dikecilkan hingga ${Math.round(zoomScale * 100)}%, cetakan mungkin sukar dibaca. Ringkaskan kandungan.`;
+                        }
                     } else {
                         statusCard.className = 'bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-xl text-xs font-semibold flex items-center gap-2';
                         statusText.parentElement.querySelector('i').className = 'fa-solid fa-triangle-exclamation text-rose-600';
@@ -1377,7 +1477,7 @@
                 ['Data Impak (Sebelum/Selepas)', hasData],
                 ['Refleksi', !!ref],
                 ['Tindakan Susulan', tin.length > 0],
-                ['Evidens (min. 2 gambar)', Object.values(loadedImages || {}).filter(Boolean).length >= 2],
+                ['Evidens (min. 2 gambar)', [1, 2, 3].filter(i => i <= imageCount && loadedImages[i]).length >= 2],
             ];
             const ok = checks.filter(c => c[1]).length;
             const sc = document.getElementById('quality-score');
@@ -1424,7 +1524,7 @@
                         div.className = 'flex items-start gap-1.5';
                         div.innerHTML = `
                             <span class="theme-num ${t.numBadge} font-extrabold rounded-full w-4 h-4 flex items-center justify-center text-[length:var(--opr-fs-2)] shrink-0 mt-0.5">${idx + 1}</span>
-                            <p class="text-slate-800 leading-relaxed font-medium text-[length:var(--opr-fs-3)]">${text || '-'}</p>
+                            <p class="text-slate-800 leading-relaxed font-medium text-[length:var(--opr-fs-3)]">${text ? escHtml(text) : '-'}</p>
                         `;
                         objContainer.appendChild(div);
                     }
@@ -1444,7 +1544,7 @@
                     if (text || impInputs.length === 1) {
                         const p = document.createElement('p');
                         p.className = 'text-slate-800 font-medium leading-relaxed text-[length:var(--opr-fs-3)] flex items-start gap-1.5';
-                        p.innerHTML = `<span class="${t.icon} font-bold theme-icon">•</span> <span>${text || '-'}</span>`;
+                        p.innerHTML = `<span class="${t.icon} font-bold theme-icon">•</span> <span>${text ? escHtml(text) : '-'}</span>`;
                         impContainer.appendChild(p);
                     }
                 });
@@ -1465,18 +1565,19 @@
                         if (val || inputs.length === 1) {
                             const p = document.createElement('p');
                             p.className = 'flex items-start gap-1 leading-relaxed text-[length:var(--opr-fs-2)]';
-                            p.innerHTML = `<span class="opacity-60">•</span> <span>${val || '-'}</span>`;
+                            p.innerHTML = `<span class="opacity-60">•</span> <span>${val ? escHtml(val) : '-'}</span>`;
                             outBox.appendChild(p);
                         }
                     });
                 }
             });
 
+            // 4. Penjana Galeri Gambar (sebelum penomboran seksyen — galeri mungkin disembunyikan)
+            renderGalleryHTML();
+            refreshImageStatus();
+
             // 3B. Kerangka OPR (isu, sasaran, pemantauan, data impak, refleksi, tindakan)
             renderFramework();
-
-            // 4. Penjana Galeri Gambar
-            renderGalleryHTML();
 
             // Disediakan Oleh (Unit/Bahagian) + Tarikh
             const disediakanUnit = (document.getElementById('inp-disediakan-unit')?.value || '').trim();
@@ -1490,7 +1591,7 @@
             }
 
             saveDraftToStorage();
-            autoFitToPage();
+            scheduleFit();
         }
 
         function loadSampleData() {
@@ -1534,12 +1635,11 @@
             document.getElementById('inp-cap-1').value = 'Ucapan Pembukaan Pengerusi';
             document.getElementById('inp-cap-2').value = 'Sesi Ceramah Utama Integriti';
             document.getElementById('inp-cap-3').value = 'Aktiviti LDK Kumpulan 3';
-            document.getElementById('inp-cap-4').value = 'Sesi Penyerahan Sijil & Cenderamata';
-
+            
             loadedImages[1] = generateLocalSvgDataUrl('Gambar 1: Perasmian', '#4f46e5');
             loadedImages[2] = generateLocalSvgDataUrl('Gambar 2: Sesi Ceramah', '#0284c7');
             loadedImages[3] = generateLocalSvgDataUrl('Gambar 3: Aktiviti LDK', '#059669');
-            loadedImages[4] = generateLocalSvgDataUrl('Gambar 4: Penyampaian Sijil', '#d97706');
+            applyImageCountUI(3);
 
             const setInpValue = (id, val) => {
                 const el = document.getElementById(id);
@@ -1571,7 +1671,9 @@
             addSwotField('o');
             addSwotField('t');
 
-            loadedImages = { 1: '', 2: '', 3: '', 4: '' };
+            loadedImages = { 1: '', 2: '', 3: '' };
+            document.querySelectorAll('input[type="file"]').forEach(f => f.value = '');
+            applyImageCountUI(3);
             document.getElementById('out-logo').src = generateDefaultLogoSvg();
 
             try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
@@ -1608,7 +1710,8 @@
                 swotW: listVals('inp-swoc-w-item'),
                 swotO: listVals('inp-swoc-o-item'),
                 swotT: listVals('inp-swoc-t-item'),
-                caps: [getVal('inp-cap-1'), getVal('inp-cap-2'), getVal('inp-cap-3'), getVal('inp-cap-4')],
+                caps: [getVal('inp-cap-1'), getVal('inp-cap-2'), getVal('inp-cap-3')],
+                imageCount,
                 imgFit: getVal('sel-img-fit'),
                 showCaption: document.getElementById('chk-show-caption')?.checked ?? true,
                 loadedImages,
@@ -1656,7 +1759,8 @@
             const chkCap = document.getElementById('chk-show-caption');
             if (chkCap) chkCap.checked = data.showCaption !== false;
             setVal('inp-cap-1', data.caps?.[0]); setVal('inp-cap-2', data.caps?.[1]);
-            setVal('inp-cap-3', data.caps?.[2]); setVal('inp-cap-4', data.caps?.[3]);
+            setVal('inp-cap-3', data.caps?.[2]);
+            applyImageCountUI(data.imageCount ?? 3);
             setVal('inp-disediakan-unit', data.disediakanUnit);
 
             document.getElementById('obj-inputs-container').innerHTML = '';
@@ -1714,7 +1818,46 @@
             return `${namaBersih}_${tarikh}`.substring(0, 120);
         }
 
+        function preflightPrint() {
+            const val = (id) => (document.getElementById(id)?.value || '').trim();
+            const miss = [];
+            if (!val('inp-nama-program')) miss.push('Nama Program');
+            if (!val('inp-tarikh')) miss.push('Tarikh');
+            if (!val('inp-tempat')) miss.push('Tempat');
+            if (!val('inp-anjuran')) miss.push('Anjuran');
+            if (!val('inp-disediakan-unit')) miss.push('Disediakan Oleh');
+            const noImg = [1, 2, 3].filter(i => i <= imageCount && !loadedImages[i]).length;
+            if (noImg) miss.push(noImg + ' gambar belum dimuat naik');
+            return miss.length ? confirm('Belum lengkap: ' + miss.join(', ') + '.\n\nTeruskan cetak?') : true;
+        }
+
+        function exportDraft() {
+            const blob = new Blob([JSON.stringify(collectDraftData())], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = buildPrintFileName() + '.opr.json';
+            document.body.appendChild(a); a.click(); a.remove();
+            setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }
+
+        function importDraft(ev) {
+            const f = ev.target.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = () => {
+                try {
+                    const d = JSON.parse(r.result);
+                    if (!d || typeof d !== 'object' || Array.isArray(d)) throw new Error('format');
+                    localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+                    if (!restoreDraftFromStorage()) throw new Error('restore');
+                } catch (e) { alert('Fail draf tidak sah atau storan penuh.'); }
+                ev.target.value = '';
+            };
+            r.readAsText(f);
+        }
+
         function triggerPrint() {
+            if (!preflightPrint()) return;
             autoFitToPage();
             document.title = buildPrintFileName();
             // 300ms: autoFitToPage() guna requestAnimationFrame + beberapa
@@ -1732,6 +1875,7 @@
             
             container.innerHTML = '';
             const clone = source.cloneNode(true);
+            clone.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
             clone.id = 'a4-paper-modal-clone';
             clone.style.boxShadow = '0 10px 25px -5px rgba(0, 0, 0, 0.3)';
             clone.style.margin = '0 auto';
@@ -1747,6 +1891,7 @@
         }
 
         window.onload = function() {
+            applyImageCountUI(imageCount);
             const restored = restoreDraftFromStorage();
             if (!restored) {
                 loadSampleData();
@@ -1755,7 +1900,7 @@
             }
         };
 
-        window.addEventListener('resize', () => autoFitToPage());
+        window.addEventListener('resize', scheduleFit);
     </script>
 </body>
 </html>
