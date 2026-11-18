@@ -16,7 +16,7 @@
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.6-flash';
 // Model sandaran: jika model utama sibuk (503/429) atau tiada (404), cuba model seterusnya.
 // Boleh diubah melalui GEMINI_FALLBACKS (senarai dipisah koma).
-const FALLBACKS = (process.env.GEMINI_FALLBACKS || 'gemini-3.8-flash,gemini-3.5-flash,gemini-3.1-flash-lite')
+const FALLBACKS = (process.env.GEMINI_FALLBACKS || 'gemini-3.8-flash,gemini-3.5-flash-lite,gemini-3.1-flash-lite')
   .split(',').map((x) => x.trim()).filter(Boolean);
 const MODELS = [...new Set([GEMINI_MODEL, ...FALLBACKS])];
 const modelUrl = (m) => `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`;
@@ -204,7 +204,24 @@ const allTexts = (r) => [r.isu, r.refleksi, ...r.objektif, ...r.implementasi, ..
 
 // ---------- Panggilan Gemini (dengan cubaan semula) ----------
 class HttpError extends Error {
-  constructor(status, message) { super(message); this.status = status; }
+  constructor(status, message, detail) { super(message); this.status = status; this.detail = detail; }
+}
+
+// Model 3.6/3.8/3.5-lite menyokong thinkingLevel 'low'. Model lama dibiarkan tanpa thinkingConfig.
+const supportsThinkingLevel = (m) => /^gemini-3\.(6|8)-flash$/.test(m) || m === 'gemini-3.5-flash-lite';
+
+// temperature/topP DIBUANG: sudah deprecated untuk model Gemini baharu (diabaikan,
+// dan akan jadi ralat HTTP 400 pada generasi akan datang).
+function buildPayload(model, userPrompt) {
+  const generationConfig = { responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA };
+  // Tugasan ini ringkas: thinking 'low' jauh lebih pantas daripada default 'medium' dan
+  // mengelakkan masa tamat.
+  if (supportsThinkingLevel(model)) generationConfig.thinkingConfig = { thinkingLevel: 'low' };
+  return JSON.stringify({
+    systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+    generationConfig,
+  });
 }
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -212,11 +229,7 @@ const backoff = (n) => n * 800 + Math.floor(Math.random() * 300);
 
 async function callGemini(userPrompt, apiKey) {
   const deadline = Date.now() + 26000; // muat dalam maxDuration 30s
-  const payload = JSON.stringify({
-    systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
-    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-    generationConfig: { temperature: 0.8, topP: 0.95, responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA },
-  });
+  const tried = []; // diagnostik: "model:status"
   let lastStatus = 0;
 
   for (const model of MODELS) {
@@ -224,16 +237,18 @@ async function callGemini(userPrompt, apiKey) {
       const left = deadline - Date.now();
       if (left < 3000) break;
       let r;
+      const payload = buildPayload(model, userPrompt);
       try {
         r = await fetch(modelUrl(model), {
           method: 'POST',
           // Kunci dalam header, bukan URL, supaya tidak masuk log.
           headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-          signal: AbortSignal.timeout(Math.min(15000, left)),
+          signal: AbortSignal.timeout(Math.min(20000, left)),
           body: payload,
         });
       } catch (e) {
         lastStatus = 0;
+        tried.push(`${model}:timeout/rangkaian`);
         console.warn(`Rangkaian/masa tamat (${model}, cubaan ${attempt}):`, e.message);
         if (attempt < 2) await sleep(backoff(attempt));
         continue;
@@ -245,12 +260,15 @@ async function callGemini(userPrompt, apiKey) {
         if (text) {
           try { return JSON.parse(text); } catch { /* JSON tidak lengkap: cuba model lain */ }
         }
-        console.warn(`Respons tidak boleh digunakan (${model}):`, data?.candidates?.[0]?.finishReason);
+        const why = data?.promptFeedback?.blockReason || data?.candidates?.[0]?.finishReason || 'kosong';
+        console.warn(`Respons tidak boleh digunakan (${model}):`, why, JSON.stringify(data || {}).slice(0, 300));
+        tried.push(`${model}:respons-${why}`);
         lastStatus = 502;
         break;
       }
 
       lastStatus = r.status;
+      tried.push(`${model}:${r.status}`);
       const body = await r.text().catch(() => '');
       console.warn(`Gemini ${r.status} (${model}, cubaan ${attempt}):`, body.slice(0, 300));
       if (r.status === 401 || r.status === 403) {
@@ -264,9 +282,10 @@ async function callGemini(userPrompt, apiKey) {
     }
   }
 
-  if (lastStatus === 503) throw new HttpError(503, 'Semua model Gemini sedang sibuk. Sila cuba lagi dalam seminit.');
-  if (lastStatus === 429) throw new HttpError(429, 'Had permintaan Gemini dicapai. Sila cuba lagi sebentar.');
-  throw new HttpError(502, 'Gemini gagal memberi respons. Sila cuba lagi atau semak GEMINI_MODEL.');
+  const detail = tried.join(' | ');
+  if (lastStatus === 503) throw new HttpError(503, 'Semua model Gemini sedang sibuk. Sila cuba lagi dalam seminit.', detail);
+  if (lastStatus === 429) throw new HttpError(429, 'Had permintaan Gemini dicapai. Sila cuba lagi sebentar.', detail);
+  throw new HttpError(502, 'Gemini gagal memberi respons. Sila cuba lagi atau semak GEMINI_MODEL.', detail);
 }
 
 // ---------- Had kadar ringkas (best-effort; setiap instans serverless berasingan) ----------
@@ -335,7 +354,7 @@ module.exports = async function handler(req, res) {
 
     return res.status(200).json(result);
   } catch (e) {
-    if (e instanceof HttpError) return res.status(e.status).json({ error: e.message });
+    if (e instanceof HttpError) return res.status(e.status).json({ error: e.message, detail: e.detail });
     console.error('Ralat tidak dijangka:', e);
     return res.status(500).json({ error: 'Ralat pelayan dalaman.' });
   }
