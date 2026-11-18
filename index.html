@@ -261,7 +261,7 @@
                 <button onclick="openPdfVisualModal()" class="px-3 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg text-xs font-semibold shadow-lg shadow-teal-600/20 transition flex items-center gap-1.5">
                     <i class="fa-solid fa-eye text-sm"></i> Pratonton
                 </button>
-                <button id="btn-newtab" onclick="window.open(location.href, '_blank')" class="hidden px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition items-center gap-1.5 border border-slate-700" title="Buka di tab baharu untuk cetak penuh"><i class="fa-solid fa-up-right-from-square"></i> Buka Tab Baharu</button>
+                <button id="btn-newtab" onclick="openInNewTab()" class="hidden px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium transition items-center gap-1.5 border border-slate-700" title="Buka di tab baharu untuk cetak penuh"><i class="fa-solid fa-up-right-from-square"></i> Buka Tab Baharu</button>
                 <button onclick="triggerPrint()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-indigo-600/30 transition flex items-center gap-2" title="Guna dialog cetak pelayar (untuk cetak kertas terus)">
                     <i class="fa-solid fa-print text-sm"></i> Cetak
                 </button>
@@ -1812,7 +1812,10 @@
             } catch (e) {
                 return false;
             }
+            return applyDraftData(data);
+        }
 
+        function applyDraftData(data) {
             const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val ?? ''; };
 
             setVal('inp-org', data.org);
@@ -1960,15 +1963,70 @@
             r.readAsText(f);
         }
 
+        // --- PAPARAN TERBENAM (Google Sites) --- //
+        // Google Sites membenamkan halaman dalam iframe bersandbox TANPA "allow-modals".
+        // Dalam keadaan itu window.print() DIABAIKAN SENYAP-SENYAP (tiada exception),
+        // jadi try/catch sahaja tidak cukup. Kita kesan sama ada cetak benar-benar
+        // berlaku melalui acara beforeprint, dan jika tidak, tawarkan "Buka Tab Baharu".
+        const IS_EMBEDDED = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+        let _printFired = false;
+        window.addEventListener('beforeprint', () => { _printFired = true; });
+        try {
+            const mq = window.matchMedia('print');
+            const onMq = (e) => { if (e.matches) _printFired = true; };
+            mq.addEventListener ? mq.addEventListener('change', onMq) : mq.addListener(onMq);
+        } catch (e) {}
+
+        async function openInNewTab() {
+            const url = location.href.split('#')[0] + '#dari-embed';
+            let w = null;
+            try { w = window.open(url, '_blank'); } catch (e) {}
+            if (!w) { uiToast('Pelayar menyekat tab baharu. Benarkan pop-up untuk laman ini, kemudian cuba lagi.'); return; }
+            uiToast('Tab baharu dibuka. Data borang semasa akan disalin automatik. Jika kosong, guna Simpan → Muat Draf.');
+        }
+
+        // Tab baharu (dibuka dari paparan terbenam) meminta draf semasa daripada pembuka.
+        // localStorage dalam iframe Google Sites diasingkan (partitioned) atau disekat,
+        // jadi tab baharu TIDAK nampak draf yang ditaip dalam paparan terbenam.
+        let _awaitingDraft = false;
+        window.addEventListener('message', (e) => {
+            if (e.origin !== location.origin) return;
+            const d = e.data;
+            if (d === 'opr-need-draft' && e.source) {
+                try { e.source.postMessage({ type: 'opr-draft', draft: collectDraftData() }, location.origin); } catch (err) {}
+            } else if (d && d.type === 'opr-draft' && _awaitingDraft && d.draft && typeof d.draft === 'object') {
+                _awaitingDraft = false;
+                try { applyDraftData(d.draft); autoFitToPage(); saveDraftToStorage(); } catch (err) { uiToast('Gagal menyalin draf. Guna Simpan → Muat Draf.'); }
+            }
+        });
+
+        function requestDraftFromOpener() {
+            if (location.hash !== '#dari-embed' || !window.opener) return false;
+            try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+            _awaitingDraft = true;
+            try { window.opener.postMessage('opr-need-draft', location.origin); } catch (e) { _awaitingDraft = false; return false; }
+            setTimeout(() => { _awaitingDraft = false; }, 4000);
+            return true;
+        }
+
+        function storageAvailable() {
+            try { const k = '__opr_t'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; }
+            catch (e) { return false; }
+        }
+
         async function triggerPrint() {
             if (!(await preflightPrint())) return;
             autoFitToPage();
             document.title = buildPrintFileName();
             // 300ms: autoFitToPage() guna requestAnimationFrame + beberapa
             // pusingan ukur-semula, jadi beri masa cukup sebelum snapshot cetak.
-            setTimeout(() => {
-                try { window.print(); }
-                catch (e) { uiToast('Cetak disekat dalam paparan terbenam. Klik "Buka Tab Baharu" kemudian cetak.'); }
+            setTimeout(async () => {
+                _printFired = false;
+                try { window.focus(); window.print(); } catch (e) { _printFired = false; }
+                if (!_printFired && IS_EMBEDDED) {
+                    document.title = TAJUK_ASAL;
+                    if (await uiConfirm('Cetak disekat dalam paparan terbenam Google Sites.\n\nBuka dalam tab baharu (data disalin automatik) untuk cetak?', 'Buka Tab Baharu')) openInNewTab();
+                }
             }, 300);
         }
 
@@ -2008,6 +2066,10 @@
                 loadSampleData();
             } else {
                 autoFitToPage();
+            }
+            requestDraftFromOpener();
+            if (IS_EMBEDDED && !storageAvailable()) {
+                uiToast('Simpan auto draf tidak tersedia dalam paparan terbenam. Guna butang Simpan untuk sandaran, atau Buka Tab Baharu.');
             }
         };
 
